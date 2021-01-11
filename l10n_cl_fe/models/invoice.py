@@ -271,12 +271,13 @@ class AccountInvoice(models.Model):
         # )
 
     use_documents = fields.Char("usedoc")        
-    referencias = fields.One2many(
-            'account.invoice.referencias',
-            'invoice_id',
-            readonly=True,
-            states={'draft': [('readonly', False)]},
-    )
+    referencias = fields.Char("account.invoice.referencias")        
+    # referencias = fields.One2many(
+    #         'account.invoice.referencias',
+    #         'invoice_id',
+    #         readonly=True,
+    #         states={'draft': [('readonly', False)]},
+    # )
     forma_pago = fields.Selection(
             [
                     ('1','Contado'),
