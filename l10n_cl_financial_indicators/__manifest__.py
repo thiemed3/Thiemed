@@ -27,7 +27,7 @@ using SBIF webservices''',
     'author': 'Blanco Martin & Asociados',
     'website': 'http://blancomartin.cl',
     'depends': [
-        'decimal_precision',
+        # 'decimal_precision',
         'webservices_generic',    ],
     'data': [
         # 'views/update_button.xml',
