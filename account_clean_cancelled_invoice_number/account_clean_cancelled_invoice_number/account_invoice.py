@@ -6,10 +6,10 @@
 from odoo import models, api
 
 
-class invoice(models.Model):
-    _inherit = 'account.invoice'
-    # @api.multi
-    def clean_internal_number(self):
-        for rec in self:
-            rec.write({'move_name': False, 'document_number': False})
+# class invoice(models.Model):
+#     _inherit = 'account.invoice'
+#     # @api.multi
+#     def clean_internal_number(self):
+#         for rec in self:
+#             rec.write({'move_name': False, 'document_number': False})
 
