@@ -22,3 +22,11 @@ raven
 # stdnum
 urllib3
 # test
+pyOpenSSL
+openupgradelib   
+xmltodict
+dicttoxml
+pdf417gen
+cchardet
+suds-jurko
+signxml
