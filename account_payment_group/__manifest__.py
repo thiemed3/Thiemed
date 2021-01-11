@@ -15,7 +15,7 @@
         "bin": [],
     },
     "depends": [
-        "account_cancel",
+        # "account_cancel",
         "account_financial_amount",
         #"account_payment_fix",  # for fixes related to domains on payments
         # "account",
