@@ -1,0 +1,23 @@
+xmltodict
+dicttoxml
+pdf417gen
+# hashlib
+cchardet
+urllib3
+signxml
+pysftp
+num2words
+xlsxwriter
+numpy
+unidecode
+lxml
+# OpenSSL
+fdfgen
+xlrd
+fdfgen
+acme_tiny
+IPy
+wheel
+raven
+# stdnum
+urllib3
