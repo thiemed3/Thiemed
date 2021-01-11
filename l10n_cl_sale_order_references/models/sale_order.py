@@ -8,6 +8,7 @@ class SO(models.Model):
     _inherit = 'sale.order'
 
 
+
     referencia_ids = fields.One2many(
         'sale.order.referencias',
         'so_id',
