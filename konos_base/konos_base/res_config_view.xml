@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<!-- Base Config Settings Form View -->
+		<record id="view_konos_base_configuration" model="ir.ui.view">
+			<field name="name">konos.base.settings</field>
+			<field name="model">konos.base.config.settings</field>
+			<field name="arch" type="xml">
+				<form string="Configure" class="oe_form_configuration" version="8.0">
+					<header>
+						<button string="Apply" type="object" name="execute" class="oe_highlight" />
+						or
+						<button string="Cancel" type="object" name="cancel" class="oe_link" />
+					</header>
+
+					<separator string="Konos Easy Wizard" />
+					<div>
+						<p>
+							<label
+								string="Easily configure your options." />
+						</p>
+					</div>
+
+
+					<separator string="Contactos" />
+					<group>
+						<div name="Contactos">
+							<div name='module_contacts'>
+								<field name="module_contacts" class="oe_inline" />
+								<label for="module_contacts" />
+							</div>
+						</div>	
+					</group>
+
+
+
+
+					
+					<separator string="Finanzas" />
+					<group>
+						<label for="id" string="Finanzas" />	
+
+						<!-- module_decimal_precision_currency -->
+
+						<div name="finance">
+
+							<div name='module_l10n_cl_chart_of_account'>
+								<field name="module_l10n_cl_chart_of_account"
+									class="oe_inline" />
+								<label for="module_l10n_cl_chart_of_account" />
+							</div>			
+							
+							<div name='module_l10n_cl_banks_sbif'>
+								<field name="module_l10n_cl_banks_sbif"
+									class="oe_inline" />
+								<label for="module_l10n_cl_banks_sbif" />
+							</div>
+							<div name='module_l10n_cl_financial_indicators'>
+								<field name="module_l10n_cl_financial_indicators"
+									class="oe_inline" />
+								<label for="module_l10n_cl_financial_indicators" />
+							</div>
+							<div name='module_vit_journal_voucher'>
+								<field name="module_vit_journal_voucher"
+									class="oe_inline" />
+								<label for="module_vit_journal_voucher" />
+							</div>
+							<div name='module_l10n_cl_balance'>
+								<field name="module_l10n_cl_balance"
+									class="oe_inline" />
+								<label for="module_l10n_cl_balance" />
+							</div>
+							<div name='module_customer_account_followup'>
+								<field name="module_customer_account_followup"
+									class="oe_inline" />
+								<label for="module_customer_account_followup" />
+							</div>
+							<div name='module_currency_rate_inverted'>
+								<field name="module_currency_rate_inverted"
+									class="oe_inline" />
+								<label for="module_currency_rate_inverted" />
+							</div>
+							<div name='module_account_payment_advance'>
+								<field name="module_account_payment_advance"
+									class="oe_inline" />
+								<label for="module_account_payment_advance" />
+							</div>
+
+
+
+
+
+							
+							
+						</div>
+					</group>
+
+					<separator string="Compras" />
+					<group>
+						<label for="id" string="Formatos" />
+						<div name="module_layouts_custom">
+							<div name='module_layouts_custom'>
+								<field name="module_layouts_custom" class="oe_inline" />
+								<label for="module_layouts_custom" />
+							</div>
+						</div>
+					</group>
+
+					<separator string="Ventas" />
+
+
+
+					<group>
+						<label for="id" string="Invoicing" />	
+						<div name="invoicing">
+							<div name='module_l10n_cl_fe'>
+								<field name="module_l10n_cl_fe"
+									class="oe_inline" />
+								<label for="module_l10n_cl_fe" />
+							</div>	
+							<div name='module_l10n_cl_dte_factoring'>
+								<field name="module_l10n_cl_dte_factoring"
+									class="oe_inline" />
+								<label for="module_l10n_cl_dte_factoring" />
+							</div>	
+							<div name='module_l10n_cl_stock_picking'>
+								<field name="module_l10n_cl_stock_picking"
+									class="oe_inline" />
+								<label for="module_l10n_cl_stock_picking" />
+							</div>
+							<div name='module_l10n_cl_dte_point_of_sale'>
+								<field name="module_l10n_cl_dte_point_of_sale"
+									class="oe_inline" />
+								<label for="module_l10n_cl_dte_point_of_sale" />
+							</div>					
+	
+						</div>
+					</group>
+
+
+
+					<separator string="Recursos Humanos" />
+					<group>
+						
+						<div name="payroll">
+							<div name='module_l10n_cl_hr'>
+								<field name="module_l10n_cl_hr" class="oe_inline" />
+								<label for="module_l10n_cl_hr" />
+							</div>
+						</div>
+						<div name="payrollanalytic">
+							<div name='module_payroll_analytic_account'>
+								<field name="module_payroll_analytic_account" class="oe_inline" />
+								<label for="module_payroll_analytic_account" />
+							</div>
+						</div>
+						<div name="module_payroll_cancel">
+							<div name='module_payroll_cancel'>
+								<field name="module_payroll_cancel" class="oe_inline" />
+								<label for="module_payroll_cancel" />
+							</div>
+						</div>
+					</group>
+
+
+					<separator string="Recomendado" />
+					<group>
+						<div name="Mass Editing">
+							<div name='module_mass_editing'>
+								<field name="module_mass_editing" class="oe_inline" />
+								<label for="module_mass_editing" />
+							</div>
+						</div>
+						<div name="Account Cancel">
+							<div name='module_account_cancel'>
+								<field name="module_account_cancel" class="oe_inline" />
+								<label for="module_account_cancel" />
+							</div>
+						</div>
+						<div name="Web Export View">
+							<div name='module_web_export_view'>
+								<field name="module_web_export_view" class="oe_inline" />
+								<label for="module_web_export_view" />
+							</div>
+						</div>
+						<div name="Account Payment Group">
+							<div name='module_account_payment_group'>
+								<field name="module_account_payment_group" class="oe_inline" />
+								<label for="module_account_payment_group" />
+							</div>
+						</div>	
+						<div name="Recupera Contraseña">
+							<div name='module_auth_signup'>
+								<field name="module_auth_signup" class="oe_inline" />
+								<label for="module_auth_signup" />
+							</div>
+						</div>	
+						<div name="Respaldos Automáticos">
+							<div name='module_auto_backup'>
+								<field name="module_auto_backup" class="oe_inline" />
+								<label for="module_auto_backup" />
+							</div>
+						</div>
+						<div name="Documentos Adjuntos">
+							<div name='module_document'>
+								<field name="module_document" class="oe_inline" />
+								<label for="module_document" />
+							</div>
+						</div>
+						<div name="Reportes Financieros OCA">
+							<div name='module_account_financial_report'>
+								<field name="module_account_financial_report" class="oe_inline" />
+								<label for="module_account_financial_report" />
+							</div>
+						</div>		
+						<div name="Cartola Bancaria - Importación de Cartolas Chile">
+							<div name='module_cl_import_bank_statement_line'>
+								<field name="module_cl_import_bank_statement_line" class="oe_inline" />
+								<label for="module_cl_import_bank_statement_line" />
+							</div>
+						</div>	
+
+											
+					</group>
+
+					<separator string="Clasicos" />
+					<group>
+						<div name="Reportes">
+							<div name='module_report'>
+								<field name="module_report" class="oe_inline" />
+								<label for="module_report" />
+							</div>
+						</div>	
+						<div name="Dashboards">
+							<div name='module_board'>
+								<field name="module_board" class="oe_inline" />
+								<label for="module_board" />
+							</div>
+						</div>	
+					</group>
+
+
+				</form>
+			</field>
+		</record>
+
+		<!-- Base Config Settings Action -->
+		<record id="action_konos_base_configuration" model="ir.actions.act_window">
+			<field name="name">Configure</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">konos.base.config.settings</field>
+			<field name="view_mode">form</field>
+			<field name="target">inline</field>
+		</record>
+
+		<!-- Base Config Settings Menu -->
+		<menuitem id="menu_konos_base_configuration"
+			action="action_konos_base_configuration"
+			name="Konos Wizard" parent="base.menu_custom" sequence="110" />
+
+	</data>
+</odoo>

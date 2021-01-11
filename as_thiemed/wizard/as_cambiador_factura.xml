@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="as_editor_factura_name" model="ir.ui.view">
+            <field name="name">Modificador de Factura</field>
+            <field name="model">as.modificador.factura</field>
+            <field name="arch" type="xml">
+                <form string="Modificador de Factura">
+                    <group col="4">
+                        <field name="as_invoice" />
+                        <field name="num" />
+                        <field name="name" />
+                        <field name="name_new" />
+
+                    </group>
+                    <b style="color:red">Verificar la secuencia en el Menu Ajuste>> Secuencia>> Facturas de cliente - Factura Electrónica: PROXIMO NUMERO</b>
+                    <footer>
+                        <!-- <button name="imprimir_kardex_productos_pdf" string="Exportar a PDF" type="object" class="btn-primary"/> -->
+                        <button name="modificar_factura" default_focus="1" string="Cambiar" type="object"
+                            class="oe_highlight" icon="fa-edit" />
+                        <!-- <button name="kardex_productos_txt" string="Formato Facilito" type="object" class="btn-primary"/>     -->
+                        <button string="Cancel" class="oe_link" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_modificar_factura" model="ir.actions.act_window">
+            <field name="name">Modificador de Factura</field>
+            <field name="res_model">as.modificador.factura</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="as_editor_factura_name" />
+            <field name="target">new</field>
+        </record>
+
+
+        <menuitem
+        id="as_editor_factura_menu"
+        name="Modificador de Factura"
+        action="action_modificar_factura"
+        parent="account.menu_finance_entries_actions"            
+        sequence="70"
+       groups="account.group_account_manager" />
+
+    
+    </data>
+</odoo>

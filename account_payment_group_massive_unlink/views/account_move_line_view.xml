@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- Journal Items -->
+<record id="view_move_line_tree_inherit_massive" model="ir.ui.view">
+    <field name="name">account.move.line.tree.inherit.massive</field>
+    <field name="model">account.move.line</field>
+    <field name="inherit_id" ref="account_payment_group.view_move_line_tree"/>
+    <field name="arch" type="xml">
+        <xpath expr="//tree" position="attributes">
+            <attribute name="editable">top</attribute>
+        </xpath>
+        <field name="date" position="before">
+            <field name="to_unlink" readonly="False"/>
+        </field>
+    </field>
+</record>
+
+<record id="view_account_payment_group_form_inherit_massive" model="ir.ui.view">
+    <field name="name">Payment Multi Inherit Massive</field>
+    <field name="model">account.payment.group</field>
+    <field name="inherit_id" ref="account_payment_group.view_account_payment_group_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//page[3]//button[@name='remove_all']" position="after">
+            <button name="unlink_selected" string="Remove Selected" type="object"/>
+        </xpath>
+        
+        <field name="debt_move_line_ids" position="attributes">
+            <attribute name="attrs">{'readonly': False}</attribute>
+            <attribute name="edit">True</attribute>
+        </field>
+    </field>
+</record>
+
+</odoo>

@@ -1,0 +1,60 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* account_centralization
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 11.0+e-20180706\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-08-23 15:10+0000\n"
+"PO-Revision-Date: 2018-08-23 12:11-0300\n"
+"Last-Translator: Nelson Ramírez <info@konos.cl>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: es_CL\n"
+"X-Generator: Poedit 2.0.8\n"
+
+#. module: account_centralization
+#: model:ir.actions.act_window,name:account_centralization.action_wizard_export_account_centralized_tree_view
+#: model:ir.ui.menu,name:account_centralization.wizard_account_centralized_menu
+#: model:ir.ui.view,arch_db:account_centralization.wizard_export_account_centralized_form_view
+msgid "Account Centralization"
+msgstr "Centralización Contable"
+
+#. module: account_centralization
+#: model:ir.actions.act_window,name:account_centralization.action_export_account_centralized_wizard
+msgid "Account Centralized Report"
+msgstr "Reporte de Centralización"
+
+#. module: account_centralization
+#: model:ir.model.fields,field_description:account_centralization.field_wizard_export_account_centralized_libro_id
+msgid "Account Journal"
+msgstr "Diario de contabilidad"
+
+#. module: account_centralization
+#: model:ir.ui.view,arch_db:account_centralization.wizard_export_account_centralized_form_view
+msgid "Close"
+msgstr "Cerrar"
+
+#. module: account_centralization
+#: model:ir.ui.view,arch_db:account_centralization.view_account_centralized_history_excel
+msgid "Excel Report file"
+msgstr "Archivo Excel"
+
+#. module: account_centralization
+#: model:ir.ui.view,arch_db:account_centralization.wizard_export_account_centralized_form_view
+msgid "Report"
+msgstr "Informe"
+
+#. module: account_centralization
+#: model:ir.model,name:account_centralization.model_account_centralized_excel
+msgid "account.centralized.excel"
+msgstr "account.centralized.excel"
+
+#. module: account_centralization
+#: model:ir.model,name:account_centralization.model_wizard_export_account_centralized
+msgid "wizard.export.account.centralized"
+msgstr "wizard.export.account.centralized"

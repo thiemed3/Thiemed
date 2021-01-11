@@ -1,0 +1,440 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* konos_base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 11.0-20180122\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-03-29 21:20+0000\n"
+"PO-Revision-Date: 2018-03-29 18:22-0300\n"
+"Last-Translator: Nelson Ramírez <info@konos.cl>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es_CL\n"
+"X-Generator: Poedit 2.0.6\n"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_account_cancel
+msgid "Account Cancel"
+msgstr "Account Cancel"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_account_payment_advance
+msgid "Account Payment Advance"
+msgstr "Anticipos"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Apply"
+msgstr "Aplicar"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_auth_signup
+msgid "Auth Signup"
+msgstr "Auth Signup"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_auto_backup
+msgid "Auto Backup"
+msgstr "Auto Backup"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_account_general_ledger_filter
+msgid "Auxiliares Contables - Filtros de Cuentas Libro Mayor"
+msgstr "Auxiliares Contables - Filtros de Cuentas Libro Mayor"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_l10n_cl_banks_sbif
+msgid "Bancos en Chile"
+msgstr "Bancos en Chile"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_payroll_cancel
+msgid "Cancelar Nómina"
+msgstr "Cancelar Nómina"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_cl_import_bank_statement_line
+msgid "Cartola Bancaria - Importación de Cartolas Chile"
+msgstr "Cartola Bancaria - Importación de Cartolas Chile"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_payroll_analytic_account
+msgid "Centros de Costos en Liquidaciones"
+msgstr "Centros de Costos en Liquidaciones"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Clasicos"
+msgstr "Clasicos"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Compras"
+msgstr "Compras"
+
+#. module: konos_base
+#: model:ir.actions.act_window,name:konos_base.action_konos_base_configuration
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Configure"
+msgstr "Configurar"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_contacts
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Contactos"
+msgstr "Contactos"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_create_date
+msgid "Created on"
+msgstr "Creado en"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_currency_rate_inverted
+msgid "Currency Rate Inverted"
+msgstr "Moneda Invertida"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_l10n_cl_dte_factoring
+msgid "DTE Factoring"
+msgstr "DTE Factoring"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_l10n_cl_stock_picking
+msgid "DTE Guías de Despacho Electrónicas"
+msgstr "DTE Guías de Despacho Electrónicas"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_l10n_cl_dte_point_of_sale
+msgid "DTE Punto de Venta"
+msgstr "DTE Punto de Venta"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_board
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_display_name
+msgid "Display Name"
+msgstr "Nombre Mostrado"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_document
+msgid "Documentos Adjuntos"
+msgstr "Documentos Adjuntos"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Easily configure your options."
+msgstr "Configure fácilmente sus opciones."
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_mass_editing
+msgid "Edición Masiva"
+msgstr "Edición Masiva"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_l10n_cl_fe
+msgid "Electronic Invoice Chile"
+msgstr "Electronic Invoice Chile"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_web_export_view
+msgid "Excel Export"
+msgstr "Excel Export"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Finanzas"
+msgstr "Finanzas"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Formatos"
+msgstr "Formatos"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_id
+msgid "ID"
+msgstr "ID (identificación)"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_vit_journal_voucher
+msgid "Impresión de Comprobantes Contables"
+msgstr "Impresión de Comprobantes Contables"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_l10n_cl_financial_indicators
+msgid "Indicadores Financieros"
+msgstr "Indicadores Financieros"
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_l10n_cl_hr
+msgid ""
+"Install l10n_cl_hr for payroll and AFPs chilean\n"
+"modules"
+msgstr ""
+"Install l10n_cl_hr for payroll and AFPs chilean\n"
+"modules"
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_currency_rate_inverted
+msgid "Installs currency_rate_inverted."
+msgstr "Installs currency_rate_inverted."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_l10n_cl_dte_point_of_sale
+msgid "Installs module 10n_cl_dte_point_of_sale, and all DTE requirements."
+msgstr "Installs module 10n_cl_dte_point_of_sale, and all DTE requirements."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_l10n_cl_banks_sbif
+msgid ""
+"Installs module l10n_cl_banks_sbif, and includes authorized\n"
+"banks, and financial institutions in Chile."
+msgstr ""
+"Installs module l10n_cl_banks_sbif, and includes authorized\n"
+"banks, and financial institutions in Chile."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_l10n_cl_chart_of_account
+msgid ""
+"Installs module l10n_cl_chart_of_account, and includes authorized\n"
+"chart of accounts in Chile."
+msgstr ""
+"Installs module l10n_cl_chart_of_account, and includes authorized\n"
+"chart of accounts in Chile."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_l10n_cl_dte_factoring
+msgid "Installs module l10n_cl_dte_factoring, and all DTE requirements."
+msgstr "Installs module l10n_cl_dte_factoring, and all DTE requirements."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_l10n_cl_financial_indicators
+msgid ""
+"Installs module l10n_cl_financial_indicators, allowing to\n"
+"update indicators daily, from SBIF."
+msgstr ""
+"Installs module l10n_cl_financial_indicators, allowing to\n"
+"update indicators daily, from SBIF."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_l10n_cl_stock_picking
+msgid "Installs module l10n_cl_stock_picking, and all DTE requirements."
+msgstr "Installs module l10n_cl_stock_picking, and all DTE requirements."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_l10n_cl_fe
+msgid "Installs module module_l10n_cl_fe, and all Electronic Invoice requirements."
+msgstr "Installs module module_l10n_cl_fe, and all Electronic Invoice requirements."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_account_cancel
+msgid "Installs module_account_cancel."
+msgstr "Installs module_account_cancel."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_account_financial_report_qweb
+msgid "Installs module_account_financial_report_qweb."
+msgstr "Installs module_account_financial_report_qweb."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_account_general_ledger_filter
+msgid "Installs module_account_general_ledger_filter."
+msgstr "Installs module_account_general_ledger_filter."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_account_payment_advance
+msgid "Installs module_account_payment_advance."
+msgstr "Installs module_account_payment_advance."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_account_payment_group
+msgid "Installs module_account_payment_group."
+msgstr "Installs module_account_payment_group."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_auth_signup
+msgid "Installs module_auth_signup."
+msgstr "Installs module_auth_signup."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_auto_backup
+msgid "Installs module_auto_backup."
+msgstr "Installs module_auto_backup."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_board
+msgid "Installs module_board."
+msgstr "Installs module_board."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_cl_import_bank_statement_line
+msgid "Installs module_cl_import_bank_statement_line."
+msgstr "Installs module_cl_import_bank_statement_line."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_contacts
+msgid "Installs module_contacts."
+msgstr "Installs module_contacts."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_customer_account_followup
+msgid "Installs module_customer_account_followup."
+msgstr "Installs module_customer_account_followup."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_document
+msgid "Installs module_document."
+msgstr "Installs module_document."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_l10n_cl_balance
+msgid "Installs module_l10n_cl_balance."
+msgstr "Installs module_l10n_cl_balance."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_layouts_custom
+msgid "Installs module_layouts_custom."
+msgstr "Installs module_layouts_custom."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_mass_editing
+msgid "Installs module_mass_editing."
+msgstr "Installs module_mass_editing."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_payroll_analytic_account
+msgid "Installs module_payroll_analytic_account."
+msgstr "Installs module_payroll_analytic_account."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_payroll_cancel
+msgid "Installs module_payroll_cancel."
+msgstr "Installs module_payroll_cancel."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_report
+msgid "Installs module_report."
+msgstr "Installs module_report."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_web_export_view
+msgid "Installs module_web_export_view."
+msgstr "Installs module_web_export_view."
+
+#. module: konos_base
+#: model:ir.model.fields,help:konos_base.field_konos_base_config_settings_module_vit_journal_voucher
+msgid "Installs vit_journal_voucher."
+msgstr "Installs vit_journal_voucher."
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Invoicing"
+msgstr "Facturando"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Konos Easy Wizard"
+msgstr "Wizar Fácil de Konos"
+
+#. module: konos_base
+#: model:ir.ui.menu,name:konos_base.menu_konos_base_configuration
+msgid "Konos Wizard"
+msgstr "Konos Wizard"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings___last_update
+msgid "Last Modified on"
+msgstr "Última modificación en"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_write_uid
+msgid "Last Updated by"
+msgstr "Última actualización de"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_write_date
+msgid "Last Updated on"
+msgstr "Última actualización en"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_layouts_custom
+msgid "Layouts Custom"
+msgstr "Layouts Custom"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_l10n_cl_hr
+msgid "Liquidaciones en Chile"
+msgstr "Liquidaciones en Chile"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_account_payment_group
+msgid "Payment Group"
+msgstr "Grupo de Pago"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_l10n_cl_chart_of_account
+msgid "Plan de Cuentas SII"
+msgstr "Plan de Cuentas SII"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Recomendado"
+msgstr "Recomendado"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Recursos Humanos"
+msgstr "Recursos Humanos"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_report
+msgid "Reportes"
+msgstr "Reportes"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_l10n_cl_balance
+msgid "Reportes Contables en Chile"
+msgstr "Reportes Contables en Chile"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_account_financial_report_qweb
+msgid "Reportes Financieros OCA QWEB"
+msgstr "Reportes Financieros OCA QWEB"
+
+#. module: konos_base
+#: model:ir.model.fields,field_description:konos_base.field_konos_base_config_settings_module_customer_account_followup
+msgid "Seguimiento de Cheques y Pagos"
+msgstr "Seguimiento de Cheques y Pagos"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "Ventas"
+msgstr "Ventas"
+
+#. module: konos_base
+#: model:ir.model,name:konos_base.model_konos_base_config_settings
+msgid "konos.base.config.settings"
+msgstr "konos.base.config.settings"
+
+#. module: konos_base
+#: model:ir.ui.view,arch_db:konos_base.view_konos_base_configuration
+msgid "or"
+msgstr "o"
