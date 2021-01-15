@@ -48,12 +48,7 @@ class userSignature(models.Model):
     _inherit = 'res.company'
 
     def check_signature(self):
-        for s in self:
-            if not s.cert:
-                s.status = 'unverified'
-                continue
-            expired = datetime.strptime(s.not_after, '%Y-%m-%d') < datetime.now()
-            s.status = 'expired' if expired else 'valid'
+        pass
 
     def load_cert_pk12(self, filecontent):
         try:
@@ -114,17 +109,6 @@ class userSignature(models.Model):
         string='Not Before', help='Not Before this Date', readonly=True)
     not_after = fields.Date(
         string='Not After', help='Not After this Date', readonly=True)
-    status = fields.Selection(
-        [
-                    ('unverified', 'Unverified'),
-                    ('valid', 'Valid'),
-                    ('expired', 'Expired')
-        ],
-        string='Status',
-        compute='check_signature',
-        help='''Draft: means it has not been checked yet.\nYou must press the\
-"check" button.''',
-    )
     final_date = fields.Date(
         string='Last Date', help='Last Control Date', readonly=True)
     # sujeto

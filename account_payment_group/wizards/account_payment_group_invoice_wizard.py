@@ -94,24 +94,24 @@ class AccountPaymentGroupInvoiceWizard(models.TransientModel):
         }
 
     # @api.multi
-    def confirm(self):
-        self.ensure_one()
+    # def confirm(self):
+    #     self.ensure_one()
 
-        invoice = self.env['account.invoice'].create(self.get_invoice_vals())
+    #     invoice = self.env['account.invoice'].create(self.get_invoice_vals())
 
-        inv_line_vals = {
-            'product_id': self.product_id.id,
-            'price_unit': self.amount,
-            'invoice_id': invoice.id,
-        }
-        invoice_line = self.env['account.invoice.line'].new(inv_line_vals)
-        invoice_line._onchange_product_id()
-        line_values = invoice_line._convert_to_write(invoice_line._cache)
-        line_values['price_unit'] = self.amount
-        if self.account_analytic_id:
-            line_values['account_analytic_id'] = self.account_analytic_id.id
-        invoice.write({'invoice_line_ids': [(0, 0, line_values)]})
-        invoice.compute_taxes()
-        invoice.signal_workflow('invoice_open')
-        self.payment_group_id.to_pay_move_line_ids += (
-            invoice.open_move_line_ids)
+    #     inv_line_vals = {
+    #         'product_id': self.product_id.id,
+    #         'price_unit': self.amount,
+    #         'invoice_id': invoice.id,
+    #     }
+    #     invoice_line = self.env['account.invoice.line'].new(inv_line_vals)
+    #     invoice_line._onchange_product_id()
+    #     line_values = invoice_line._convert_to_write(invoice_line._cache)
+    #     line_values['price_unit'] = self.amount
+    #     if self.account_analytic_id:
+    #         line_values['account_analytic_id'] = self.account_analytic_id.id
+    #     invoice.write({'invoice_line_ids': [(0, 0, line_values)]})
+    #     invoice.compute_taxes()
+    #     invoice.signal_workflow('invoice_open')
+    #     self.payment_group_id.to_pay_move_line_ids += (
+    #         invoice.open_move_line_ids)

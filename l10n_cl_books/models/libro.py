@@ -893,7 +893,7 @@ version="1.0">
         det = collections.OrderedDict()
         det['TpoDoc'] = rec.document_class_id.sii_code
         det['FolioDoc'] = int(rec.sii_document_number)
-        #if self.env['account.invoice.referencias'].search(
+        # if self.env['account.invoice.referencias'].search(
         #        [('origen', '=', det['FolioDoc']),
         #         ('sii_referencia_TpoDocRef', '=', rec.document_class_id.id),
         #         ('sii_referencia_CodRef', '=', '1')

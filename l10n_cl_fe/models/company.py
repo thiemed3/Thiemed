@@ -93,58 +93,58 @@ stamp to be legally valid.''',
             string='Document type',
         )
 
-    @api.onchange('document_number', 'document_type_id')
-    def onchange_document(self):
-        mod_obj = self.env['ir.model.data']
-        if self.document_number and ((
-            'sii.document_type',
-            self.document_type_id.id) == mod_obj.get_object_reference(
-                'l10n_cl_fe', 'dt_RUT') or ('sii.document_type',
-                self.document_type_id.id) == mod_obj.get_object_reference(
-                    'l10n_cl_fe', 'dt_RUN')):
-            document_number = (
-                re.sub('[^1234567890Kk]', '', str(
-                    self.document_number))).zfill(9).upper()
-            if not self.partner_id.check_vat_cl(document_number):
-                self.vat = ''
-                self.document_number = ''
-                return {'warning': {'title': _('Rut Erróneo'),
-                                    'message': _('Rut Erróneo'),
-                                    }
-                        }
-            vat = 'CL%s' % document_number
-            exist = self.env['res.partner'].search(
-                [
-                    ('vat','=', vat),
-                    ('vat', '!=',  'CL555555555'),
-                    ('commercial_partner_id', '!=', self.id ),
-                ],
-                limit=1,
-            )
-            if exist:
-                self.vat = ''
-                self.document_number = ''
-                return {'warning': {'title': 'Informacion para el Usuario',
-                                    'message': _("El usuario %s está utilizando este documento" ) % exist.name,
-                                    }}
-            self.vat = vat
-            self.document_number = '%s.%s.%s-%s' % (
-                                        document_number[0:2], document_number[2:5],
-                                        document_number[5:8], document_number[-1],
-                                    )
-        elif self.document_number and (
-            'sii.document_type',
-            self.document_type_id.id) == mod_obj.get_object_reference(
-                'l10n_cl_fe',
-                'dt_Sigd',
-            ):
-            self.document_number = ''
-        else:
-            self.vat = ''
+    # @api.onchange('document_number', 'document_type_id')
+    # def onchange_document(self):
+    #     mod_obj = self.env['ir.model.data']
+    #     if self.document_number and ((
+    #         'sii.document_type',
+    #         self.document_type_id.id) == mod_obj.get_object_reference(
+    #             'l10n_cl_fe', 'dt_RUT') or ('sii.document_type',
+    #             self.document_type_id.id) == mod_obj.get_object_reference(
+    #                 'l10n_cl_fe', 'dt_RUN')):
+    #         document_number = (
+    #             re.sub('[^1234567890Kk]', '', str(
+    #                 self.document_number))).zfill(9).upper()
+    #         if not self.partner_id.check_vat_cl(document_number):
+    #             self.vat = ''
+    #             self.document_number = ''
+    #             return {'warning': {'title': _('Rut Erróneo'),
+    #                                 'message': _('Rut Erróneo'),
+    #                                 }
+    #                     }
+    #         vat = 'CL%s' % document_number
+    #         exist = self.env['res.partner'].search(
+    #             [
+    #                 ('vat','=', vat),
+    #                 ('vat', '!=',  'CL555555555'),
+    #                 ('commercial_partner_id', '!=', self.id ),
+    #             ],
+    #             limit=1,
+    #         )
+    #         if exist:
+    #             self.vat = ''
+    #             self.document_number = ''
+    #             return {'warning': {'title': 'Informacion para el Usuario',
+    #                                 'message': _("El usuario %s está utilizando este documento" ) % exist.name,
+    #                                 }}
+    #         self.vat = vat
+    #         self.document_number = '%s.%s.%s-%s' % (
+    #                                     document_number[0:2], document_number[2:5],
+    #                                     document_number[5:8], document_number[-1],
+    #                                 )
+    #     elif self.document_number and (
+    #         'sii.document_type',
+    #         self.document_type_id.id) == mod_obj.get_object_reference(
+    #             'l10n_cl_fe',
+    #             'dt_Sigd',
+    #         ):
+    #         self.document_number = ''
+    #     else:
+    #         self.vat = ''
 
-    @api.onchange('city_id')
-    def _asign_city(self):
-        if self.city_id:
-            self.country_id = self.city_id.state_id.country_id.id
-            self.state_id = self.city_id.state_id.id
-            self.city = self.city_id.name
+    # @api.onchange('city_id')
+    # def _asign_city(self):
+    #     if self.city_id:
+    #         self.country_id = self.city_id.state_id.country_id.id
+    #         self.state_id = self.city_id.state_id.id
+    #         self.city = self.city_id.name
