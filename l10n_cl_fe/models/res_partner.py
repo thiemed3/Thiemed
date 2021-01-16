@@ -40,10 +40,10 @@ class ResPartner(models.Model):
         ]
     )
 
-    state_id = fields.Many2one(
-            "res.country.state",
-            'Ubication',
-        )
+    # state_id = fields.Char(
+    #         # "res.country.state",
+    #         'Ubication',
+    #     )
     responsability_id = fields.Many2one(
         'sii.responsability',
         string='Responsability',

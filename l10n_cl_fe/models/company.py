@@ -47,9 +47,9 @@ stamp to be legally valid.''',
             'sii.regional.offices',
             string='SII Regional Office',
         )
-    state_id = fields.Many2one(
-            related='partner_id.state_id',
-            relation="res.country.state",
+    state_id = fields.Char(
+            # related='partner_id.state_id',
+            # relation="res.country.state",
             string='Ubication',
         )
     company_activities_ids = fields.Many2many(

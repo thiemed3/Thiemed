@@ -162,8 +162,7 @@ class ProcessMailsDocument(models.Model):
         ],
         default='draft',
     )
-    invoice_id = fields.Many2one(
-        'account.invoice',
+    invoice_id = fields.Char(
         string="Factura",
         readonly=True,
     )

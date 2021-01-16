@@ -161,9 +161,6 @@ class Referencias(models.Model):
         )
     invoice_id = fields.Many2one(
             'account.invoice',
-            ondelete='cascade',
-            index=True,
-            copy=False,
             string="Documento",
         )
     fecha_documento = fields.Date(
@@ -176,16 +173,16 @@ class AccountInvoice(models.Model):
     # _inherit = "account.invoice"
     _name = "account.invoice"
 
-    def _default_journal_document_class_id(self, default=None):
-        ids = self._get_available_journal_document_class()
-        document_classes = self.env['account.journal.sii_document_class'].browse(ids)
-        if default:
-            for dc in document_classes:
-                if dc.sii_document_class_id.id == default:
-                    self.journal_document_class_id = dc.id
-        elif document_classes:
-            default = self.get_document_class_default(document_classes)
-        return default
+    # def _default_journal_document_class_id(self, default=None):
+    #     ids = self._get_available_journal_document_class()
+    #     document_classes = self.env['account.journal.sii_document_class'].browse(ids)
+    #     if default:
+    #         for dc in document_classes:
+    #             if dc.sii_document_class_id.id == default:
+    #                 self.journal_document_class_id = dc.id
+    #     elif document_classes:
+    #         default = self.get_document_class_default(document_classes)
+    #     return default
 
     def _domain_journal_document_class_id(self):
         domain = self._get_available_journal_document_class()
@@ -271,13 +268,13 @@ class AccountInvoice(models.Model):
         # )
 
     use_documents = fields.Char("usedoc")        
-    referencias = fields.Char("account.invoice.referencias")        
-    # referencias = fields.One2many(
-    #         'account.invoice.referencias',
-    #         'invoice_id',
-    #         readonly=True,
-    #         states={'draft': [('readonly', False)]},
-    # )
+    # referencias = fields.Char("account.invoice.referencias")        
+    referencias = fields.One2many(
+            'account.invoice.referencias',
+            'invoice_id',
+            readonly=True,
+            states={'draft': [('readonly', False)]},
+    )
     forma_pago = fields.Selection(
             [
                     ('1','Contado'),
@@ -402,9 +399,7 @@ class AccountInvoice(models.Model):
             default=0.00,
             # compute='_compute_amount',
         )
-    global_descuentos_recargos = fields.One2many(
-            'account.invoice.gdr',
-            'invoice_id',
+    global_descuentos_recargos = fields.Char(
             string="Descuentos / Recargos globales",
             readonly=True,
             states={'draft': [('readonly', False)]},
