@@ -17,10 +17,9 @@ class StockPicking(models.Model):
     
     analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Etiquetas analíticas')
     
-    # # @api.one
     @api.model
     def get_products_invoice(self):
-        account_invs = self.env['account.invoice'].search([('analytic_tag_ids', 'in', self.analytic_tag_ids.ids)])
+        account_invs = self.env['account.move'].search([('analytic_tag_ids', 'in', self.analytic_tag_ids.ids)])
         
         for i in self.move_lines:
             if not i.pedido:
@@ -63,75 +62,81 @@ class StockMove(models.Model):
         ('rechazado', 'Rechazado'),],
                     string='Aceptado?')
 
-# class AccountInvoice(models.Model):
-#     _name = "account.invoice"
-#     _inherit = ["account.invoice"]
+class AccountInvoice(models.Model):
+    _name = "account.move"
+    _inherit = ["account.move"]
     
-#     analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Etiquetas analíticas')
+    analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Etiquetas analíticas')
 
-#     #@api.onchange("whin_id")
-#     #def onchange_whin_id(self):
-#     #    if self.whin_id:
-#     #        self.analytic_tag_ids = self.whin_id.analytic_tag_ids
+    #@api.onchange("whin_id")
+    #def onchange_whin_id(self):
+    #    if self.whin_id:
+    #        self.analytic_tag_ids = self.whin_id.analytic_tag_ids
             
-#     @api.onchange("analytic_tag_ids")
-#     def onchange_analytic_tag_ids(self):
-#         for i in self.invoice_line_ids:
-#             i.analytic_tag_ids = self.analytic_tag_ids
+    @api.onchange("analytic_tag_ids")
+    def onchange_analytic_tag_ids(self):
+        for i in self.invoice_line_ids:
+            i.analytic_tag_ids = self.analytic_tag_ids
 
-# class AccountInvoiceLine(models.Model):
-#     _name = "account.invoice.line"
-#     _inherit = "account.invoice.line"
+class AccountInvoiceLine(models.Model):
+    _name = "account.move.line"
+    _inherit = "account.move.line"
     
-#     @api.onchange('product_id')
-#     def _onchange_product_id(self):
-#         domain = {}
-#         if not self.invoice_id:
-#             return
+    @api.onchange('product_id')
+    def _onchange_product_id(self):
+        domain = {}
+        if not self.move_id:
+            return
 
-#         part = self.invoice_id.partner_id
-#         fpos = self.invoice_id.fiscal_position_id
-#         company = self.invoice_id.company_id
-#         currency = self.invoice_id.currency_id
-#         type = self.invoice_id.type
-#         self.analytic_tag_ids = self.invoice_id.analytic_tag_ids
+        part = self.move_id.partner_id
+        fpos = self.move_id.fiscal_position_id
+        company = self.move_id.company_id
+        currency = self.move_id.currency_id
+        move_type = self.move_id.move_type
+        self.analytic_tag_ids = self.move_id.analytic_tag_ids
 
-#         if not part:
-#             warning = {
-#                     'title': _('Warning!'),
-#                     'message': _('You must first select a partner!'),
-#                 }
-#             return {'warning': warning}
+        if not part:
+            warning = {
+                    'title': _('Warning!'),
+                    'message': _('You must first select a partner!'),
+                }
+            return {'warning': warning}
 
-#         if not self.product_id:
-#             if type not in ('in_invoice', 'in_refund'):
-#                 self.price_unit = 0.0
-#             domain['uom_id'] = []
-#         else:
-#             if part.lang:
-#                 product = self.product_id.with_context(lang=part.lang)
-#             else:
-#                 product = self.product_id
+        if not self.product_id:
+            if move_type not in ('in_invoice', 'in_refund'):
+                self.price_unit = 0.0
+            domain['uom_id'] = []
+        else:
+            if part.lang:
+                product = self.product_id.with_context(lang=part.lang)
+            else:
+                product = self.product_id
 
-#             self.name = product.partner_ref
-#             account = self.get_invoice_line_account(type, product, fpos, company)
-#             if account:
-#                 self.account_id = account.id
-#             self._set_taxes()
+            self.name = product.partner_ref
+            account = self.get_invoice_line_account(move_type, product, fpos, company)
+            if account:
+                self.account_id = account.id
+            self._get_computed_taxes()
 
-#             if type in ('in_invoice', 'in_refund'):
-#                 if product.description_purchase:
-#                     self.name += '\n' + product.description_purchase
-#             else:
-#                 if product.description_sale:
-#                     self.name += '\n' + product.description_sale
+            if move_type in ('in_invoice', 'in_refund'):
+                if product.description_purchase:
+                    self.name += '\n' + product.description_purchase
+            else:
+                if product.description_sale:
+                    self.name += '\n' + product.description_sale
 
-#             if not self.uom_id or product.uom_id.category_id.id != self.uom_id.category_id.id:
-#                 self.uom_id = product.uom_id.id
-#             domain['uom_id'] = [('category_id', '=', product.uom_id.category_id.id)]
+            if not self.product_uom_id or product.uom_id.category_id.id != self.product_uom_id.category_id.id:
+                self.product_uom_id = product.uom_id.id
+            domain['uom_id'] = [('category_id', '=', product.uom_id.category_id.id)]
 
-#             if company and currency:
+            if company and currency:
 
-#                 if self.uom_id and self.uom_id.id != product.uom_id.id:
-#                     self.price_unit = product.uom_id._compute_price(self.price_unit, self.uom_id)
-#         return {'domain': domain}
+                if self.product_uom_id and self.product_uom_id.id != product.uom_id.id:
+                    self.price_unit = product.uom_id._compute_price(self.price_unit, self.product_uom_id)
+        return {'domain': domain}
+
+    def get_invoice_line_account(self, type, product, fpos, company):
+        accounts = product.product_tmpl_id.get_product_accounts(fpos)
+        if type in ('out_invoice', 'out_refund'):
+            return accounts['income']
+        return accounts['expense']

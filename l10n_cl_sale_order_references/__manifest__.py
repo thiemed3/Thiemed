@@ -19,9 +19,9 @@ Referencias de Documentos en Notas de Ventas hacia DTE
         ],
 
     'data': [
-            # 'views/layout.xml',
-            # 'views/sale_order.xml',
-            # 'security/ir.model.access.csv'
+            'views/layout.xml',
+            'views/sale_order.xml',
+            'security/ir.model.access.csv'
 
     ],
 

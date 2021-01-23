@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="stock_landed_costs.view_stock_landed_cost_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header/button[1]" position="after">
-                <button name="search_tags" string="Search" class="oe_highlight" type="object"/>
+                <button name="search_tags" string="Buscar" class="oe_highlight" type="object"/>
             </xpath>
             <xpath expr="//field[@name='account_move_id']" position="after">
                 <field name="analytic_tag_id"/>

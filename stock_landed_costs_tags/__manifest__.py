@@ -8,19 +8,19 @@
     'website': "https://odoolatam.odoo.com/",
 
     'category': 'Warehouse',
-    'version': '11.0.0.0.0',
+    'version': '1.0.0',
 
     'depends': [
         # 'account_invoicing',
         'stock_landed_costs',
-        'whin_process_thiemed',  # REVIEW: check this module later
+        # 'whin_process_thiemed',  # REVIEW: check this module later
     ],
 
     'data': [
         # 'data/res_config_settings.yml',
         # 'data/res_users_data.xml',
         # 'data/stock_landed_cost_data.xml',
-        # 'views/stock_landed_cost_views.xml',
+        'views/stock_landed_cost_views.xml',
     ],
 
     'demo': [

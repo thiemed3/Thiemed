@@ -11,13 +11,12 @@ class LandedCost(models.Model):
         'account.analytic.tag', string="Analytic tag",
         help="Analytic tag associated with the invoice. E.g. DIN1")
 
-    # @api.multi
     def search_tags(self):
         
         if self.cost_lines:
             raise ValidationError(_("The cost lines were already generated."))
 
-        invoices = self.env['account.invoice'].search([]).filtered(
+        invoices = self.env['account.move'].search([]).filtered(
             lambda r: self.analytic_tag_id in r.analytic_tag_ids)
 
         if not invoices:
@@ -40,7 +39,7 @@ class LandedCost(models.Model):
             'cost_lines': [(0, 0, {
                 'product_id': product.id,
                 'name': product.name or '',
-                'split_method': product.split_method or 'equal',
+                'split_method': product.split_method_landed_cost or 'equal',
                 'price_unit': price,
                 'account_id': product.property_account_expense_id.id or product.categ_id.property_account_expense_categ_id.id,
                 }) for product, price in cost_lines.items()],
@@ -59,7 +58,7 @@ class LandedCost(models.Model):
                 'product_id': move.product_id.id,
                 'move_id': move.id,
                 'quantity': move.product_qty,
-                'former_cost': move.value,
+                'former_cost': move.product_id.standard_price,
                 'weight': move.product_id.weight * move.product_qty,
                 'volume': move.product_id.volume * move.product_qty
             }
@@ -82,10 +81,9 @@ class AdjustmentLines(models.Model):
         compute='_compute_new_cost',
         help="Former Cost (Per unit) + Additional Landed Cost / Quantity")
 
-    # @api.multi
     def _compute_new_cost(self):
         """Computes the new cost amount"""
         for record in self:
             record.new_cost = (
-                record.former_cost_per_unit + record.additional_landed_cost
+                record.final_cost + record.additional_landed_cost
                 / record.quantity)
