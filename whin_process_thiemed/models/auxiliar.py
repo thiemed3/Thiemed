@@ -645,12 +645,12 @@ class account_journal(models.Model):
             string="Código SII Sucursal",
             readonly=True,
         )
-    journal_document_class_ids = fields.class("journal_document_class_ids")
+    journal_document_class_ids = fields.Char("journal_document_class_ids")
     use_documents = fields.Boolean(
             string='Use Documents?',
             default='_get_default_doc',
         )
-    journal_activities_ids = fields.char("journal_activities_ids")
+    journal_activities_ids = fields.Char("journal_activities_ids")
     restore_mode = fields.Boolean(
             string="Restore Mode",
             default=False,
