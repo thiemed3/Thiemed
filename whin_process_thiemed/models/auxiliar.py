@@ -645,23 +645,12 @@ class account_journal(models.Model):
             string="Código SII Sucursal",
             readonly=True,
         )
-    journal_document_class_ids = fields.One2many(
-            'account.journal.sii_document_class',
-            'journal_id',
-            'Documents Class',
-        )
+    journal_document_class_ids = fields.class("journal_document_class_ids")
     use_documents = fields.Boolean(
             string='Use Documents?',
             default='_get_default_doc',
         )
-    journal_activities_ids = fields.Many2many(
-            'partner.activities',
-            id1='journal_id',
-            id2='activities_id',
-            string='Journal Turns',
-            help="""Select the turns you want to \
-            invoice in this Journal""",
-        )
+    journal_activities_ids = fields.char("journal_activities_ids")
     restore_mode = fields.Boolean(
             string="Restore Mode",
             default=False,
