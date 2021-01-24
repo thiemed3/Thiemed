@@ -1,4 +1,4 @@
-# v19
+# v20
 # Desinstalados y/o forzados
 auth_session_timeout
 webservices_generic
