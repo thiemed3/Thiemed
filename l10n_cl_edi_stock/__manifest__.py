@@ -1,6 +1,6 @@
 {
     "name": """Chile - E-Invoicing Delivery Guides""",
-    'version': '1.0.',
+    'version': '1.0.1',
     'category': 'Localization/Chile',
     'sequence': 12,
     'author':  'Blanco Martín & Asociados',

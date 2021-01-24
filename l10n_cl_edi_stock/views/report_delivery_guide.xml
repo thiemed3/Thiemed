@@ -105,7 +105,7 @@
             <t t-if="o.invoice_incoterm_id" position="replace">
                 <br /><strong>Order:</strong><span t-field="o.name"/>
             </t>
-            <t t-if="o.l10n_cl_reference_ids" position="replace"/><!-- falta en la guia, pero quitado para avazar -->
+            <!-- <t t-if="o.l10n_cl_reference_ids" position="replace"/>falta en la guia, pero quitado para avazar -->
         </template>
 
         <template id="barcode_stamp_footer">
