@@ -43,6 +43,7 @@
                     <group>
                         <field name="l10n_latam_document_type_id" />
                         <field name="l10n_cl_sii_send_ident" />
+                        <field name="invoice_date" />
                         <!-- <field name="journal_id" /> -->
                         <field name="date_invoice" />
 

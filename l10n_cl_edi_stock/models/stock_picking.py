@@ -64,6 +64,11 @@ class Picking(models.Model):
         default=fields.Date.context_today,
         required=True
     )
+    invoice_date = fields.Date(
+        string='Fecha de Movimiento',
+        default=fields.Date.context_today,
+        required=True
+    )
 
     l10n_cl_sii_barcode = fields.Char(
         string='SII Barcode', readonly=True, copy=False,
