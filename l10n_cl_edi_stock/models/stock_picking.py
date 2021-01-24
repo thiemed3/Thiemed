@@ -43,7 +43,7 @@ class Picking(models.Model):
     l10n_latam_document_type_id = fields.Many2one('l10n_latam.document.type', string='Document Type',copy=False)
     l10n_latam_document_number = fields.Char(string='Delivery Guide Number', copy=False)
     l10n_cl_draft_status = fields.Boolean()
-    l10n_cl_reference_ids = fields.One2many('l10n_cl.account.invoice.reference', 'move_id', readonly=True,
+    l10n_cl_reference_ids = fields.One2many('l10n_cl.account.invoice.reference', 'picking_id', readonly=True,
                                             states={'draft': [('readonly', False)]}, string='Reference Records')
     l10n_cl_dte_status = fields.Selection([
             ('not_sent', 'Pending To Be Sent'),

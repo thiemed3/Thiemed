@@ -103,7 +103,7 @@
             <span t-esc="o.invoice_date_due" t-options='{"widget": "date"}' position="replace"/>
             <span t-esc="o.invoice_payment_term_id.name or ''" position="replace"/>
             <t t-if="o.invoice_incoterm_id" position="replace">
-                <br /><strong>Order:</strong><span t-field="o.origin"/>
+                <br /><strong>Order:</strong><span t-field="o.name"/>
             </t>
             <t t-if="o.l10n_cl_reference_ids" position="replace"/><!-- falta en la guia, pero quitado para avazar -->
         </template>
