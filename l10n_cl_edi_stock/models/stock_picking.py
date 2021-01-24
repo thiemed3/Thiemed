@@ -69,7 +69,20 @@ class Picking(models.Model):
         string='SII Barcode', readonly=True, copy=False,
         help='This XML contains the portion of the DTE XML that should be coded in PDF417 '
              'and printed in the invoice barcode should be present in the printed invoice report to be valid')
+    as_use_document = fields.Boolean(string='Usa Documentos Tributarios', copy=False)
 
+    def button_validate(self):
+        res = super().button_validate()
+        if self.as_use_document:
+            self.create_delivery_guide()
+        return res
+
+    @api.onchange('as_use_document')
+    def get_docuemnt_type(self):
+        self.l10n_latam_document_type_id = self.env['l10n_latam.document.type'].search([('code','=',52)])
+        self.l10n_cl_dte_status = 'manual'
+
+        
     def write(self, vals):
         total = 0.0
         for move in self.move_ids_without_package:
@@ -242,7 +255,8 @@ class Picking(models.Model):
     def _l10n_cl_get_dte_envelope(self, receiver_rut='60803000-K'):
         file_name = 'F{}T{}.xml'.format(self.l10n_latam_document_number, self.l10n_latam_document_type_id.code)
         digital_signature = self.company_id._get_digital_signature(user_id=self.env.user.id)
-        template = self.l10n_latam_document_type_id._is_doc_type_voucher() and self.env.ref(self.env.ref('l10n_cl_edi.envio_dte'))
+        template = self.l10n_latam_document_type_id._is_doc_type_voucher() and self.env.ref(
+            'l10n_cl_edi.envio_boleta') or self.env.ref('l10n_cl_edi_stock.envio_dte')
         dte_rendered = template._render({
             'move': self,
             'RutEmisor': self._l10n_cl_format_vat(self.company_id.vat),
@@ -439,7 +453,7 @@ class Picking(models.Model):
                 'subtotal_amount_taxable': 0,
                 'subtotal_amount_exempt': 0,
                 'vat_percent': False,
-                'total_amount': 0,
+                'total_amount': self.as_amount_total,
             }
         # TODO: add sale_order_price
         values = {}
@@ -522,11 +536,14 @@ class StockMove(models.Model):
     _inherit = "stock.move"
 
     discount = fields.Float(string='Descuento')
+    price_subtotal = fields.Float(string='Price_subtotal')
 
     def _l10n_cl_get_product_price(self):
         if self.partner_id._l10n_cl_is_delivery_guide_with_no_price():
+            self.price_subtotal = self.price_unit * self.product_uom_qty
             return 0
         if self.partner_id._l10n_cl_is_delivery_guide_with_product_price_lst():
+            self.price_subtotal = self.price_unit * self.product_uom_qty
             return self.product_id.lst_price
         # TODO: sale order price
         return self.pricelist_id.get_product_price(self.product_id, self.quantity, self.partner_id,
