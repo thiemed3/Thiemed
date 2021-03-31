@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'AhoraSoft Modulo THIEMED en facturas',
-    'version': '1.0.3',
+    'version': '1.0.5',
     'category': 'sale',
     'author': 'Ahorasoft',
     'summary': 'Customized invoice Management',
     'website': 'http://www.ahorasoft.com',
     'depends': [
         'base',
-        'sale','product', 'account','stock','l10n_cl_edi','stock_landed_costs',
+        'sale','product', 'account','stock','l10n_cl_edi','stock_landed_costs','report_xlsx',
     ],
     'data': [
         # 'security/as_group_view.xml',
-        # 'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         'views/sale_order.xml',
         # 'views/sii_document_class_view.xml',
         'views/as_stock_picking.xml',
         'views/as_pricelist_item.xml',
         'views/stock_landed_cost_views.xml',
+        'views/as_res_config.xml',
+        'wizard/as_kardex_productos_wiz.xml',
         # 'data/res_config_settings.yml',
         'data/res_users_data.xml',
         'data/stock_landed_cost_data.xml',
