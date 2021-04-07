@@ -4,7 +4,7 @@
 
 {
     'name': 'WH/IN Process Thiemed',
-    'version': '14.0.0.0',
+    'version': '1.0.3',
     'category': 'Accounting',
     'summary': 'Make the WH/IN Process for Thiemed',
     'description': """
@@ -14,8 +14,8 @@
     'website': 'http://www.odoolatam.com',
     'depends': ['purchase','product','stock','stock_landed_costs','analytic','account','parse_gs1_128'],
     'data': [
-        # 'views/picking_view.xml', 
-        # 'views/account_invoice_view.xml'
+        'views/picking_view.xml', 
+        'views/account_invoice_view.xml'
         ],
     'demo': [],
     'js': [],

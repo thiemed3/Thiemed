@@ -11,6 +11,13 @@ from odoo.exceptions import UserError
 import logging
 _logger = logging.getLogger(__name__)
 
+class AccountBook(models.Model):
+    _name = 'account.move.book.honorarios'
+
+    dte_resolution_number = fields.Char(
+            string='campo auxiliar',
+    )
+    
 
 class DTECompany(models.Model):
     _inherit = 'res.company'

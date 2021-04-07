@@ -1,0 +1,24 @@
+<odoo>
+    <data>
+        <record id="custom_picking_order_form_gde" model="ir.ui.view">
+            <field name="name">custom.picking.custom.form.inherited</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='location_id']" position="after">
+                    <field name="as_ref_gde" />
+                </xpath>
+            </field>
+        </record>
+          <record id="custom_picking_order_tree_gde" model="ir.ui.view">
+            <field name="name">stock.picking.tree.</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.vpicktree" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="as_ref_gde" />
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

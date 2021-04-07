@@ -16,6 +16,7 @@ class StockPicking(models.Model):
     _inherit = ["stock.picking"]
     
     analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Etiquetas analíticas')
+    l10n_cl_draft_status = fields.Boolean()
     
     @api.model
     def get_products_invoice(self):
