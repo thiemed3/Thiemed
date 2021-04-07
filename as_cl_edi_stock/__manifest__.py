@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Customizaciones Guia de Despacho',
-    'version': '1.0.0',
+    'version': '1.0.1',
     'category': 'stock',
     'summary': 'Customizaciones Guia de Despacho Lozalizacion Chilena',
     'description': """
@@ -13,6 +13,7 @@
     'data': [
         'views/picking_view.xml', 
         'views/report/as_picking_cedible.xml', 
+        'views/report/as_picking_report.xml', 
         ],
     'demo': [],
     'js': [],
