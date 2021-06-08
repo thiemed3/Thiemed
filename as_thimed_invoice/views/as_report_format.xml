@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+  <report 
+        id="nueva_factura" 
+        model="account.move" 
+        string="Factura Cedible"
+        report_type="qweb-pdf"
+        name="as_thimed_invoice.factura_cedible"
+        file="as_thimed_invoice.factura_cedible"
+        attachment_use="False" 
+        menu="True" />
+             
+  </data>
+</odoo>

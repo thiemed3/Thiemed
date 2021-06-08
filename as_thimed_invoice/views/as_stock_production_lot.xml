@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="as_stock_lot_tree_view">
+            <field name="name">as.stock.production.lot.tree</field>
+            <field name="model">stock.production.lot</field>
+            <field name="inherit_id" ref="stock.view_production_lot_tree" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                   <field name="product_qty"/>
+                   <field name="removal_date"/>
+                </xpath>                
+            </field>
+        </record>        
+        <record id="view_products_h_search" model="ir.ui.view">
+            <field name="name">as.stock.production.lot.tree</field>
+            <field name="model">stock.production.lot</field>
+            <field name="inherit_id" ref="stock.search_product_lot_filter"/>
+            <field name="arch" type="xml">
+                <!-- <field name="name" position="after">
+                    <field name="product_qty" string="Cantidad" filter_domain="[('product_qty','ilike',self)]"/>
+                </field> -->
+                <xpath expr="//search" position="inside">
+                <field name="product_qty" string="Cantidad" filter_domain="[('product_qty','=',self)]"/>
+            </xpath>
+            </field>
+        </record>
+
+         <record id="model_account_mov_share" model="ir.actions.server">
+            <field name="name">Actualizar Cantidad</field>
+            <field name="model_id" ref="stock.model_stock_production_lot"/>
+            <field name="binding_model_id" ref="stock.model_stock_production_lot"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">code</field>
+            <field name="code">action = records.get_cantidad_lote()</field>
+        </record>
+    </data>
+</odoo>

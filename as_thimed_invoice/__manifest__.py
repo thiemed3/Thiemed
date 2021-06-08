@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'AhoraSoft Modulo THIEMED en facturas',
-    'version': '1.0.5',
+    'version': '1.0.8',
     'category': 'sale',
     'author': 'Ahorasoft',
     'summary': 'Customized invoice Management',
@@ -23,6 +23,9 @@
         # 'data/res_config_settings.yml',
         'data/res_users_data.xml',
         'data/stock_landed_cost_data.xml',
+        'views/report/as_report_templates.xml',
+        'views/as_report_format.xml',
+        'views/as_stock_production_lot.xml',
 
         # 'views/as_tabla_comisiones.xml',
         # 'views/as_res_config.xml',
