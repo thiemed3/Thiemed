@@ -93,7 +93,7 @@ class Libro(models.Model):
         index=True,
         readonly=True,
         default="draft",
-        track_visibility="onchange",
+        tracking=True,
         copy=False,
         help=" * The 'Draft' status is used when a user is encoding a new and unconfirmed Invoice.\n"
         " * The 'Pro-forma' status is used the invoice does not have an invoice number.\n"
@@ -136,7 +136,7 @@ class Libro(models.Model):
         string="Moneda",
         default=lambda self: self.env.user.company_id.currency_id,
         required=True,
-        track_visibility="always",
+        tracking=True,
     )
     total_afecto = fields.Monetary(string="Total Afecto", readonly=True, compute="set_resumen", store=True,)
     total_exento = fields.Monetary(string="Total Exento", readonly=True, compute="set_resumen", store=True,)
@@ -179,17 +179,6 @@ class Libro(models.Model):
     )
     codigo_rectificacion = fields.Char(string="Código de Rectificación",)
     sii_result = fields.Selection(
-        [
-            ("draft", "Borrador"),
-            ("NoEnviado", "No Enviado"),
-            ("Enviado", "Enviado"),
-            ("Aceptado", "Aceptado"),
-            ("Rechazado", "Rechazado"),
-            ("Reparo", "Reparo"),
-            ("Proceso", "Proceso"),
-            ("Reenviar", "Reenviar"),
-            ("Anulado", "Anulado"),
-        ],
         related="state",
     )
 
@@ -589,7 +578,7 @@ class Boletas(models.Model):
         string="Moneda",
         default=lambda self: self.env.user.company_id.currency_id,
         required=True,
-        track_visibility="always",
+        tracking=True,
     )
     tipo_boleta = fields.Many2one(
         "l10n_latam.document.type",
@@ -599,7 +588,7 @@ class Boletas(models.Model):
     )
     rango_inicial = fields.Integer(string="Rango Inicial", required=True)
     rango_final = fields.Integer(string="Rango Final", required=True)
-    cantidad_boletas = fields.Integer(string="Cantidad Boletas", rqquired=True)
+    cantidad_boletas = fields.Integer(string="Cantidad Boletas", required=True)
     neto = fields.Monetary(string="Monto Neto", required=True)
     impuesto = fields.Many2one(
         "account.tax",
@@ -639,6 +628,6 @@ class ImpuestosLibro(models.Model):
         string="Moneda",
         default=lambda self: self.env.user.company_id.currency_id,
         required=True,
-        track_visibility="always",
+        tracking=True|,
     )
     book_id = fields.Many2one("account.move.book", string="Libro")
