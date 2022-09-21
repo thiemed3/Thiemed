@@ -628,6 +628,6 @@ class ImpuestosLibro(models.Model):
         string="Moneda",
         default=lambda self: self.env.user.company_id.currency_id,
         required=True,
-        tracking=True|,
+        tracking=True,
     )
     book_id = fields.Many2one("account.move.book", string="Libro")
