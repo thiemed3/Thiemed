@@ -9,7 +9,7 @@
 """,
     'author': 'tpco',
     'website': 'http://www.tpco.cl',
-    'depends': ['product','stock','account','l10n_cl_edi','l10n_cl','account'],
+    'depends': ['product','stock','account','l10n_cl_edi','l10n_cl','account', 'mail'],
     'data': [
         'security/ir.model.access.csv', 
         'views/libro_compra_venta.xml', 
