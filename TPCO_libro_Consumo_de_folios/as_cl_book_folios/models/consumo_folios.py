@@ -14,6 +14,7 @@ except Exception as e:
 
 class ConsumoFolios(models.Model):
     _name = "account.move.consumo_folios"
+    _inherit = ['mail.thread']
     _description = "Consumo Diario de Folios"
     order = "fecha_inicio desc"
 
@@ -429,6 +430,7 @@ class DetalleCOnsumoFolios(models.Model):
 
 class DetalleImpuestos(models.Model):
     _name = "account.move.consumo_folios.impuestos"
+    _inherit = ['mail.thread']
     _description = "Línea Impuestos Consumo de folios"
 
     cf_id = fields.Many2one("account.move.consumo_folios", string="Consumo de Folios", ondelete="cascade",)

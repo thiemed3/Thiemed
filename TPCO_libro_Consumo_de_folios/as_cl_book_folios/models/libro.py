@@ -73,6 +73,7 @@ allowed_docs = [
 
 class Libro(models.Model):
     _name = "account.move.book"
+    _inherit = ['mail.thread']
     _description = "Libro de Compra / Venta DTE"
 
     sii_xml_request = fields.Many2one("sii.xml.envio", string="SII XML Request", copy=False)
@@ -571,6 +572,7 @@ class Libro(models.Model):
 
 class Boletas(models.Model):
     _name = "account.move.book.boletas"
+    _inherit = ['mail.thread']
     _description = "Línea de boletas mensuales para Libro de Ventas"
 
     currency_id = fields.Many2one(
@@ -611,6 +613,7 @@ class Boletas(models.Model):
 
 class ImpuestosLibro(models.Model):
     _name = "account.move.book.tax"
+    _inherit = ['mail.thread']
     _description = "línea de impuesto Libro CV"
 
     def get_monto(self):
