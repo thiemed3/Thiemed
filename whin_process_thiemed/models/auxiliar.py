@@ -13,6 +13,7 @@ _logger = logging.getLogger(__name__)
 
 class AccountBook(models.Model):
     _name = 'account.move.book.honorarios'
+    _description = 'Libro de Honorarios'
 
     dte_resolution_number = fields.Char(
             string='campo auxiliar',

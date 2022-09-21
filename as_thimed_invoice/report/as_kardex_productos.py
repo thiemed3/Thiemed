@@ -9,6 +9,7 @@ from time import mktime
 
 class as_kardex_productos_excel(models.AbstractModel):
     _name = 'report.as_thimed_invoice.kardex_productos_report_xls.xlsx'
+    _description = 'Kardex de Productos'
     _inherit = 'report.report_xlsx.abstract'
 
     def generate_xlsx_report(self, workbook, data, lines):        
