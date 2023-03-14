@@ -11,7 +11,7 @@
     'category': 'sale',
     'version': '1.0',
     # any module necessary for this one to work correctly
-    'depends': ['base', 'account', 'stock', 'l10n_cl_edi_stock_delivery_guide', 'account'],
+    'depends': ['base', 'account', 'stock', 'l10n_cl_edi_stock_delivery_guide', 'account', 'l10n_cl'],
     # always loaded
     'data': [
         'reports/report_delivery_guide.xml',
