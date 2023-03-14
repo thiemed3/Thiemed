@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <template id="sale_order_inherit" inherit_id="l10n_cl_edi_stock_delivery_guide.delivery_guide_document_content">
+             <xpath expr="//th[@name='th_code']" position="before">
+                 <th name="lote" class="text-right">
+                    <strong>Lote</strong>
+                </th>
+                 <th name="expiration_date" class="text-center">
+                    <strong>Fecha Vencimiento</strong>
+                </th>
+            </xpath>
+             <xpath expr="//td[@name='td_code']" position="before">
+                 <td>
+                    <span t-field="line.picking_id.move_line_ids_without_package.lot_id.name"/>
+                </td>
+               <td>
+                    <span t-field="line.picking_id.move_line_ids_without_package.lot_id.expiration_date"/>
+                </td>
+            </xpath>
+        </template>
+    </data>
+</odoo>

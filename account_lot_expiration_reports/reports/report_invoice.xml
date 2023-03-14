@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <template id="account_move_lot_expiration" inherit_id="account.report_invoice_document">
+             <xpath expr="//th[@name='th_description']" position="before">
+                 <th name="lote" class="text-right">
+                    <strong>Lote</strong>
+                </th>
+                 <th name="expiration_date" class="text-center">
+                    <strong>Fecha Vencimiento</strong>
+                </th>
+            </xpath>
+             <xpath expr="//td[@name='account_invoice_line_name']" position="before">
+                 <td>
+                    <span t-field="line.lot_id.name"/>
+                </td>
+               <td>
+                    <span t-field="line.lot_id.expiration_date"/>
+                </td>
+            </xpath>
+        </template>
+    </data>
+</odoo>

@@ -54,7 +54,7 @@
                                 <th class="text-right">
                                     <strong>Cantidad</strong>
                                 </th>
-                                <th groups="uom.group_uom">>
+                                <th groups="uom.group_uom">
                                     <strong>Un Med</strong>
                                 </th>
                                 <th name="unit_price" class="text-right" t-if="has_unit_price">
@@ -75,7 +75,7 @@
                             <t t-foreach="o.move_lines" t-as="line">
                                 <t t-set="line_amounts" t-value="total_line_amounts.get(line, {})"/>
                                 <tr>
-                                    <td>
+                                    <td name="td_code">
                                         <span t-field="line.product_id.default_code"/>
                                     </td>
                                     <td>
@@ -83,14 +83,14 @@
                                         <br/>
                                         <span t-field="line.product_id.description_picking"/>
                                     </td>
-                                    <td class="text-right">
+                                    <td class="text-right" name="td_quantity_done">
                                         <span t-field="line.quantity_done"/>
                                     </td>
                                     <td groups="uom.group_uom">
                                         <span t-field="line.product_uom"/>
                                     </td>
 
-                                    <td class="text-right" t-if="has_unit_price">
+                                    <td class="text-right" t-if="has_unit_price" name="td_price_unit">
                                         <span t-esc="float_repr(line_amounts.get('price_unit', False), 2)"/>
                                     </td>
                                     <td class="text-right" t-if="has_discount">
