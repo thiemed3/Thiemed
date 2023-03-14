@@ -10,14 +10,14 @@
                     <strong>Fecha Vencimiento</strong>
                 </th>
             </xpath>
-             <xpath expr="//td[@name='account_invoice_line_name']" position="before">
-                 <td>
-                    <span t-field="line.lot_id.name"/>
-                </td>
-               <td>
-                    <span t-field="line.lot_id.expiration_date"/>
-                </td>
-            </xpath>
+<!--             <xpath expr="//td[@name='account_invoice_line_name']" position="before">-->
+<!--                 <td>-->
+<!--                    <span t-field="line.lot_id.name"/>-->
+<!--                </td>-->
+<!--               <td>-->
+<!--                    <span t-field="line.lot_id.expiration_date"/>-->
+<!--                </td>-->
+<!--            </xpath>-->
         </template>
     </data>
 </odoo>
