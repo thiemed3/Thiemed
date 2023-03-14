@@ -10,7 +10,7 @@
                     <strong>Fecha Vencimiento</strong>
                 </th>
             </xpath>
-             <xpath expr="//td[@name='account_invoice_line_name']" position="before">
+             <xpath expr="//t[@name='account_invoice_line_accountable']" position="before">
                  <td>
                     <span t-field="line.lot_id.name"/>
                 </td>
