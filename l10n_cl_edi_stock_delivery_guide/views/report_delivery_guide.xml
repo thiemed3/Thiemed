@@ -8,24 +8,24 @@
                     <table style="border: 1px solid black;">
                         <tbody>
                             <tr style="border: 1px solid black;">
-                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 6px;">Nombre:</td>
+                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 10px;">Nombre:</td>
                             </tr>
                             <tr style="border: 1px solid black;">
-                                <td style="border: 1px solid black; width:50%; font-size: 6px;">R.U.T.:</td>
-                                <td style="border: 1px solid black; width:50%; font-size: 6px;">FECHA:</td>
+                                <td style="border: 1px solid black; width:50%; font-size: 10px;">R.U.T.:</td>
+                                <td style="border: 1px solid black; width:50%; font-size: 10px;">FECHA:</td>
                             </tr>
                             <tr style="border: 1px solid black;">
-                                <td style="border: 1px solid black; width:50%; font-size: 6px;">RECINTO:</td>
-                                <td style="border: 1px solid black; width:50%; font-size: 6px;">FIRMA:</td>
+                                <td style="border: 1px solid black; width:50%; font-size: 10px;">RECINTO:</td>
+                                <td style="border: 1px solid black; width:50%; font-size: 10px;">FIRMA:</td>
                             </tr>
                             <tr style="border: 1px solid black;">
-                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 6px;">
+                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 10px;">
                                     "El acuse de recibo que se declara en este acto, de acuerdo a lo dispuesto en la letra b) del Artículo 4°, y la letra c) del Artículo 5° de la Ley 19.983, acredita que la entrega de mercaderias o servicio(s) prestado(s) ha(n) sido recibido(s)"
                                 </td>
                             </tr>
                         </tbody>
                     </table>
-                    CEDIBLE CON SU FACTURA
+                    <p style="font-size: 10px;">CEDIBLE CON SU FACTURA </p>
                 </p>
             </div>
         </template>
