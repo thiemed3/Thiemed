@@ -7,7 +7,9 @@ class SaleOrderLine(models.Model):
 
     def _prepare_invoice_line(self, **optional_values):
         res = super(SaleOrderLine, self)._prepare_invoice_line()
-        res.update({'lot_id': self.order_id.picking_ids.move_line_ids_without_package.lot_id.id})
+        for lot in self.order_id.picking_ids.move_line_ids_without_package:
+            if lot.product_id.id == self.product_id.id:
+                res.update({'lot_id': lot.lot_id.id})
         return res
 
 

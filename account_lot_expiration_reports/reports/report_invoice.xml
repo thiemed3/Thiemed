@@ -15,7 +15,7 @@
                     <span t-field="line.lot_id.name"/>
                 </td>
                <td>
-                    <span t-field="line.lot_id.expiration_date"/>
+                    <span t-field="line.lot_id.expiration_date" t-options='{"format": "dd/MM/yyyy"}'/>
                 </td>
             </xpath>
         </template>
