@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <template id="sale_order_inherit" inherit_id="l10n_cl_edi_stock_delivery_guide.delivery_guide_document_content">
-             <xpath expr="//th[@name='th_code']" position="before">
+             <xpath expr="//th[@name='unit_price']" position="before">
                  <th name="lote" class="text-right">
                     <strong>Lote</strong>
                 </th>
@@ -10,22 +10,20 @@
                     <strong>Fecha Vencimiento</strong>
                 </th>
             </xpath>
-             <xpath expr="//td[@name='td_code']" position="before">
+             <xpath expr="//td[@name='td_price_unit']" position="before">
                  <td>
                      <t t-foreach="line.picking_id.move_line_ids_without_package" t-as="lines">
                          <t t-if="lines.product_id.id == line.product_id.id">
                              <span t-field="lines.lot_id.name"/>
                          </t>
                     </t>
-<!--                    <span t-field="line.picking_id.move_line_ids_without_package.lot_id.name"/>-->
                 </td>
                <td>
                     <t t-foreach="line.picking_id.move_line_ids_without_package" t-as="lines">
                          <t t-if="lines.product_id.id == line.product_id.id">
-                             <span t-field="lines.lot_id.expiration_date"/>
+                             <span t-field="lines.lot_id.expiration_date" t-options='{"format": "dd/MM/yyyy"}'/>
                          </t>
                     </t>
-<!--                    <span t-field="line.picking_id.move_line_ids_without_package.lot_id.expiration_date"/>-->
                 </td>
             </xpath>
         </template>

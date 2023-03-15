@@ -8,18 +8,18 @@
                     <table style="border: 1px solid black;">
                         <tbody>
                             <tr style="border: 1px solid black;">
-                                <td colspan="2" style="border: 1px solid black; width:100%">Nombre:</td>
+                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 8px;">Nombre:</td>
                             </tr>
                             <tr style="border: 1px solid black;">
-                                <td style="border: 1px solid black; width:50%">R.U.T.:</td>
-                                <td style="border: 1px solid black; width:50%">FECHA:</td>
+                                <td style="border: 1px solid black; width:50%; font-size: 8px;">R.U.T.:</td>
+                                <td style="border: 1px solid black; width:50%; font-size: 8px;">FECHA:</td>
                             </tr>
                             <tr style="border: 1px solid black;">
-                                <td style="border: 1px solid black; width:50%">RECINTO:</td>
-                                <td style="border: 1px solid black; width:50%">FIRMA:</td>
+                                <td style="border: 1px solid black; width:50%; font-size: 8px;">RECINTO:</td>
+                                <td style="border: 1px solid black; width:50%; font-size: 8px;">FIRMA:</td>
                             </tr>
                             <tr style="border: 1px solid black;">
-                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 9px;">
+                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 8px;">
                                     "El acuse de recibo que se declara en este acto, de acuerdo a lo dispuesto en la letra b) del Artículo 4°, y la letra c) del Artículo 5° de la Ley 19.983, acredita que la entrega de mercaderias o servicio(s) prestado(s) ha(n) sido recibido(s)"
                                 </td>
                             </tr>
