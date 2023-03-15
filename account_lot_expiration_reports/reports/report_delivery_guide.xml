@@ -12,10 +12,20 @@
             </xpath>
              <xpath expr="//td[@name='td_code']" position="before">
                  <td>
-                    <span t-field="line.picking_id.move_line_ids_without_package.lot_id.name"/>
+                     <t t-foreach="line.picking_id.move_line_ids_without_package" t-as="lines">
+                         <t t-if="lines.product_id.id == line.product_id.id">
+                             <span t-field="lines.lot_id.name"/>
+                         </t>
+                    </t>
+<!--                    <span t-field="line.picking_id.move_line_ids_without_package.lot_id.name"/>-->
                 </td>
                <td>
-                    <span t-field="line.picking_id.move_line_ids_without_package.lot_id.expiration_date"/>
+                    <t t-foreach="line.picking_id.move_line_ids_without_package" t-as="lines">
+                         <t t-if="lines.product_id.id == line.product_id.id">
+                             <span t-field="lines.lot_id.expiration_date"/>
+                         </t>
+                    </t>
+<!--                    <span t-field="line.picking_id.move_line_ids_without_package.lot_id.expiration_date"/>-->
                 </td>
             </xpath>
         </template>
