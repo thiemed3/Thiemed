@@ -645,10 +645,6 @@ provider for DTE service.
 class account_journal(models.Model):
     _inherit = "account.journal"
 
-    sucursal_id = fields.Many2one(
-            'sii.sucursal',
-            string="Sucursal",
-        )
     sii_code = fields.Char(
             string="Código SII Sucursal",
             readonly=True,
