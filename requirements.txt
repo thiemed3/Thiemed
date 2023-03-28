@@ -22,7 +22,7 @@ raven
 # stdnum
 urllib3
 # test
-pyOpenSSL
+# pyOpenSSL
 openupgradelib   
 xmltodict
 dicttoxml
