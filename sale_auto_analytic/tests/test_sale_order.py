@@ -43,7 +43,7 @@ class TestSaleOrder(TransactionCase):
             # verificamos que se haya creado la cuenta analitica
             self.assertTrue(sale_order.analytic_account_id)
             # verificamos que la cuenta analitica tenga el mismo nombre que el pedido de venta
-            self.assertEqual(sale_order.analytic_account_id.name, sale_order.name)
+            self.assertEqual(sale_order.analytic_account_id.name, sale_order.name + ' - ' + sale_order.partner_id.name)
             # verificamos que la cuenta analitica tenga el mismo partner que el pedido de venta
             self.assertEqual(sale_order.analytic_account_id.partner_id.id, sale_order.partner_id.id)
             # verificamos que la cuenta analitica tenga el mismo codigo que el pedido de venta
