@@ -18,14 +18,14 @@ class SaleOrder(models.Model):
         res = super(SaleOrder, self)._action_confirm()
         for order in self:
             for picking in order.picking_ids:
-                picking.write({'partner_paciente': order.partner_paciente, 'partner_doctor': order.partner_doctor, 'fecha_operacion': order.fecha_operacion})
+                picking.write({'partner_paciente': order.partner_paciente, 'partner_doctor': order.partner_doctor, 'fecha_operacion': order.fecha_operacion, 'tipo_venta': order.tipo_venta})
         return res
 
     def _create_invoices(self, grouped=False, final=False, date=None):
         res = super(SaleOrder, self)._create_invoices()
         for order in self:
             for invoice in order.invoice_ids:
-                invoice.write({'partner_paciente': order.partner_paciente, 'partner_doctor': order.partner_doctor, 'fecha_operacion': order.fecha_operacion})
+                invoice.write({'partner_paciente': order.partner_paciente, 'partner_doctor': order.partner_doctor, 'fecha_operacion': order.fecha_operacion, 'tipo_venta': order.tipo_venta})
         return res
 
 

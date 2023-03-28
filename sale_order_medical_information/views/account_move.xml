@@ -8,9 +8,10 @@
             <field name="priority" eval="8"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='payment_reference']" position="after">
-                <field name="partner_paciente" />
-                <field name="partner_doctor" />
-                <field name="fecha_operacion" />
+                    <field name="tipo_venta" />
+                    <field name="partner_paciente" attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]}"/>
+                    <field name="partner_doctor" attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]}"/>
+                    <field name="fecha_operacion"  attrs="{'invisible': [('tipo_venta','!=','asistenciacirugia'),('tipo_venta','!=','transito')]}"/>
                 </xpath>
             </field>
         </record>

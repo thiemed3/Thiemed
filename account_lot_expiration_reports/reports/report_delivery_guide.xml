@@ -1,30 +1,215 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
-        <template id="sale_order_inherit" inherit_id="l10n_cl_edi_stock_delivery_guide.delivery_guide_document_content">
-             <xpath expr="//th[@name='unit_price']" position="before">
-                 <th name="lote" class="text-right">
-                    <strong>Lote</strong>
-                </th>
-                 <th name="expiration_date" class="text-center">
-                    <strong>Fecha Vencimiento</strong>
-                </th>
+        <!--        <template id="sale_order_inherit" inherit_id="l10n_cl_edi_stock_delivery_guide.delivery_guide_document_content">-->
+        <!--            <xpath expr="//th[@name='unit_price']" position="before">-->
+        <!--                <th name="lote" class="text-right">-->
+        <!--                    <strong>Lote</strong>-->
+        <!--                </th>-->
+        <!--                <th name="expiration_date" class="text-center">-->
+        <!--                    <strong>Fecha Vencimiento</strong>-->
+        <!--                </th>-->
+        <!--            </xpath>-->
+        <!--            <xpath expr="//td[@name='td_price_unit']" position="before">-->
+        <!--                <td>-->
+        <!--                    <t t-foreach="line.picking_id.move_line_ids_without_package" t-as="lines">-->
+        <!--                        <t t-if="lines.product_id.id == line.product_id.id">-->
+        <!--                            <span t-field="lines.lot_id.name"/>-->
+        <!--                        </t>-->
+        <!--                    </t>-->
+        <!--                </td>-->
+        <!--                <td>-->
+        <!--                    <t t-foreach="line.picking_id.move_line_ids_without_package" t-as="lines">-->
+        <!--                        <t t-if="lines.product_id.id == line.product_id.id">-->
+        <!--                            <span t-field="lines.lot_id.expiration_date" t-options='{"format": "dd/MM/yyyy"}'/>-->
+        <!--                        </t>-->
+        <!--                    </t>-->
+        <!--                </td>-->
+        <!--            </xpath>-->
+        <!--        </template>-->
+
+        <template id="delivery_guide_inherit_table"
+                  inherit_id="l10n_cl_edi_stock_delivery_guide.delivery_guide_document_content">
+            <xpath expr="//table[@t-if='o.move_lines']" position="replace">
+                <t t-if="o.move_line_ids_without_package">
+                    <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
+                    <t t-set="has_unit_price" t-value="prepared_amounts['has_unit_price']"/>
+                    <t t-set="has_discount" t-value="prepared_amounts['has_discount']"/>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th name="th_code">
+                                    <strong>Código</strong>
+                                </th>
+                                <th name="th_product">
+                                    <strong>Producto</strong>
+                                </th>
+                                <th class="text-right">
+                                    <strong>Cantidad</strong>
+                                </th>
+                                <th groups="uom.group_uom">
+                                    <strong>Un Med</strong>
+                                </th>
+                                <th name="lote" class="text-right">
+                                    <strong>Lote</strong>
+                                </th>
+                                <th name="expiration_date" class="text-center">
+                                    <strong>Fecha Vencimiento</strong>
+                                </th>
+                                <th name="unit_price" class="text-right" t-if="has_unit_price">
+                                    <strong>Precio</strong>
+                                </th>
+                                <th name="discount" class="text-right" t-if="has_discount">
+                                    <strong>Descuento</strong>
+                                </th>
+                                <th name="subtotal" class="text-right" t-if="has_unit_price">
+                                    <strong>Subtotal</strong>
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
+                            <t t-set="float_repr" t-value="prepared_amounts['float_repr']"/>
+                            <t t-foreach="o.move_line_ids_without_package" t-as="line">
+                                <t t-set="line_amounts" t-value="total_line_amounts.get(line, {})"/>
+                                <t t-set="unit_price" t-value="0"/>
+                                <tr>
+                                    <td name="td_code">
+                                        <span t-field="line.product_id.default_code"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="line.product_id.name"/>
+                                        <br/>
+                                        <span t-field="line.product_id.description_picking"/>
+                                    </td>
+                                    <td class="text-right" name="td_quantity_done">
+                                        <span t-field="line.qty_done"/>
+                                    </td>
+                                    <td groups="uom.group_uom">
+                                        <span t-field="line.product_uom_id.name"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="line.lot_id.name"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="line.lot_id.expiration_date"
+                                              t-options='{"format": "dd/MM/yyyy"}'/>
+                                    </td>
+
+                                    <td class="text-right" t-if="has_unit_price" name="td_price_unit">
+                                        <t t-if="o.sale_id">
+                                            <t t-foreach="o.sale_id.order_line" t-as="order_line">
+                                                <t t-if="order_line.product_id == line.product_id">
+                                                    <span t-field="order_line.price_unit"/>
+                                                     <t t-set="unit_price" t-value="order_line.price_unit"/>
+                                                </t>
+                                            </t>
+                                        </t>
+                                    </td>
+
+                                    <td class="text-right" t-if="has_discount">
+                                        <span t-esc="line_amounts.get('total_discount_fl', 0.0)"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                    </td>
+                                    <td class="text-right" t-if="has_unit_price">
+                                        <span t-esc="line_amounts.get('total_amount', 0.0)"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                        <span t-esc="unit_price * line.qty_done" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}" />
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
+
+                <t t-if="not o.move_line_ids_without_package">
+                    <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
+                    <t t-set="has_unit_price" t-value="prepared_amounts['has_unit_price']"/>
+                    <t t-set="has_discount" t-value="prepared_amounts['has_discount']"/>
+                   <table class="table table-sm" t-if="o.move_lines">
+                        <thead>
+                            <tr>
+                                <th name="th_code">
+                                    <strong>Código</strong>
+                                </th>
+                                <th name="th_product">
+                                    <strong>Producto</strong>
+                                </th>
+                                <th class="text-right">
+                                    <strong>Cantidad</strong>
+                                </th>
+                                <th groups="uom.group_uom">
+                                    <strong>Un Med</strong>
+                                </th>
+                                <th name="unit_price" class="text-right" t-if="has_unit_price">
+                                    <strong>Precio</strong>
+                                </th>
+                                <th name="discount" class="text-right" t-if="has_discount">
+                                    <strong>Descuento</strong>
+                                </th>
+                                <th name="subtotal" class="text-right" t-if="has_unit_price">
+                                    <strong>Subtotal</strong>
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
+                            <t t-set="float_repr" t-value="prepared_amounts['float_repr']"/>
+                            <t t-foreach="o.move_lines" t-as="line">
+                                <t t-set="line_amounts" t-value="total_line_amounts.get(line, {})"/>
+                                <tr>
+                                    <td name="td_code">
+                                        <span t-field="line.product_id.default_code"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="line.product_id.name"/>
+                                        <br/>
+                                        <span t-field="line.product_id.description_picking"/>
+                                    </td>
+                                    <td class="text-right" name="td_quantity_done">
+                                        <span t-field="line.quantity_done"/>
+                                    </td>
+                                    <td groups="uom.group_uom">
+                                        <span t-field="line.product_uom"/>
+                                    </td>
+
+                                    <td class="text-right" t-if="has_unit_price" name="td_price_unit">
+                                        <span t-esc="float_repr(line_amounts.get('price_unit', False), 2)"/>
+                                    </td>
+                                    <td class="text-right" t-if="has_discount">
+                                        <span t-esc="line_amounts.get('total_discount_fl', 0.0)"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                    </td>
+                                    <td class="text-right" t-if="has_unit_price">
+                                        <span t-esc="line_amounts.get('total_amount', 0.0)"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
             </xpath>
-             <xpath expr="//td[@name='td_price_unit']" position="before">
-                 <td>
-                     <t t-foreach="line.picking_id.move_line_ids_without_package" t-as="lines">
-                         <t t-if="lines.product_id.id == line.product_id.id">
-                             <span t-field="lines.lot_id.name"/>
-                         </t>
-                    </t>
-                </td>
-               <td>
-                    <t t-foreach="line.picking_id.move_line_ids_without_package" t-as="lines">
-                         <t t-if="lines.product_id.id == line.product_id.id">
-                             <span t-field="lines.lot_id.expiration_date" t-options='{"format": "dd/MM/yyyy"}'/>
-                         </t>
-                    </t>
-                </td>
+        </template>
+
+        <template id="delivery_guide_inherit" inherit_id="l10n_cl_edi_stock.stock_informations">
+            <xpath expr="//span[@t-field='o.origin']" position="after">
+                <t t-if="o.tipo_venta == 'transito' or o.tipo_venta == 'asistenciacirugia'">
+                    <br/>
+                    <strong>Fecha de cirugia:</strong>
+                    <span t-field="o.fecha_operacion"/>
+                </t>
+            </xpath>
+            <xpath expr="//t[@t-if='o.partner_id.vat and o.partner_id.l10n_latam_identification_type_id']"
+                   position="after">
+                <t t-if="o.tipo_venta == 'transito' or o.tipo_venta == 'asistenciacirugia'">
+                    <strong>Paciente:</strong>
+                    <span t-field="o.partner_paciente"/><br/>
+                    <strong>Doctor:</strong>
+                    <span t-field="o.partner_doctor"/><br/>
+                </t>
             </xpath>
         </template>
     </data>
