@@ -13,6 +13,7 @@ class SaleOrder(models.Model):
             'partner_id': res.partner_id.id,
             'code': res.name,
             'active': True,
+            'company_id': res.company_id.id,
         })
         # asignamos el analytic account al pedido de venta
         res.analytic_account_id = analityc.id
