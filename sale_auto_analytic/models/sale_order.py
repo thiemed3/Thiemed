@@ -35,5 +35,5 @@ class SaleOrder(models.Model):
     @api.onchange('analytic_account_id')
     def _onchange_analytic_account_id(self):
         # no se puede eliminar la cuenta analitica
-        if not self.analytic_account_id:
+        if not self.analytic_account_id and self.partner_id:
             raise UserError('Usted no puede eliminar la cuenta analítica, debe cancelar el pedido de venta.')
