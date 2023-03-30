@@ -109,12 +109,12 @@
                                     </td>
 
                                     <td class="text-right" t-if="has_discount">
-                                        <span t-esc="line_amounts.get('total_discount_fl', 0.0)"
-                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+<!--                                        <span t-esc="line_amounts.get('total_discount_fl', 0.0)"-->
+<!--                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>-->
                                     </td>
                                     <td class="text-right" t-if="has_unit_price">
-                                        <span t-esc="line_amounts.get('total_amount', 0.0)"
-                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+<!--                                        <span t-esc="line_amounts.get('total_amount', 0.0)"-->
+<!--                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>-->
                                         <span t-esc="unit_price * line.qty_done" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}" />
                                     </td>
                                 </tr>
