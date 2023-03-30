@@ -4,7 +4,7 @@ from odoo import fields, models, api, _
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    check_imprimible = fields.Boolean(string='Imprimible', default=True, tracking=1)
+    check_imprimible = fields.Boolean(string='Producto imprimible', default=True, tracking=1)
 
     def _update_line_check_imprimible(self, values):
         orders = self.mapped('order_id')

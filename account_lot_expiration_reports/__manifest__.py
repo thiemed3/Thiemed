@@ -20,7 +20,6 @@
     ],
     # only loaded in demonstration mode
     'demo': [],
-    #'demo.xml',
     'installable': True,
     'application': False,
     'auto_install': False,
