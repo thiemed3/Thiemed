@@ -11,7 +11,7 @@
                     <t t-set="has_discount" t-value="prepared_amounts['has_discount']"/>
                     <table class="table table-sm">
                         <thead>
-                            <tr>
+                            <tr style="font-size:12px" >
                                 <th name="th_code">
                                     <strong>Código</strong>
                                 </th>
@@ -50,10 +50,10 @@
                                 <t t-set="unit_price" t-value="0"/>
                                 <tr>
                                     <td name="td_code">
-                                        <span t-field="line.product_id.default_code"/>
+                                        <span style="font-size:12px" t-field="line.product_id.default_code"/>
                                     </td>
                                     <td>
-                                        <span t-field="line.product_id.name"/>
+                                        <span style="font-size:12px" t-field="line.product_id.name"/>
                                         <br/>
                                         <span t-field="line.product_id.description_picking"/>
                                     </td>
@@ -63,10 +63,10 @@
                                     <td groups="uom.group_uom">
                                         <span t-field="line.product_uom_id.name"/>
                                     </td>
-                                    <td>
+                                    <td class="text-right">
                                         <span t-field="line.lot_id.name"/>
                                     </td>
-                                    <td>
+                                    <td class="text-right">
                                         <span t-field="line.lot_id.expiration_date"
                                               t-options='{"format": "dd/MM/yyyy"}'/>
                                     </td>
@@ -75,7 +75,7 @@
                                         <t t-if="o.sale_id">
                                             <t t-foreach="o.sale_id.order_line" t-as="order_line">
                                                 <t t-if="order_line.product_id == line.product_id">
-                                                    <span t-field="order_line.price_unit"/>
+                                                    <span t-field="order_line.price_unit" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
                                                      <t t-set="unit_price" t-value="order_line.price_unit"/>
                                                 </t>
                                             </t>
