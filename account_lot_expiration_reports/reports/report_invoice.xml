@@ -186,7 +186,7 @@
                 <t t-if="not o.move_type == 'out_invoice'">
                     <table class="table table-sm o_main_table" name="invoice_line_table">
                         <thead>
-                            <tr>
+                            <tr style="font-size:12px">
                                 <th name="th_description" class="text-left"><span>Description</span></th>
                                 <th name="th_quantity" class="text-right"><span>Quantity</span></th>
                                 <th name="th_priceunit"
