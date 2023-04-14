@@ -3,43 +3,31 @@
     <data>
 
         <template id="delivery_guide_cedible">
+            <style type="text/css">
+                .stilo_cedible {
+                width: 100%;
+                border: 1px solid #ccc;
+                border: 1px solid #ccc;
+                font-size: 12px;
+                text-align: justify;
+                }
+            </style>
             <div name="cedible">
-<!--                <p t-att-style="'color: %s;' % o.company_id.primary_color" class="text-center small">-->
-<!--                    <table style="border: 1px solid black;">-->
-<!--                        <tbody>-->
-<!--                            <tr style="border: 1px solid black;">-->
-<!--                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 10px;">Nombre:</td>-->
-<!--                            </tr>-->
-<!--                            <tr style="border: 1px solid black;">-->
-<!--                                <td style="border: 1px solid black; width:50%; font-size: 10px;">R.U.T.:</td>-->
-<!--                                <td style="border: 1px solid black; width:50%; font-size: 10px;">FECHA:</td>-->
-<!--                            </tr>-->
-<!--                            <tr style="border: 1px solid black;">-->
-<!--                                <td style="border: 1px solid black; width:50%; font-size: 10px;">RECINTO:</td>-->
-<!--                                <td style="border: 1px solid black; width:50%; font-size: 10px;">FIRMA:</td>-->
-<!--                            </tr>-->
-<!--                            <tr style="border: 1px solid black;">-->
-<!--                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 10px;">-->
-<!--                                    "El acuse de recibo que se declara en este acto, de acuerdo a lo dispuesto en la letra b) del Artículo 4°, y la letra c) del Artículo 5° de la Ley 19.983, acredita que la entrega de mercaderias o servicio(s) prestado(s) ha(n) sido recibido(s)"-->
-<!--                                </td>-->
-<!--                            </tr>-->
-<!--                        </tbody>-->
-<!--                    </table>-->
-<!--                    <p style="font-size: 10px;">CEDIBLE CON SU FACTURA </p>-->
-<!--                </p>-->
-
-                    <div style="border:1px solid #ccc">
-                        Nombre: ___________________________________________ R.U.T.:
-                        ________________________________________________________<br />
-                        Recinto: __________________________________________ Fecha: _________________________ Firma:
-                        __________________________<br />
-                        "El acuse de recibo que se declara en este acto, de acuerdo a lo discpuesto en la letra b) del
-                        Art
-                        4, y la letra c) del Art. 5 de la Ley 19.983, acredita que la entrega de mercaderias o
-                        servicio(s)
-                        prestado(s) ha(s) sido recibido(s)"
-                    </div>
-                    <div style="float:right;width:10%"><b>CEDIBLE</b></div>
+                <div class="stilo_cedible">
+                    Nombre: ___________________________________________ R.U.T.:
+                    _________________________<br/>
+                    Recinto: __________________________________________ Fecha: _________________________
+                    Firma:
+                    _______________________<br/>
+                    "El acuse de recibo que se declara en este acto, de acuerdo a lo discpuesto en la
+                    letra b) del Art
+                    4, y la letra c) del Art. 5 de la Ley 19.983, acredita que la entrega de mercaderias
+                    o servicio(s)
+                    prestado(s) ha(s) sido recibido(s)"
+                </div>
+                <div style="text-align:right;font-size:12px">
+                    CEDIBLE
+                </div>
             </div>
         </template>
 
@@ -133,7 +121,8 @@
                                                   t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
                                         </td>
                                     </tr>
-                                    <tr t-if="amounts.get('subtotal_amount_exempt', False)" class="border-black o_subtotal">
+                                    <tr t-if="amounts.get('subtotal_amount_exempt', False)"
+                                        class="border-black o_subtotal">
                                         <td>
                                             <strong>Subtotal Exento</strong>
                                         </td>
@@ -179,11 +168,29 @@
                         </div>
                     </div>
                     <div class="row">
-
-                        <t t-if="copia == 'CEDIBLE CON SU FACTURA'">
-                                <br/>
-                                <t t-call="l10n_cl_edi_stock_delivery_guide.delivery_guide_cedible"/>
+                        <div class="col-6">
+                            <t t-call="l10n_cl_edi_stock.barcode_stamp_footer"/>
+                        </div>
+                        <div class="col-6 text-justify">
+                            <br/>
+                            <t t-if="o.tipo_venta == 'transito' or o.tipo_venta == 'asistenciacirugia'">
+                                <strong>Paciente:</strong>
+                                <span t-field="o.partner_paciente"/><br/>
+                                <strong>Doctor:</strong>
+                                <span t-field="o.partner_doctor"/><br/>
+                                <strong>Fecha de cirugia:</strong>
+                                <span t-field="o.fecha_operacion"/>
                             </t>
+                            <br/> <br/> <br/>
+                            <!--                            <span t-field="o.narration"/>-->
+                            <p t-field="o.note"/>
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <t t-if="copia == 'CEDIBLE CON SU FACTURA'">
+                            <t t-call="l10n_cl_edi_stock_delivery_guide.delivery_guide_cedible"/>
+                        </t>
                     </div>
                 </div>
             </t>

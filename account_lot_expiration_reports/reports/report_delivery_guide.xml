@@ -2,13 +2,12 @@
 <odoo>
     <data>
 
-        <template id="delivery_guide_inherit_table"
-                  inherit_id="l10n_cl_edi_stock_delivery_guide.delivery_guide_document_content">
+        <template id="delivery_guide_inherit_table" inherit_id="l10n_cl_edi_stock_delivery_guide.delivery_guide_document_content">
             <xpath expr="//table[@t-if='o.move_lines']" position="replace">
                 <t t-if="o.move_line_ids_without_package">
                     <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
                     <t t-set="has_unit_price" t-value="prepared_amounts['has_unit_price']"/>
-                    <t t-set="has_discount" t-value="prepared_amounts['has_discount']"/>
+                    <t t-set="has_discount" t-value="0"/>
                     <table class="table table-sm">
                         <thead>
                             <tr style="font-size:12px" >
@@ -33,7 +32,7 @@
                                 <th name="unit_price" class="text-right" t-if="has_unit_price">
                                     <strong>Precio</strong>
                                 </th>
-                                <th name="discount" class="text-right" t-if="has_discount">
+                                <th name="discount" class="text-right" t-if="has_discount > 0">
                                     <strong>Descuento</strong>
                                 </th>
                                 <th name="subtotal" class="text-right" t-if="has_unit_price">
@@ -48,7 +47,7 @@
                             <t t-foreach="o.move_line_ids_without_package" t-as="line">
                                 <t t-set="line_amounts" t-value="total_line_amounts.get(line, {})"/>
                                 <t t-set="unit_price" t-value="0"/>
-                                <tr>
+                                <tr style="font-size:12px">
                                     <td name="td_code">
                                         <span style="font-size:12px" t-field="line.product_id.default_code"/>
                                     </td>
@@ -82,9 +81,10 @@
                                         </t>
                                     </td>
 
-                                    <td class="text-right" t-if="has_discount">
-<!--                                        <span t-esc="line_amounts.get('total_discount_fl', 0.0)"-->
-<!--                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>-->
+                                    <td class="text-right" t-if="has_discount > 0">
+                                        <span t-esc="line_amounts.get('total_discount_fl', 0.0)"  t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                        <t t-set="has_discount" t-value="has_discount + line_amounts.get('total_discount_fl', 0.0) "/>
+
                                     </td>
                                     <td class="text-right" t-if="has_unit_price">
 <!--                                        <span t-esc="line_amounts.get('total_amount', 0.0)"-->
@@ -164,25 +164,6 @@
                             </t>
                         </tbody>
                     </table>
-                </t>
-            </xpath>
-        </template>
-
-        <template id="delivery_guide_inherit" inherit_id="l10n_cl_edi_stock.stock_informations">
-            <xpath expr="//span[@t-field='o.origin']" position="after">
-                <t t-if="o.tipo_venta == 'transito' or o.tipo_venta == 'asistenciacirugia'">
-                    <br/>
-                    <strong>Fecha de cirugia:</strong>
-                    <span t-field="o.fecha_operacion"/>
-                </t>
-            </xpath>
-            <xpath expr="//t[@t-if='o.partner_id.vat and o.partner_id.l10n_latam_identification_type_id']"
-                   position="after">
-                <t t-if="o.tipo_venta == 'transito' or o.tipo_venta == 'asistenciacirugia'">
-                    <strong>Paciente:</strong>
-                    <span t-field="o.partner_paciente"/><br/>
-                    <strong>Doctor:</strong>
-                    <span t-field="o.partner_doctor"/><br/>
                 </t>
             </xpath>
         </template>
