@@ -103,7 +103,7 @@
                     <t t-set="has_discount" t-value="prepared_amounts['has_discount']"/>
                    <table class="table table-sm" t-if="o.move_lines">
                         <thead>
-                            <tr>
+                            <tr style="font-size:12px">
                                 <th name="th_code">
                                     <strong>Código</strong>
                                 </th>
@@ -133,7 +133,7 @@
                             <t t-set="float_repr" t-value="prepared_amounts['float_repr']"/>
                             <t t-foreach="o.move_lines" t-as="line">
                                 <t t-set="line_amounts" t-value="total_line_amounts.get(line, {})"/>
-                                <tr>
+                                <tr style="font-size:12px">
                                     <td name="td_code">
                                         <span t-field="line.product_id.default_code"/>
                                     </td>
