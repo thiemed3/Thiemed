@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_l10n_cl_edi_stock_delivery_guide_l10n_cl_edi_stock_delivery_guide,l10n_cl_edi_stock_delivery_guide.l10n_cl_edi_stock_delivery_guide,model_l10n_cl_edi_stock_delivery_guide_l10n_cl_edi_stock_delivery_guide,base.group_user,1,1,1,1
