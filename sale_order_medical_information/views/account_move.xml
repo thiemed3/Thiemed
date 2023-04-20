@@ -8,10 +8,10 @@
             <field name="priority" eval="8"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='payment_reference']" position="after">
-                    <field name="tipo_venta" />
-                    <field name="partner_paciente" attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]}"/>
-                    <field name="partner_doctor" attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]}"/>
-                    <field name="fecha_operacion"  attrs="{'invisible': [('tipo_venta','!=','asistenciacirugia'),('tipo_venta','!=','transito')]}"/>
+                    <field name="tipo_venta" attrs="{'invisible': [('move_type', 'not in', ['out_invoice'])]}"/>
+                    <field name="partner_paciente" attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito'),('move_type', 'not in', ['out_invoice'])]}"/>
+                    <field name="partner_doctor" attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito'),('move_type', 'not in', ['out_invoice'])]}"/>
+                    <field name="fecha_operacion"  attrs="{'invisible': [('tipo_venta','!=','asistenciacirugia'),('tipo_venta','!=','transito'),('move_type', 'not in', ['out_invoice'])]}"/>
                 </xpath>
             </field>
         </record>
