@@ -12,7 +12,18 @@
     'category': 'sale',
     'version': '1.1',
     # any module necessary for this one to work correctly
-    'depends': ['base', 'account', 'stock', 'sale', 'l10n_cl_edi_stock_delivery_guide', 'account', 'l10n_cl', 'l10n_cl_edi_stock', 'sale_order_medical_information'],
+    'depends': ['base',
+                'account',
+                'stock',
+                'sale',
+                'l10n_cl_edi_stock_delivery_guide',
+                'account',
+                'l10n_cl',
+                'l10n_cl_edi_stock',
+                'sale_order_medical_information',
+                'stock_account',
+                'sale_stock',
+                'product_expiry'],
     # always loaded
     'data': [
         'reports/report_delivery_guide.xml',
