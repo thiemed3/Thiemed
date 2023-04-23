@@ -83,13 +83,13 @@
                                                       id="line_tax_ids"/>
                                             </td>
                                             <td class="text-right o_price_total">
-<!--                                                <span class="text-nowrap" t-field="line.price_subtotal"-->
-<!--                                                      groups="account.group_show_line_subtotals_tax_excluded"/>-->
-                                                <span class="text-nowrap" t-esc="lotes.get(linea_lote).get('cantidad') * line.price_subtotal"
+                                                <span class="text-nowrap" t-field="line.price_subtotal"
+                                                      groups="account.group_show_line_subtotals_tax_excluded" hidden="hidden"/>
+                                                <span class="text-nowrap" t-esc="lotes.get(linea_lote).get('cantidad') * line.price_unit"  t-options='{"widget": "monetary", "display_currency": o.currency_id}'
                                                       groups="account.group_show_line_subtotals_tax_excluded"/>
-<!--                                                <span class="text-nowrap" t-field="line.price_total"-->
-<!--                                                      groups="account.group_show_line_subtotals_tax_included"/>-->
-                                                <span class="text-nowrap" t-esc="lotes.get(linea_lote).get('cantidad') * line.price_total"
+                                                <span class="text-nowrap" t-field="line.price_total"
+                                                      groups="account.group_show_line_subtotals_tax_included" hidden="hidden"/>
+                                                <span class="text-nowrap" t-esc="lotes.get(linea_lote).get('cantidad') * line.price_unit"  t-options='{"widget": "monetary", "display_currency": o.currency_id}'
                                                       groups="account.group_show_line_subtotals_tax_included"/>
                                             </td>
                                         </t>
