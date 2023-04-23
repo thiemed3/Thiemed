@@ -12,7 +12,7 @@ class AccountMove(models.Model):
                    ('transito', 'TRANSITO'),
                    ('asistenciacirugia', 'ASISTENCIA CIRUGIA'),
                    ('consignacion', 'CONSIGNACION')],
-        string='Tipo Venta', required=True)
+        string='Tipo Venta')
 
 
 
