@@ -29,7 +29,7 @@ class AccountMoveLines(models.Model):
                 cantidad_lote[key] = {'cantidad': value, 'nombre': key, 'fecha_vencimiento': ''}
             else:
                 fecha_vencimiento = self.env['stock.production.lot'].search([('name', '=', key)]).expiration_date
-                if len(fecha_vencimiento) > 1:
+                if fecha_vencimiento:
                     cantidad_lote[key] = {'cantidad': value, 'nombre': key, 'fecha_vencimiento': fecha_vencimiento.strftime('%d/%m/%Y')}
                 else:
                     cantidad_lote[key] = {'cantidad': value, 'nombre': key, 'fecha_vencimiento': ''}
