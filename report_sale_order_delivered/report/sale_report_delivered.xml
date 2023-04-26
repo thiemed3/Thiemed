@@ -133,14 +133,18 @@
                                             <span t-esc="', '.join(map(lambda x: (x.description or x.name), line.tax_id))"/>
                                             <!--                                                        <span t-esc="line.tax_id.amount"/>-->
                                             <t t-set="iva"
-                                               t-value="(line.price_subtotal * (line.tax_id.amount / 100) ) + iva"/>
+                                               t-value="((line.qty_delivered * line.price_unit) * (line.tax_id.amount / 100) ) + iva"/>
                                         </td>
                                         <td name="td_subtotal" class="text-right o_price_total">
+                                            <span t-esc="line.qty_delivered * line.price_unit"
+                                                  groups="account.group_show_line_subtotals_tax_excluded" t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'/>
+                                            <span t-esc="line.qty_delivered * line.price_unit"
+                                                  groups="account.group_show_line_subtotals_tax_included" t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'/>
                                             <span t-field="line.price_subtotal"
-                                                  groups="account.group_show_line_subtotals_tax_excluded"/>
+                                                  groups="account.group_show_line_subtotals_tax_excluded" hidden="hidden"/>
                                             <span t-field="line.price_total"
-                                                  groups="account.group_show_line_subtotals_tax_included"/>
-                                            <t t-set="gravado" t-value="line.price_subtotal + gravado"/>
+                                                  groups="account.group_show_line_subtotals_tax_included" hidden="hidden"/>
+                                            <t t-set="gravado" t-value="(line.qty_delivered * line.price_unit) + gravado"/>
                                         </td>
                                     </t>
                                     </t>
