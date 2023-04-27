@@ -207,15 +207,15 @@
                                                       t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'/>
                                             </td>
                                         </t>
-                                        <t t-else="">
-                                            <td name="td_amount_by_group_label">
-                                                <span t-esc="iva"/>
-                                            </td>
-                                            <td name="td_amount_by_group" class="text-right o_price_total">
-                                                <span t-esc="iva"
-                                                      t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'/>
-                                            </td>
-                                        </t>
+<!--                                        <t t-else="">-->
+<!--                                            <td name="td_amount_by_group_label">-->
+<!--                                                <span t-esc="iva"/>-->
+<!--                                            </td>-->
+<!--                                            <td name="td_amount_by_group" class="text-right o_price_total">-->
+<!--                                                <span t-esc="iva"-->
+<!--                                                      t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'/>-->
+<!--                                            </td>-->
+<!--                                        </t>-->
                                     </tr>
                                 </t>
                                 <tr class="border-black o_total">
