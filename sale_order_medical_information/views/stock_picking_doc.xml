@@ -7,12 +7,17 @@
             <field name="inherit_id" ref="stock.view_picking_form"/>
             <field name="priority" eval="8"/>
             <field name="arch" type="xml">
-            <xpath expr="//field[@name='location_id']" position="after">
-                <field name="tipo_venta" />
-                <field name="partner_paciente" attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]}"/>
-                <field name="partner_doctor" attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]}"/>
-                <field name="fecha_operacion"  attrs="{'invisible': [('tipo_venta','!=','asistenciacirugia'),('tipo_venta','!=','transito')]}"/>
-            </xpath>
+                <xpath expr="//field[@name='location_id']" position="after">
+                    <field name="tipo_venta"/>
+                    <field name="partner_paciente"
+                           attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]}"/>
+                    <field name="partner_doctor"
+                           attrs="{'invisible': [('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]}"/>
+                    <field name="fecha_operacion"
+                           attrs="{'invisible': [('tipo_venta','!=','asistenciacirugia'),('tipo_venta','!=','transito')]}"/>
+                    <field name="asistente_ciguria" attrs="{'invisible': [('tipo_venta','!=','asistenciacirugia')]}"
+                           options="{'no_create': True}"/>
+                </xpath>
             </field>
         </record>
     </data>
