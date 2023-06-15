@@ -24,6 +24,9 @@ class AccountMoveLines(models.Model):
         cantidad_lote = json.loads(self.cantidad_lote)
         # si el diccionario esta vacio actualizar con el valor de la cantidad de la linea de facturaz
 
+
+        # VALIDA SI LA FACTURA ESTA AGREGADA EN EL PICKING
+        # if self.move_id.sale_order_id.picking_ids.account_move_id == self.id:
         for key, value in cantidad_lote.items():
             for rec in self:
                 move_lines = rec.sale_line_ids.move_ids.mapped('move_line_ids').filtered(lambda x: x.product_id == rec.product_id)
