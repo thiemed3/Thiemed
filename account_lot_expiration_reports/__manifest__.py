@@ -10,7 +10,7 @@
     # Check https://github.com/odoo/odoo/blob/master/odoo/addons/base/module/module_data.xml
     # for the full list
     'category': 'sale',
-    'version': '16.2',
+    'version': '1.1',
     # any module necessary for this one to work correctly
     'depends': ['base',
                 'account',
@@ -28,8 +28,9 @@
     'data': [
         'reports/report_delivery_guide.xml',
         'reports/report_invoice.xml',
-        # 'views/account_move_line.xml',
-        # 'views/sale_order_line.xml',
+        'views/stock_picking_views.xml',
+        # 'views/sale_order_views.xml',
+        # 'views/account_move_views.xml',
     ],
     # only loaded in demonstration mode
     'demo': [],
