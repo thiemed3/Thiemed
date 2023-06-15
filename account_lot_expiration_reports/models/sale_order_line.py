@@ -22,14 +22,16 @@ class SaleOrderLine(models.Model):
             # RECORRER LOS MOVIENMIENTOS DE LA LINEA DE VENTA Y OBTENER EL LOTE Y CANTIDAD.
             for move_line in move_lines:
                 if move_line.lot_id:
-                    if move_line.lot_id.name in cantidad_lote:
-                        if move_line.picking_id.picking_type_code == 'outgoing':
-                            cantidad_lote[move_line.lot_id.name] += move_line.qty_done
-                        if move_line.picking_id.picking_type_code == 'incoming':
-                            cantidad_lote[move_line.lot_id.name] -= move_line.qty_done
+                    # VALIDAMOS QUE TENGA ASIGNADA FACTURA EL MOVIMIENTO, SI NO TIENE RECORRE LA FUNCION, SI TIENE NO LO CONSIDERA.
+                    if not move_line.picking_id.account_move_id:
+                        if move_line.lot_id.name in cantidad_lote:
+                            if move_line.picking_id.picking_type_code == 'outgoing':
+                                cantidad_lote[move_line.lot_id.name] += move_line.qty_done
+                            if move_line.picking_id.picking_type_code == 'incoming':
+                                cantidad_lote[move_line.lot_id.name] -= move_line.qty_done
 
-                    else:
-                        cantidad_lote[move_line.lot_id.name] = move_line.qty_done
+                        else:
+                            cantidad_lote[move_line.lot_id.name] = move_line.qty_done
 
             # Crea una lista de las llaves que se deben eliminar
             keys_to_remove = []

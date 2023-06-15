@@ -17,3 +17,15 @@ class AccountMove(models.Model):
                 rec.sale_order_id = False
 
 
+    # AGREGAR EL ID DE LA FACTURA EN LA GUIA DE DESPACHO AL CONFIRMAR LA FACTURA
+    def action_post(self):
+        res = super(AccountMove, self).action_post()
+        for rec in self:
+            if rec.invoice_origin:
+                sale_order = self.env['sale.order'].search([('name', '=', rec.invoice_origin)])
+                if sale_order.picking_ids:
+                    if not sale_order.picking_ids.account_move_id:
+                        sale_order.picking_ids.write({'account_move_id': rec.id})
+        return res
+
+
