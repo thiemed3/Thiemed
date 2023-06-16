@@ -55,6 +55,7 @@ class AccountMoveLines(models.Model):
                                                   'precio': sale_lines.price_unit,
                                                   'ratio': 1}
                 if sale_lines.product_uom.uom_type == 'bigger':
+                    valor = 0
                     if key == 'SIN LOTE':
                         valor = rec.quantity * sale_lines.product_uom.factor_inv
                         cantidad_lote[key] = {'cantidad': valor,
