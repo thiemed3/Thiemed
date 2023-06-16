@@ -26,7 +26,7 @@ class AccountMoveLines(models.Model):
 
 
         for key, value in cantidad_lote.items():
-            valor = 0
+
             for rec in self:
                 move_lines = rec.sale_line_ids.move_ids.mapped('move_line_ids').filtered(lambda x: x.product_id == rec.product_id)
                 sale_lines = rec.mapped('sale_line_ids').filtered(lambda x: x.product_id == rec.product_id)
@@ -56,6 +56,7 @@ class AccountMoveLines(models.Model):
                                                   'precio': sale_lines.price_unit,
                                                   'ratio': 1}
                 if sale_lines.product_uom.uom_type == 'bigger':
+
                     if key == 'SIN LOTE':
                         valor = rec.quantity * sale_lines.product_uom.factor_inv
                         cantidad_lote[key] = {'cantidad': valor,
