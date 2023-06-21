@@ -4,7 +4,10 @@ import json
 class AccountMoveLines(models.Model):
     _inherit = 'account.move.line'
 
-    cantidad_lote = fields.Char(string='Cantidad Lote', compute='_compute_cantidad_lote')
+    # cantidad_lote = fields.Char(string='Cantidad Lote', compute='_compute_cantidad_lote')
+    cantidad_lote = fields.Char(string='Cantidad Lote')
+    # stock_move_line_id = fields.One2many('stock.move.line', 'account_move_line_id', string='Linea de Movimiento')
+
 
     def _compute_cantidad_lote(self):
         for rec in self:
@@ -32,7 +35,7 @@ class AccountMoveLines(models.Model):
                 sale_lines = rec.mapped('sale_line_ids').filtered(lambda x: x.product_id == rec.product_id)
                 if sale_lines.product_uom.uom_type == 'reference':
                     if key == 'SIN LOTE':
-                        cantidad_lote[key] = {'cantidad': rec.quantity,
+                        cantidad_lote[key] = {'cantidad': value,
                                               'nombre': key,
                                               'fecha_vencimiento': '',
                                               'udm': move_lines.product_uom_id.name,
@@ -42,14 +45,14 @@ class AccountMoveLines(models.Model):
                         fecha_vencimiento = self.env['stock.production.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
                         # fecha = fecha_vencimiento.expiration_date
                         if fecha_vencimiento:
-                            cantidad_lote[key] = {'cantidad': rec.quantity,
+                            cantidad_lote[key] = {'cantidad': value,
                                                   'nombre': key,
                                                   'fecha_vencimiento': fecha_vencimiento.strftime('%d/%m/%Y'),
                                                   'udm': move_lines.product_uom_id.name,
                                                   'precio': sale_lines.price_unit,
                                                   'ratio': 1}
                         else:
-                            cantidad_lote[key] = {'cantidad': rec.quantity,
+                            cantidad_lote[key] = {'cantidad': value,
                                                   'nombre': key,
                                                   'fecha_vencimiento': '',
                                                   'udm': move_lines.product_uom_id.name,
@@ -59,7 +62,7 @@ class AccountMoveLines(models.Model):
 
                     if key == 'SIN LOTE':
                         valor = rec.quantity * sale_lines.product_uom.factor_inv
-                        cantidad_lote[key] = {'cantidad': valor,
+                        cantidad_lote[key] = {'cantidad': value,
                                               'nombre': key,
                                               'fecha_vencimiento': '',
                                               'udm': move_lines.product_uom_id.name,
@@ -69,14 +72,14 @@ class AccountMoveLines(models.Model):
                         fecha_vencimiento = self.env['stock.production.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
                         # fecha = fecha_vencimiento.expiration_date
                         if fecha_vencimiento:
-                            cantidad_lote[key] = {'cantidad': valor,
+                            cantidad_lote[key] = {'cantidad': value,
                                                   'nombre': key,
                                                   'fecha_vencimiento': fecha_vencimiento.strftime('%d/%m/%Y'),
                                                   'udm': move_lines.product_uom_id.name,
                                                   'precio': sale_lines.price_unit,
                                                   'ratio': int(sale_lines.product_uom.factor_inv)}
                         else:
-                            cantidad_lote[key] = {'cantidad': valor,
+                            cantidad_lote[key] = {'cantidad': value,
                                                   'nombre': key,
                                                   'fecha_vencimiento': '',
                                                   'udm': move_lines.product_uom_id.name,
@@ -91,3 +94,5 @@ class AccountMoveLines(models.Model):
 
     def get_lote_fvencimiento(self, diccionario, llave):
         return diccionario.get(llave).get('fecha_vencimiento')
+
+
