@@ -5,7 +5,7 @@ class StockPickingDoc(models.Model):
     _inherit = 'stock.picking'
 
     l10n_cl_reference_ids = fields.One2many('l10n_cl.account.invoice.reference', 'picking_id', readonly=True,
-                                            states={'draft': [('readonly', False)]}, string='Reference Records')
+                                            states={'draft': [('readonly', False)],'waiting':[('readonly', False)]}, string='Reference Records')
 
 class AccountInvoiceReference(models.Model):
     _inherit = 'l10n_cl.account.invoice.reference'
