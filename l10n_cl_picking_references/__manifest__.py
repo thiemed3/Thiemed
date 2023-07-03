@@ -12,7 +12,8 @@
     'license': 'OPL-1',
     'website': "",
     'data': [
-        'views/stock_picking.xml'
+        'views/stock_picking.xml',
+        'models/stock_picking.py'
     ],
     'demo': [],
     'installable': True,
