@@ -13,7 +13,7 @@
     'website': "",
     'data': [
         'views/stock_picking.xml',
-        'models/stock_picking.py'
+        'views/report_delivery_guide.xml'
     ],
     'demo': [],
     'installable': True,
