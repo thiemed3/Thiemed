@@ -7,7 +7,7 @@ class SaleOrder(models.Model):
     partner_paciente = fields.Char(string="Paciente")
     partner_doctor = fields.Many2one('res.partner', string="Doctor")
     fecha_operacion = fields.Datetime(string="Fecha operacion")
-    asistente_cirugia = fields.Many2one('res.users', string="Asistente cirugia", default=lambda self: self.env.user.id)
+    asistente_cirugia = fields.Many2one('res.users', string="Asistente cirugia", default=lambda self: self.user_id)
     tipo_venta = fields.Selection(
         selection=[('ventadirecta', 'VENTA DIRECTA'),
                    ('transito', 'TRANSITO'),
