@@ -13,7 +13,8 @@
     'website': "",
     'data': [
         'views/stock_picking.xml',
-        'views/report_delivery_guide.xml'
+        'views/report_delivery_guide.xml',
+        'views/dte_template.xml',
     ],
     'demo': [],
     'installable': True,
