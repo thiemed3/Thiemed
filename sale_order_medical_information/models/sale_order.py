@@ -38,8 +38,8 @@ class SaleOrder(models.Model):
         return res
 
     @api.onchange('partner_id')
-    def _onchange_partner_id(self):
-        res =  super(SaleOrder, self)._onchange_partner_id()
+    def onchange_partner_id(self):
+        res =  super(SaleOrder, self).onchange_partner_id()
         self.asistente_cirugia = self['user_id']
         return res
 
