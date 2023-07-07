@@ -7,7 +7,7 @@
 
     """,
     'summary': """""",
-    'depends': ['base', 'l10n_cl', 'stock'],
+    'depends': ['base','stock', 'l10n_cl_edi_stock'],
     'currency': 'CLP',
     'license': 'OPL-1',
     'website': "",
@@ -20,4 +20,5 @@
     'auto_install': False,
     'application': False,
 }
+
 
