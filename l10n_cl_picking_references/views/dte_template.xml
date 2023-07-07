@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <odoo>
     <data>
-        <template id="dte_subtemplate">
+        <template id="dte_subtemplate" inherit_id="l10n_cl_edi_stock.dte_subtemplate">
             <xpath expr="//t[@t-if='picking.sale_id.client_order_ref']" position="replace">
                 <t t-if="picking.l10n_cl_reference_ids">
                     <t t-set="reference_number" t-value="1"/>
