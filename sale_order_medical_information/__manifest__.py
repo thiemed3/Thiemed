@@ -8,7 +8,7 @@
         
     """,
     'summary': """""",
-    'depends': ['base', 'sale_management', 'sale_stock'],
+    'depends': ['base', 'sale', 'sale_management', 'sale_stock'],
     'price': 25,
     'currency': 'EUR',
     'license': 'OPL-1',
