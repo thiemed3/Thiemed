@@ -7,7 +7,7 @@ class SaleOrder(models.Model):
     partner_paciente = fields.Char(string="Paciente")
     partner_doctor = fields.Many2one('res.partner', string="Doctor")
     fecha_operacion = fields.Datetime(string="Fecha operacion")
-    asistente_cirugia = fields.Many2one('res.users', string="Asistente cirugia", default=lambda self: self.user_id)
+    asistente_cirugia = fields.Many2one('res.users', string="Asistente cirugia", default=lambda self: self.env.user)
     tipo_venta = fields.Selection(
         selection=[('ventadirecta', 'VENTA DIRECTA'),
                    ('transito', 'TRANSITO'),
@@ -35,4 +35,17 @@ class SaleOrder(models.Model):
                                'fecha_operacion': order.fecha_operacion,
                                'tipo_venta': order.tipo_venta,
                                'asistente_cirugia': order.asistente_cirugia})
+        return res
+
+    @api.onchange('partner_id')
+    def _onchange_partner_id(self):
+        res =  super(SaleOrder, self)._onchange_partner_id()
+        self.asistente_cirugia = self['user_id']
+        return res
+
+    @api.onchange('user_id')
+    def onchange_user_id(self):
+        res = super(SaleOrder, self).onchange_user_id()
+        if self.user_id:
+            self.asistente_cirugia = self['user_id']
         return res
