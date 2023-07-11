@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="account_lot_expiration_reports_form_inherit_form_inherit" model="ir.ui.view">
+            <field name="name">account_lot_expiration_reports.form_inherit</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="priority" eval="8"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='group_id']" position="after">
+                    <field name="account_move_id" widget="many2many"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

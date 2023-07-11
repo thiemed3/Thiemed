@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="stock_move_lines_form_inherit" model="ir.ui.view">
+            <field name="name">account_lote_expiration_repots.stock_move_lines.form</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_move_line_tree"/>
+            <field name="priority" eval="8"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='state']" position="after">
+                    <field name="is_factured"/>
+<!--                    <field name="account_move_line_id"/>-->
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
