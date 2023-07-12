@@ -18,28 +18,6 @@
                     <field name="asistente_cirugia" attrs="{'invisible': [('tipo_venta','!=','asistenciacirugia')]}"
                            options="{'no_create': True}"/>
                 </xpath>
-                <notebook position="inside">
-                    <page string="Cross Reference Documents" name="cross_reference_docs">
-                        <field name="l10n_cl_reference_ids" mode="tree">
-                            <form>
-                                <group>
-                                    <field name="origin_doc_number" required="True"/>
-                                    <field name="l10n_cl_reference_doc_type_selection" required="True"/>
-                                    <field name="reference_doc_code" attrs="{'invisible': [('l10n_cl_reference_doc_type_selection', 'not in', ['39','33','34','71','38','61','56','29','30','32','40','43','45','46','55','60','901','914','911','904','905','906','907','35','41','70','110','111','112','50','52'])]}"/>
-                                    <field name="reason"/>
-                                    <field name="date"/>
-                                </group>
-                            </form>
-                            <tree>
-                                <field name="origin_doc_number" required="True"/>
-                                <field name="l10n_cl_reference_doc_type_selection" required="True"/>
-                                <field name="reference_doc_code"/>
-                                <field name="reason"/>
-                                <field name="date"/>
-                            </tree>
-                        </field>
-                    </page>
-                </notebook>
             </field>
         </record>
     </data>
