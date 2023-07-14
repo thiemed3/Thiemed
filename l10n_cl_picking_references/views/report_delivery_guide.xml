@@ -5,7 +5,7 @@
             <xpath expr="//div[@id='references']" position="replace">
                 <div id="references" class="row">
                     <div class="col-12">
-                        <t t-if="o.l10n_cl_reference_ids">
+                        <t t-if="o.l10n_cl_reference_ids or o.sale_id.client_order_ref">
                             <table class="table table-sm o_main_table small" name="invoice_references">
                                 <thead>
                                     <tr>
