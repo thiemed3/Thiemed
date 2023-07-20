@@ -17,7 +17,7 @@
         'views/sale_order_doc.xml',
         'views/stock_picking_doc.xml',
         'views/account_move.xml',
-        # 'views/res_config_setting.xml',
+        'views/res_config_setting.xml',
     ],
     'demo': [],
     'installable': True,
