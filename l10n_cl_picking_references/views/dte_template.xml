@@ -3,8 +3,20 @@
     <data>
         <template id="dte_subtemplate" inherit_id="l10n_cl_edi_stock.dte_subtemplate">
             <xpath expr="//t[@t-if='picking.sale_id.client_order_ref']" position="replace">
+                <t t-if="picking.sale_id.client_order_ref">
+                    <Referencia>
+                        <NroLinRef t-esc="'1'"/>
+                        <TpoDocRef t-esc="'801'"/>
+                        <FolioRef t-esc="picking.sale_id.client_order_ref"/>
+                        <FchRef t-esc="picking.sale_id.date_dte.date()"/>
+                        <RazonRef t-esc="'Orden de compra Ref Cliente'"/>
+                    </Referencia>
+                </t>
                 <t t-if="picking.l10n_cl_reference_ids">
                     <t t-set="reference_number" t-value="1"/>
+                    <t t-if="picking.sale_id.client_order_ref">
+                        <t t-set="reference_number" t-value="reference_number + 1"/>
+                    </t>
                     <t t-foreach="picking.l10n_cl_reference_ids" t-as="reference_id">
                     <Referencia>
                         <NroLinRef t-esc="reference_number"/>
