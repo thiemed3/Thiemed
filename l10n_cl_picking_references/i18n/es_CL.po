@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 14.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-11 13:18+0000\n"
-"PO-Revision-Date: 2023-07-11 09:21-0400\n"
+"POT-Creation-Date: 2023-08-06 01:59+0000\n"
+"PO-Revision-Date: 2023-08-05 22:02-0400\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es\n"
@@ -19,27 +19,42 @@ msgstr ""
 
 #. module: l10n_cl_picking_references
 #: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
-msgid "<span>Codigo Doc</span>"
-msgstr "<span>Codigo Doc</span>"
+msgid "<span>801</span>"
+msgstr "<span>801</span>"
 
 #. module: l10n_cl_picking_references
 #: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
-msgid "<span>Fecha</span>"
+msgid "<span>Date</span>"
 msgstr "<span>Fecha</span>"
 
 #. module: l10n_cl_picking_references
 #: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
-msgid "<span>Razon</span>"
+msgid "<span>Doc Code</span>"
+msgstr "<span>Codigo Doc</span>"
+
+#. module: l10n_cl_picking_references
+#: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
+msgid "<span>Orden de compra del cliente</span>"
+msgstr "<span>Orden de compra del cliente</span>"
+
+#. module: l10n_cl_picking_references
+#: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
+msgid "<span>Orden de compra</span>"
+msgstr "<span>Orden de compra</span>"
+
+#. module: l10n_cl_picking_references
+#: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
+msgid "<span>Origin Ref</span>"
+msgstr "<span>referencia de origen</span>"
+
+#. module: l10n_cl_picking_references
+#: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
+msgid "<span>Reason</span>"
 msgstr "<span>Razon</span>"
 
 #. module: l10n_cl_picking_references
 #: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
-msgid "<span>Ref Origen</span>"
-msgstr "<span>Ref Origen</span>"
-
-#. module: l10n_cl_picking_references
-#: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
-msgid "<span>Tipoo Doc Referencia</span>"
+msgid "<span>Reference Doc Type</span>"
 msgstr "<span>Tipoo Doc Referencia</span>"
 
 #. module: l10n_cl_picking_references
@@ -54,18 +69,26 @@ msgstr "Referencias cruzadas de documentos"
 
 #. module: l10n_cl_picking_references
 #: model:ir.model.fields,field_description:l10n_cl_picking_references.field_l10n_cl_account_invoice_reference__display_name
+#: model:ir.model.fields,field_description:l10n_cl_picking_references.field_sale_order__display_name
 #: model:ir.model.fields,field_description:l10n_cl_picking_references.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
 
 #. module: l10n_cl_picking_references
+#: model:ir.model.fields,field_description:l10n_cl_picking_references.field_sale_order__date_dte
+msgid "Fecha"
+msgstr "Fecha"
+
+#. module: l10n_cl_picking_references
 #: model:ir.model.fields,field_description:l10n_cl_picking_references.field_l10n_cl_account_invoice_reference__id
+#: model:ir.model.fields,field_description:l10n_cl_picking_references.field_sale_order__id
 #: model:ir.model.fields,field_description:l10n_cl_picking_references.field_stock_picking__id
 msgid "ID"
 msgstr "ID (identificación)"
 
 #. module: l10n_cl_picking_references
 #: model:ir.model.fields,field_description:l10n_cl_picking_references.field_l10n_cl_account_invoice_reference____last_update
+#: model:ir.model.fields,field_description:l10n_cl_picking_references.field_sale_order____last_update
 #: model:ir.model.fields,field_description:l10n_cl_picking_references.field_stock_picking____last_update
 msgid "Last Modified on"
 msgstr "Última modificación en"
@@ -74,6 +97,11 @@ msgstr "Última modificación en"
 #: model:ir.model.fields,field_description:l10n_cl_picking_references.field_stock_picking__l10n_cl_reference_ids
 msgid "Reference Records"
 msgstr "Registro referenciado"
+
+#. module: l10n_cl_picking_references
+#: model:ir.model,name:l10n_cl_picking_references.model_sale_order
+msgid "Sales Order"
+msgstr "Pedido de venta"
 
 #. module: l10n_cl_picking_references
 #: model:ir.model,name:l10n_cl_picking_references.model_stock_picking
