@@ -45,17 +45,17 @@ msgstr "<span>Orden de compra</span>"
 #. module: l10n_cl_picking_references
 #: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
 msgid "<span>Origin Ref</span>"
-msgstr "<span>referencia de origen</span>"
+msgstr "<span>Referencia de Origen</span>"
 
 #. module: l10n_cl_picking_references
 #: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
 msgid "<span>Reason</span>"
-msgstr "<span>Razon</span>"
+msgstr "<span>Razón</span>"
 
 #. module: l10n_cl_picking_references
 #: model_terms:ir.ui.view,arch_db:l10n_cl_picking_references.report_delivery_guide_inherit
 msgid "<span>Reference Doc Type</span>"
-msgstr "<span>Tipoo Doc Referencia</span>"
+msgstr "<span>Tipo Doc Referencia</span>"
 
 #. module: l10n_cl_picking_references
 #: model:ir.model,name:l10n_cl_picking_references.model_l10n_cl_account_invoice_reference
@@ -96,7 +96,7 @@ msgstr "Última modificación en"
 #. module: l10n_cl_picking_references
 #: model:ir.model.fields,field_description:l10n_cl_picking_references.field_stock_picking__l10n_cl_reference_ids
 msgid "Reference Records"
-msgstr "Registro referenciado"
+msgstr "Registro Referenciado"
 
 #. module: l10n_cl_picking_references
 #: model:ir.model,name:l10n_cl_picking_references.model_sale_order
