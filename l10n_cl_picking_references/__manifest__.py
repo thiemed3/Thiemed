@@ -4,7 +4,6 @@
     'version': '14.0.1.0',
     'author': 'Pedro Arroyo - Tierranube',
     'description': """
-
     """,
     'summary': """""",
     'depends': ['base','stock', 'l10n_cl_edi_stock', 'sale'],
