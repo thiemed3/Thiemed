@@ -8,7 +8,7 @@
                         <NroLinRef t-esc="'1'"/>
                         <TpoDocRef t-esc="'801'"/>
                         <FolioRef t-esc="picking.sale_id.client_order_ref"/>
-                        <FchRef t-esc="picking.sale_id.date_dte.date() if picking.sale_id.date_dte else picking.sale_id.date_order.date()"/>
+                        <FchRef t-esc="picking.sale_id.date_order.date()"/>
                         <RazonRef t-esc="'Orden de compra Ref Cliente'"/>
                     </Referencia>
                 </t>

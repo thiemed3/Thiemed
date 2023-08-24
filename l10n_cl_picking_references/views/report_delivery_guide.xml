@@ -23,7 +23,7 @@
                                             <td class="text-left" name="td_reference_doc_type"><span>Orden de compra</span></td>
                                             <td class="text-left" name="td_reference_code"><span>801</span></td>
                                             <td class="text-left" name="td_reference_reason"><span>Orden de compra del cliente</span></td>
-                                            <td class="text-left" name="td_reference_date"><span t-esc="o.sale_id.date_dte.date() if o.sale_id.date_dte else o.sale_id.date_order.date()" t-options="{'widget': 'date'}"/></td>
+                                            <td class="text-left" name="td_reference_date"><span t-esc="o.sale_id.date_order.date()" t-options="{'widget': 'date'}"/></td>
                                         </tr>
                                     </t>
                                 <t t-foreach="o.l10n_cl_reference_ids" t-as="refs">
