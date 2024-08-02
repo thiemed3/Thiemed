@@ -8,9 +8,9 @@
     "category": "Reporting",
     "version": "17.0.1.0.1",
     "license": "AGPL-3",
-    "external_dependencies": {"python": ["xlsxwriter", "xlrd"]},
+    #"external_dependencies": {"python": ["xlsxwriter", "xlrd"]},
     "depends": ["base", "web"],
-    "data": ["views/webclient_templates.xml"],
-    "demo": ["demo/report.xml"],
+    #"data": ["views/webclient_templates.xml"],
+    #"demo": ["demo/report.xml"],
     "installable": True,
 }
