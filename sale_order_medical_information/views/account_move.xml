@@ -16,7 +16,7 @@
                     <field name="fecha_operacion"
                            invisible="[('tipo_venta','!=','asistenciacirugia'),('tipo_venta','!=','transito')]"/>
                     <field name="asistente_cirugia"
-                           invisible="tipo_venta != 'asistenciacirugia"
+                           invisible="[(tipo_venta != 'asistenciacirugia)]"
                            options="{'no_create': True}"/>
                 </xpath>
             </field>
