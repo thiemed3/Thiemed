@@ -123,9 +123,9 @@
                     </tbody>
                 </table>
             </xpath>
-            <xpath expr="//p[@name='comment']" position="replace">
-                <p t-if="o.narration" name="comment">
-                </p>
+            <xpath expr="//div[@name='comment']" position="replace">
+                <div t-if="o.narration" name="comment">
+                </div>
             </xpath>
         </template>
 
