@@ -14,9 +14,7 @@
                             <th name="expiration_date" class="text-center">
                                 <strong style="font-size:12px;">Fecha Vencimiento</strong>
                             </th>
-                            <th name="th_priceunit"
-                                t-attf-class="text-right {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>
-                                Unit Price</span></th>
+                            <th name="th_priceunit" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>Unit Price</span></th>
                             <th name="th_price_unit" t-if="display_discount"
                                 t-attf-class="text-right {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
                                 <span>Disc.%</span>

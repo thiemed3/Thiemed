@@ -8,7 +8,7 @@
     'website': 'http://www.ahorasoft.com',
     'depends': [
         'base',
-        'sale','product', 'account','stock','l10n_cl_edi','stock_landed_costs','report_xlsx',
+        'sale','product', 'account','stock','l10n_cl_edi','stock_landed_costs',
     ],
     'data': [
         # 'security/as_group_view.xml',
