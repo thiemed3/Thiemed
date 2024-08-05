@@ -42,7 +42,7 @@ class AccountMoveLines(models.Model):
                                               'precio': sale_lines.price_unit,
                                               'ratio': 1}
                     else:
-                        fecha_vencimiento = self.env[stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
+                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
                         # fecha = fecha_vencimiento.expiration_date
                         if fecha_vencimiento:
                             cantidad_lote[key] = {'cantidad': value,
