@@ -128,7 +128,7 @@
         </template>
 
 
-        <template id="medical_info" inherit_id="l10n_cl.report_invoice_document">
+        <!--template id="medical_info" inherit_id="l10n_cl.report_invoice_document">
             <xpath expr="//div[@name='transferable-table']" position="replace">
                 <div name="transferable-table" class="col-2"/>
             </xpath>
@@ -147,6 +147,6 @@
                     <span t-field="o.narration"/>
                 </div>
             </xpath>
-        </template>
+        </template-->
     </data>
 </odoo>
