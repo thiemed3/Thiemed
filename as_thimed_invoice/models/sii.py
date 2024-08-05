@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 from odoo import fields, models, api
-from odoo.tools.translate import _
-from odoo.exceptions import Warning
 
 
 class sii_document_class(models.Model):
