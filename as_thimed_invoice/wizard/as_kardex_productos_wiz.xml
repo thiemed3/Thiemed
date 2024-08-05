@@ -41,22 +41,22 @@
         <field name="target">new</field>
     </record>
 
-    <report
+    <!--report
         id="kardex_productos_xlsx"
         model="as.kardex.productos.wiz"
         string="Libro Ventas Report"
         report_type="xlsx"
         name="as_thimed_invoice.kardex_productos_report_xls.xlsx"
         file="as_thimed_invoice.kardex_productos_report_xls.xlsx"
-        attachment_use="False" />
+        attachment_use="False" /-->
 
-    <menuitem
+    <!--menuitem
         id="as_kardex_productos"
         name="Kardex de productos"
         action="action_kardex_productos_qweb"
         parent="stock.menu_warehouse_report"          
         sequence="50"
-        groups="stock.group_stock_manager" />
+        groups="stock.group_stock_manager" /-->
 
     
 </data>
