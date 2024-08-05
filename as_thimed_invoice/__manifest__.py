@@ -19,7 +19,7 @@
         'views/as_pricelist_item.xml',
         'views/stock_landed_cost_views.xml',
         'views/as_res_config.xml',
-        'wizard/as_kardex_productos_wiz.xml',
+        #'wizard/as_kardex_productos_wiz.xml',
         # 'data/res_config_settings.yml',
         'data/res_users_data.xml',
         'data/stock_landed_cost_data.xml',
