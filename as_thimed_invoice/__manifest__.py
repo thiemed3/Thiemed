@@ -12,7 +12,8 @@
     ],
     'data': [
         # 'security/as_group_view.xml',
-        'security/ir.model.access.csv',
+
+        #'security/ir.model.access.csv',
         'views/sale_order.xml',
         # 'views/sii_document_class_view.xml',
         'views/as_stock_picking.xml',
