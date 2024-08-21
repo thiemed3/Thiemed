@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from . import as_kardex_productos
+#from . import as_kardex_productos

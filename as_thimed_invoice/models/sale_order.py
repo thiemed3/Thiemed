@@ -23,7 +23,7 @@ class SO(models.Model):
                 vals['referencias'].append(
                     (0, 0, {
                         'origin_doc_number': ref.origin_doc_number,
-                        'l10n_cl_reference_doc_type_selection': ref.l10n_cl_reference_doc_type_selection,
+                        'l10n_cl_reference_doc_type_id.code': ref.l10n_cl_reference_doc_type_id.code,
                         'reason': ref.reason,
                         'date': ref.date,
                     })
@@ -47,7 +47,7 @@ class SO(models.Model):
         #         for ref in self.referencias:
         #             data = {
         #                     'origin_doc_number': ref.origin_doc_number,
-        #                     'l10n_cl_reference_doc_type_selection': ref.l10n_cl_reference_doc_type_selection,
+        #                     'l10n_cl_reference_doc_type_id.code': ref.l10n_cl_reference_doc_type_id.code,
         #                     'date': ref.date,
         #                     'stock_picking_id': do_pick.id
         #                     } 
