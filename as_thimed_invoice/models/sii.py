@@ -15,8 +15,8 @@ class sii_document_class(models.Model):
         'Code Template for Journal')
     sii_code = fields.Integer(
         'SII Code', required=True)
-    document_letter_id = fields.Many2one(
-        'sii.document_letter', 'Document Letter')
+    #document_letter_id = fields.Many2one(
+    #    'sii.document_letter', 'Document Letter')
     report_name = fields.Char(
         'Name on Reports',
         help='Name that will be printed in reports, for example "CREDIT NOTE"')
