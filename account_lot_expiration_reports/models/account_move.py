@@ -5,7 +5,7 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     sale_order_id = fields.Many2one('sale.order', string='Pedido', compute='_compute_sale_order_id', store=True)
-    # cantidad_lote = fields.Char(string='Cantidad Lote', compute='_compute_cantidad_lote')
+    cantidad_lote = fields.Char(string='Cantidad Lote', compute='_compute_cantidad_lote')
 
     @api.depends('invoice_origin')
     def _compute_sale_order_id(self):

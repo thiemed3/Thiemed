@@ -9,7 +9,7 @@
             <field name="priority" eval="8"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='group_id']" position="after">
-                    <field name="account_move_id" widget="many2many"/>
+                    <!--field name="account_move_id" widget="many2many"/-->
                 </xpath>
             </field>
         </record>
