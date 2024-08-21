@@ -1,19 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
-        <template id="report_delivery_guide_inherit" inherit_id="l10n_cl_edi_stock.stock_informations">
-            <xpath expr="//div[@id='informations']/div[1]" position="inside">
-                <br/>
-                <strong>Driver:</strong>
-                <span t-if="o.l10n_cl_driver" t-esc="o.l10n_cl_driver.name"/>
-                <br/>
-                <strong>Driver vat:</strong>
-                <span t-if="o.l10n_cl_driver" t-esc="o.l10n_cl_driver.vat"/>
-                <br/>
-                <strong>Patent:</strong>
-                <span t-field="o.l10n_cl_patent"/>
-            </xpath>
-        </template>
 
         <template id="delivery_guide_cedible">
             <style type="text/css">
