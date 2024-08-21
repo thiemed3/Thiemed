@@ -11,4 +11,5 @@
         'views/report_delivery_guide.xml'
     ],
     'demo': [],
+    'license': 'LGPL-3',
 }

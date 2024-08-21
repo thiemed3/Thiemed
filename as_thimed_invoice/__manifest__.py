@@ -8,12 +8,12 @@
     'website': 'http://www.ahorasoft.com',
     'depends': [
         'base',
-        'sale','product', 'account','stock','l10n_cl_edi','stock_landed_costs',
+        'sale','product', 'account','stock','l10n_cl_edi','stock_landed_costs','mrp'
     ],
     'data': [
         # 'security/as_group_view.xml',
 
-        #'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         'views/sale_order.xml',
         # 'views/sii_document_class_view.xml',
         'views/as_stock_picking.xml',
@@ -39,4 +39,5 @@
     'installable': True,
     'application': True,
     'auto_install': False,
+    'license': 'LGPL-3',
 }

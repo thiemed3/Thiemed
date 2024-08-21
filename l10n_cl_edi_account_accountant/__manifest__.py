@@ -11,4 +11,5 @@
         'views/report_invoice.xml'
     ],
     'demo': [],
+    'license': 'LGPL-3',
 }
