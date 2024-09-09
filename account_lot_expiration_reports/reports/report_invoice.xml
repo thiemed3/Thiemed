@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <template id="account_move_lot_expiration_jenner" inherit_id="account.report_invoice_document">
-            <th name="th_description" class="text-start" position="replace">
+            <!--th name="th_description" class="text-start" position="replace">
                 <th name="th_description" class="text-start"><span>Código</span></th>
             </th>
 
@@ -32,7 +32,7 @@
                         <span>Amount</span>
                     </th>
                 </tr>
-            </thead>
+            </thead-->
 
             <table class="table table-sm o_main_table table-borderless" name="invoice_line_table" position="replace">
                 <table class="table table-sm o_main_table table-borderless" name="invoice_line_table">
@@ -217,7 +217,7 @@
 
         <template id="medical_info_ref" inherit_id="l10n_cl.informations">
             <xpath expr="//div[@id='informations']" position="after">
-                <div id="medical_info" class="row">
+                <!--div id="medical_info" class="row">
                         <div class="col-3">
                             <span><strong>Cirugia:</strong></span><br/>
                             <span t-field="o.cirugia"/>
@@ -234,7 +234,7 @@
                             <span><strong>Paciente:</strong></span><br/>
                             <span t-field="o.partner_paciente"/>
                         </div>
-                </div>
+                </div-->
             </xpath>
         </template>
 
