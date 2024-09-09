@@ -14,14 +14,14 @@
                                 <th name="th_code">
                                     <strong>Código</strong>
                                 </th>
+                                <th name="th_ref_interna">
+                                    <strong>Referencia Interna</strong>
+                                </th>
                                 <th name="th_product">
                                     <strong>Producto</strong>
                                 </th>
                                 <th class="text-right">
                                     <strong>Cantidad</strong>
-                                </th>
-                                <th groups="uom.group_uom">
-                                    <strong>Un Med</strong>
                                 </th>
                                 <th name="lote" class="text-right">
                                     <strong>Lote</strong>
@@ -49,19 +49,34 @@
                                 <t t-set="unit_price" t-value="0"/>
                                 <tr style="font-size:12px">
                                     <td name="td_code">
-                                        <span style="font-size:12px" t-field="line.product_id.default_code"/>
+                                        <t t-if="line.supplier_code">
+                                            <span t-field="line.supplier_code"/>
+                                        </t>
+                                        <t t-if="not line.supplier_code">
+                                            <span t-field="line.product_id.default_code"/>
+                                        </t>
                                     </td>
-                                    <td>
-                                        <span style="font-size:12px" t-field="line.product_id.name"/>
-                                        <br/>
-                                        <span t-field="line.product_id.description_picking"/>
+                                     <td name="td_ref">
+                                        <span t-field="line.product_id.default_code"/>
+                                    </td>
+                                    <td name="td_name">
+<!--                                        <span style="font-size:12px" t-field="line.supplier_description"/>-->
+                                        <t t-if="line.supplier_description">
+                                            <span t-esc="line.only_name(line.supplier_description)"/>
+                                        </t>
+                                        <t t-if="not line.supplier_description">
+                                            <span t-field="line.product_id.name"/>
+                                        </t>
+<!--                                        <br/>-->
+<!--                                        <span t-field="line.product_id.description_picking"/>-->
                                     </td>
                                     <td class="text-right" name="td_quantity_done">
                                         <span t-field="line.qty_done"/>
-                                    </td>
-                                    <td groups="uom.group_uom">
                                         <span t-field="line.product_uom_id.name"/>
                                     </td>
+<!--                                    <td groups="uom.group_uom">-->
+<!--                                        -->
+<!--                                    </td>-->
                                     <td class="text-right">
                                         <span t-field="line.lot_id.name"/>
                                     </td>
@@ -101,11 +116,14 @@
                     <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
                     <t t-set="has_unit_price" t-value="prepared_amounts['has_unit_price']"/>
                     <t t-set="has_discount" t-value="prepared_amounts['has_discount']"/>
-                   <table class="table table-sm" t-if="o.move_ids">
+                   <table class="table table-sm" t-if="o.move_lines">
                         <thead>
                             <tr style="font-size:12px">
                                 <th name="th_code">
                                     <strong>Código</strong>
+                                </th>
+                                <th name="th_ref_interna">
+                                    <strong>Referencia Interna</strong>
                                 </th>
                                 <th name="th_product">
                                     <strong>Producto</strong>
@@ -113,9 +131,9 @@
                                 <th class="text-right">
                                     <strong>Cantidad</strong>
                                 </th>
-                                <th groups="uom.group_uom">
-                                    <strong>Un Med</strong>
-                                </th>
+<!--                                <th groups="uom.group_uom">-->
+<!--                                    <strong>Un Med</strong>-->
+<!--                                </th>-->
                                 <th name="unit_price" class="text-right" t-if="has_unit_price">
                                     <strong>Precio</strong>
                                 </th>
@@ -131,23 +149,27 @@
                         <tbody>
                             <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
                             <t t-set="float_repr" t-value="prepared_amounts['float_repr']"/>
-                            <t t-foreach="o.move_ids" t-as="line">
+                            <t t-foreach="o.move_lines" t-as="line">
                                 <t t-set="line_amounts" t-value="total_line_amounts.get(line, {})"/>
                                 <tr style="font-size:12px">
                                     <td name="td_code">
                                         <span t-field="line.product_id.default_code"/>
                                     </td>
-                                    <td>
+                                    <td name="td_ref">
+                                        <span t-field="line.product_id.default_code"/>
+                                    </td>
+                                    <td name="td_name">
                                         <span t-field="line.product_id.name"/>
                                         <br/>
                                         <span t-field="line.product_id.description_picking"/>
                                     </td>
                                     <td class="text-right" name="td_quantity_done">
                                         <span t-field="line.quantity_done"/>
-                                    </td>
-                                    <td groups="uom.group_uom">
                                         <span t-field="line.product_uom"/>
                                     </td>
+<!--                                    <td groups="uom.group_uom">-->
+<!--                                        -->
+<!--                                    </td>-->
 
                                     <td class="text-right" t-if="has_unit_price" name="td_price_unit">
                                         <span t-esc="float_repr(line_amounts.get('price_unit', False), 2)"/>

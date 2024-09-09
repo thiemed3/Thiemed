@@ -4,9 +4,9 @@ import json
 class AccountMoveLines(models.Model):
     _inherit = 'account.move.line'
 
-    cantidad_lote = fields.Char(string='Cantidad Lote', compute='_compute_cantidad_lote')
+    # cantidad_lote = fields.Char(string='Cantidad Lote', compute='_compute_cantidad_lote')
     cantidad_lote = fields.Char(string='Cantidad Lote')
-    stock_move_line_id = fields.One2many('stock.move.line', 'account_move_line_id', string='Linea de Movimiento')
+    # stock_move_line_id = fields.One2many('stock.move.line', 'account_move_line_id', string='Linea de Movimiento')
 
 
     def _compute_cantidad_lote(self):
@@ -86,7 +86,6 @@ class AccountMoveLines(models.Model):
                                                   'precio': sale_lines.price_unit,
                                                   'ratio': int(sale_lines.product_uom.factor_inv)}
 
-
         return cantidad_lote
 
     def get_lote_cantidad(self, diccionario, llave):
@@ -94,5 +93,21 @@ class AccountMoveLines(models.Model):
 
     def get_lote_fvencimiento(self, diccionario, llave):
         return diccionario.get(llave).get('fecha_vencimiento')
+
+    def only_name(self, name):
+        if name:
+            name = name.split(']')[1]
+            return name
+        else:
+            return name
+
+    def only_code(self, name):
+        if name:
+            name = name.split(']')[0]
+            name_format = name.replace('[', '')
+            return name_format
+        else:
+            return name
+
 
 

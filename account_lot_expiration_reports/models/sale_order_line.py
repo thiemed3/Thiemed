@@ -6,6 +6,7 @@ class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
     cantidad_lote = fields.Char(string='Cantidad Lote', compute='_compute_cantidad_lote')
+    cantidad_lote_facturado = fields.Float(string='Cantidad Lote Facturado', compute='_compute_cantidad_lote')
 
     def _compute_cantidad_lote(self):
         for rec in self:
@@ -40,5 +41,12 @@ class SaleOrderLine(models.Model):
 
     def _prepare_invoice_line(self, **optional_values):
         res = super(SaleOrderLine, self)._prepare_invoice_line()
-        res.update({'cantidad_lote': self.cantidad_lote})
+        for rec in self:
+            move_lines = rec.move_ids.mapped('move_line_ids')
+            for move_line in move_lines:
+                if rec.product_id == move_lines.product_id:
+                    if not move_line.is_factured:
+                        res.update({'cantidad_lote': rec.cantidad_lote, 'quantity': move_line.qty_done})
         return res
+
+
