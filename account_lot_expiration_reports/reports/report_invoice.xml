@@ -34,7 +34,7 @@
                 </tr>
             </thead-->
 
-            <table class="table table-sm o_main_table table-borderless" name="invoice_line_table" position="replace">
+            <xpath expr="//table[@name='invoice_line_table']"  position="replace">
                 <table class="table table-sm o_main_table table-borderless" name="invoice_line_table">
                     <thead>
                         <tr>
@@ -208,7 +208,7 @@
                         </t>
                     </tbody>
                 </table>
-            </table>
+            </xpath>
 
 
 
