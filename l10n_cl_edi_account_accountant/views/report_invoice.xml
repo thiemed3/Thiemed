@@ -33,8 +33,7 @@
         <template id="cedible_footer" inherit_id="account.report_invoice_document">
             <xpath expr="//div[@id='total']" position="after">
                 <div class="row">
-                    <div class="col-5"/>
-                    <div class="col-7 text-justify">
+                    <div class="col text-justify">
                         <t t-if="copia == 'CEDIBLE CON SU FACTURA'">
                             <t t-call="l10n_cl_edi_account_accountant.delivery_guide_cedible"/>
                         </t>
@@ -69,7 +68,7 @@
             </xpath>
         </template>
 
-        <template id="report_invoice_with_payments_inherit" inherit_id="account.report_invoice_with_payments">
+        <!--template id="report_invoice_with_payments_inherit" inherit_id="account.report_invoice_with_payments">
             <xpath expr="//t[@t-foreach='docs']" position="replace">
                 <t t-foreach="docs" t-as="o">
                     <t t-set="lang" t-value="o.invoice_user_id.sudo().lang if o.move_type in ('in_invoice', 'in_refund') else o.partner_id.lang"/>
@@ -94,7 +93,7 @@
                     </t>
                 </t>
             </xpath>
-        </template>
+        </template-->
 
     </data>
 </odoo>
