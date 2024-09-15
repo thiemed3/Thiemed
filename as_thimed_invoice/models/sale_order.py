@@ -23,7 +23,7 @@ class SO(models.Model):
                 vals['referencias'].append(
                     (0, 0, {
                         'origin_doc_number': ref.origin_doc_number,
-                        'l10n_cl_reference_doc_type_id.code': ref.l10n_cl_reference_doc_type_id.code,
+                        'l10n_cl_reference_doc_type_id': ref.l10n_cl_reference_doc_type_id,
                         'reason': ref.reason,
                         'date': ref.date,
                     })
