@@ -95,19 +95,19 @@ class AccountMoveLines(models.Model):
         return diccionario.get(llave).get('fecha_vencimiento')
 
     def only_name(self, name):
-        if name:
+        if name and ']' in name:
             name = name.split(']')[1]
             return name
         else:
             return name
 
     def only_code(self, name):
-        if name:
+        if name and ']' in name:
             name = name.split(']')[0]
             name_format = name.replace('[', '')
             return name_format
         else:
-            return name
+            return ''
 
 
 

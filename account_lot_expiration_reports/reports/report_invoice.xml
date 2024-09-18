@@ -41,20 +41,20 @@
                             <th name="th_description" class="text-start"><span>Código</span></th>
                             <th name="th_ref" class="text-start"><span>Referencia Interna</span></th>
                             <th name="th_description" class="text-start"><span>Descripcion</span></th>
-                            <th name="th_quantity" class="text-end"><span>Quantity</span></th>
+                            <th name="th_quantity" class="text-end"><span>Cantidad</span></th>
                             <th name="lote" class="text-end">
                                 <strong>Lote</strong>
                             </th>
                             <th name="expiration_date" class="text-center">
                                 <strong style="font-size:12px;">Fecha Vencimiento</strong>
                             </th>
-                            <th name="th_priceunit" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>Unit Price</span></th>
+                            <th name="th_priceunit" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>Precio unitario</span></th>
                             <th name="th_discount" t-if="display_discount" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
-                                <span>Disc.%</span>
+                                <span>Desc.%</span>
                             </th>
-                            <th name="th_taxes" t-attf-class="text-start {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>Taxes</span></th>
+                            <th name="th_taxes" t-attf-class="text-start {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>Impuestos</span></th>
                             <th name="th_subtotal" class="text-end">
-                                <span>Amount</span>
+                                <span>Monto</span>
                             </th>
                         </tr>
                     </thead>
@@ -63,7 +63,7 @@
                         <t t-set="current_total" t-value="0"/>
                         <t t-set="lines" t-value="o.invoice_line_ids.sorted(key=lambda l: (-l.sequence, l.date, l.move_name, -l.id), reverse=True)"/>
                         <t t-foreach="lines" t-as="line">
-                            <t t-if="line.cantidad_lote">
+                            <t t-if="not line.cantidad_lote=='{}'">
                                 <t t-set="lotes" t-value="line.get_lote_lines()"/>
                                 <t t-foreach="lotes" t-as="linea_lote">
                                     <t t-set="current_subtotal" t-value="current_subtotal + line.price_subtotal"/>
