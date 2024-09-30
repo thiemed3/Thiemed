@@ -16,7 +16,7 @@
 						<field name="origin_doc_number" />
 						<field name="date" />
 						<field name="reference_doc_code" />
-						<field name="l10n_cl_reference_doc_type_selection" />
+						<field name="l10n_cl_reference_doc_type_id" />
 						<field name="reason" />
 					</tree>
 				</field>
@@ -39,7 +39,7 @@
 						<field name="origin_doc_number" />
 						<field name="date" />
 						<field name="reference_doc_code" />
-						<field name="l10n_cl_reference_doc_type_selection" />
+						<field name="l10n_cl_reference_doc_type_id" />
 						<field name="reason" />
 					</tree>
 				</field>

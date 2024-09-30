@@ -14,16 +14,15 @@
     # any module necessary for this one to work correctly
     'depends': ['base',
                 'account',
+                'l10n_cl',
                 'stock',
                 'sale',
-                'l10n_cl_edi_stock_delivery_guide',
-                'account',
-                'l10n_cl',
                 'l10n_cl_edi_stock',
-                'sale_order_medical_information',
+                'l10n_cl_edi_stock_delivery_guide',
                 'stock_account',
                 'sale_stock',
-                'product_expiry'],
+                'product_expiry',
+            ],
     # always loaded
     'data': [
         'reports/report_delivery_guide.xml',

@@ -2,7 +2,6 @@
 from collections import defaultdict
 from odoo import api, fields, models, tools, _
 from odoo.exceptions import ValidationError, UserError
-from odoo.tools.float_utils import float_is_zero
 
 class LandedCost(models.Model):
     _inherit = 'stock.landed.cost'

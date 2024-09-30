@@ -6,9 +6,9 @@
             <field name="model">res.config.settings</field>
             <field name="inherit_id" ref="stock.res_config_settings_view_form"/>
             <field name="arch" type="xml">
-                <div id="production_lot_info" position="after">
+                <block id="production_lot_info" position="after">
                     <h2>Kardex de Inventario</h2>
-                    <div class="row mt16 o_settings_container">
+                    <block class="row mt16 o_settings_container">
                         <div class="col-xs-12 col-md-6 o_setting_box" title="Affect landed costs on receipt operations and split them among products to update their cost price.">
                             <div class="o_setting_left_pane">
                             </div>
@@ -20,8 +20,8 @@
                                
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </block>
+                </block>
             </field>
         </record>
     </data>

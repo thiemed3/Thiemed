@@ -2,7 +2,7 @@
 {
     'name': "Sale Order Medical Information",
     'category': 'sale',
-    'version': '14.0.1.0',
+    'version': '17.0.1.0',
     'author': 'Nestor Ulloa - Tierranube',
     'description': """
         

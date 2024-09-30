@@ -42,7 +42,7 @@ class AccountMoveLines(models.Model):
                                               'precio': sale_lines.price_unit,
                                               'ratio': 1}
                     else:
-                        fecha_vencimiento = self.env['stock.production.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
+                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)])[0].expiration_date
                         # fecha = fecha_vencimiento.expiration_date
                         if fecha_vencimiento:
                             cantidad_lote[key] = {'cantidad': value,
@@ -69,7 +69,7 @@ class AccountMoveLines(models.Model):
                                               'precio': sale_lines.price_unit,
                                               'ratio': int(sale_lines.product_uom.factor_inv)}
                     else:
-                        fecha_vencimiento = self.env['stock.production.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
+                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
                         # fecha = fecha_vencimiento.expiration_date
                         if fecha_vencimiento:
                             cantidad_lote[key] = {'cantidad': value,
@@ -86,7 +86,6 @@ class AccountMoveLines(models.Model):
                                                   'precio': sale_lines.price_unit,
                                                   'ratio': int(sale_lines.product_uom.factor_inv)}
 
-
         return cantidad_lote
 
     def get_lote_cantidad(self, diccionario, llave):
@@ -94,5 +93,21 @@ class AccountMoveLines(models.Model):
 
     def get_lote_fvencimiento(self, diccionario, llave):
         return diccionario.get(llave).get('fecha_vencimiento')
+
+    def only_name(self, name):
+        if name and ']' in name:
+            name = name.split(']')[1]
+            return name
+        else:
+            return name
+
+    def only_code(self, name):
+        if name and ']' in name:
+            name = name.split(']')[0]
+            name_format = name.replace('[', '')
+            return name_format
+        else:
+            return ''
+
 
 

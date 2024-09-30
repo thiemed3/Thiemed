@@ -8,7 +8,7 @@ from odoo.tools.safe_eval import safe_eval
 from datetime import datetime, timedelta
 
 class as_helpdesk_notify(models.Model):
-    _inherit = 'stock.production.lot'
+    _inherit = 'stock.lot'
 
     as_cantidad = fields.Char(string='Cantidad lote',compute='_get_cantidad_lote',store=True)
 
