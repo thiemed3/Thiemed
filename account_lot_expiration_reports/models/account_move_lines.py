@@ -26,14 +26,7 @@ class AccountMoveLines(models.Model):
     def get_lote_lines(self):
         # si el diccionario esta vacio actualizar con el valor de la cantidad de la linea de factura
         cantidad_lote = {}
-        if not self.cantidad_lote:
-            cantidad_lote = {'SIN LOTE': {'cantidad': self.quantity,
-                                                  'nombre': 'SIN LOTE',
-                                                  'fecha_vencimiento': '',
-                                                  'udm': self.product_uom_id.name,
-                                                  'precio': self.price_unit,
-                                                  'ratio': 1}}
-        else:
+        if self.cantidad_lote:
             cantidad_lote = json.loads(self.cantidad_lote)
 
         for key, value in cantidad_lote.items():
