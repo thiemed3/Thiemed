@@ -107,7 +107,7 @@ class AccountMoveLines(models.Model):
                                                   'precio': sale_lines.price_unit,
                                                   'ratio': int(sale_lines.product_uom.factor_inv)}
                         else:
-                            cantidad_lote[key] = {'cantidad': value,
+                            cantidad_lote[key] = {'cantidad': rec.quantity,
                                                   'nombre': key,
                                                   'fecha_vencimiento': '',
                                                   'udm': move_lines.product_uom_id.name,
