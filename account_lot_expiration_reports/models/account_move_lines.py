@@ -26,7 +26,9 @@ class AccountMoveLines(models.Model):
     def get_lote_lines(self):
         # si el diccionario esta vacio actualizar con el valor de la cantidad de la linea de factura
         cantidad_lote = {}
-        if self.cantidad_lote:
+        if not self.cantidad_lote:
+            cantidad_lote = {'SIN LOTE': {}}
+        else:
             cantidad_lote = json.loads(self.cantidad_lote)
 
         for key, value in cantidad_lote.items():
@@ -59,7 +61,7 @@ class AccountMoveLines(models.Model):
                                                   'udm': move_lines.product_uom_id.name,
                                                   'precio': sale_lines.price_unit,
                                                   'ratio': 1}
-                if sale_lines.product_uom.uom_type == 'bigger':
+                elif sale_lines.product_uom.uom_type == 'bigger':
 
                     if key == 'SIN LOTE':
                         valor = rec.quantity * sale_lines.product_uom.factor_inv
@@ -68,7 +70,7 @@ class AccountMoveLines(models.Model):
                                               'fecha_vencimiento': '',
                                               'udm': move_lines.product_uom_id.name,
                                               'precio': sale_lines.price_unit,
-                                              'ratio': int(sale_lines.product_uom.factor_inv)}
+                                              'ratio': 1}
                     else:
                         fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
                         # fecha = fecha_vencimiento.expiration_date
@@ -86,7 +88,31 @@ class AccountMoveLines(models.Model):
                                                   'udm': move_lines.product_uom_id.name,
                                                   'precio': sale_lines.price_unit,
                                                   'ratio': int(sale_lines.product_uom.factor_inv)}
-
+                else:
+                    if key == 'SIN LOTE':
+                        cantidad_lote[key] = {'cantidad': rec.quantity,
+                                              'nombre': key,
+                                              'fecha_vencimiento': '',
+                                              'udm': move_lines.product_uom_id.name,
+                                              'precio': rec.price_unit,
+                                              'ratio': 1}
+                    else:
+                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
+                        # fecha = fecha_vencimiento.expiration_date
+                        if fecha_vencimiento:
+                            cantidad_lote[key] = {'cantidad': rec.quantity,
+                                                  'nombre': key,
+                                                  'fecha_vencimiento': fecha_vencimiento.strftime('%d/%m/%Y'),
+                                                  'udm': move_lines.product_uom_id.name,
+                                                  'precio': sale_lines.price_unit,
+                                                  'ratio': int(sale_lines.product_uom.factor_inv)}
+                        else:
+                            cantidad_lote[key] = {'cantidad': value,
+                                                  'nombre': key,
+                                                  'fecha_vencimiento': '',
+                                                  'udm': move_lines.product_uom_id.name,
+                                                  'precio': sale_lines.price_unit,
+                                                  'ratio': int(sale_lines.product_uom.factor_inv)}
         return cantidad_lote
 
     def get_lote_cantidad(self, diccionario, llave):
