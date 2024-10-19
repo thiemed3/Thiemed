@@ -10,13 +10,13 @@ class AccountMoveLines(models.Model):
 
     # Sobrescribir el comportamiento para que pueda tomar las lineas de seccion------------------------------------------
     def _l10n_cl_get_line_amounts(self):
-    if self.display_type != 'product':
-        return {
-            'price_subtotal': 0,
-            'line_description': self.name,
-        }
+        if self.display_type != 'product':
+            return {
+                'price_subtotal': 0,
+                'line_description': self.name,
+            }
 
-    return super()._l10n_cl_get_line_amounts()
+        return super()._l10n_cl_get_line_amounts()
 
 
     def _compute_cantidad_lote(self):
