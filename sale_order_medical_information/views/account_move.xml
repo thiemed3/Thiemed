@@ -10,13 +10,13 @@
                 <xpath expr="//field[@name='payment_reference']" position="after">
                     <field name="tipo_venta" invisible="[('move_type', 'not in', ['out_invoice'])]"/>
                     <field name="partner_paciente"
-                           invisible="[('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]"/>
+                           invisible="tipo_venta != 'transito' and tipo_venta != 'asistenciacirugia'"/>
                     <field name="partner_doctor"
-                           invisible="[('tipo_venta', '!=', 'asistenciacirugia'),('tipo_venta', '!=', 'transito')]"/>
+                           invisible="tipo_venta != 'transito' and tipo_venta != 'asistenciacirugia'"/>
                     <field name="fecha_operacion"
-                           invisible="[('tipo_venta','!=','asistenciacirugia'),('tipo_venta','!=','transito')]"/>
+                           invisible="tipo_venta != 'transito' and tipo_venta != 'asistenciacirugia'"/>
                     <field name="asistente_cirugia"
-                           invisible="[('tipo_venta', '!=', 'asistenciacirugia')]"
+                           invisible="tipo_venta != 'asistenciacirugia'"
                            options="{'no_create': True}"/>
                 </xpath>
             </field>
