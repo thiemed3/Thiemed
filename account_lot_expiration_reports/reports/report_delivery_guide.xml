@@ -71,9 +71,10 @@
                                     </td>
 
                                     <td class="text-right" t-if="has_unit_price" name="td_price_unit">
+                                        <span t-out="float_repr(line_amounts.get('price_unit', False), 2)"/>
                                         <t t-if="o.sale_id">
                                             <t t-foreach="o.sale_id.order_line" t-as="order_line">
-                                                <t t-if="order_line.product_id == line.product_id">
+                                                <t t-if="order_line.product_id == line.product_id and order_line.price_unit > 0">
                                                     <span t-field="order_line.price_unit" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
                                                      <t t-set="unit_price" t-value="order_line.price_unit"/>
                                                 </t>
@@ -87,9 +88,9 @@
 
                                     </td>
                                     <td class="text-right" t-if="has_unit_price">
-<!--                                        <span t-esc="line_amounts.get('total_amount', 0.0)"-->
-<!--                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>-->
-                                        <span t-esc="unit_price * line.qty_done" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}" />
+                                        <span t-if="(unit_price * line.qty_done) == 0"  t-esc="line_amounts.get('total_amount', 0.0)"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                        <span t-else="" t-esc="unit_price * line.qty_done" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}" />
                                     </td>
                                 </tr>
                             </t>
