@@ -17,25 +17,25 @@
                                 <th name="th_product">
                                     <strong>Producto</strong>
                                 </th>
-                                <th class="text-right">
+                                <th class="text-end">
                                     <strong>Cantidad</strong>
                                 </th>
                                 <th groups="uom.group_uom">
                                     <strong>Un Med</strong>
                                 </th>
-                                <th name="lote" class="text-right">
+                                <th name="lote" class="text-end">
                                     <strong>Lote</strong>
                                 </th>
                                 <th name="expiration_date" class="text-center">
                                     <strong>Fecha Vencimiento</strong>
                                 </th>
-                                <th name="unit_price" class="text-right" t-if="has_unit_price">
+                                <th name="unit_price" class="text-end" t-if="has_unit_price">
                                     <strong>Precio</strong>
                                 </th>
-                                <th name="discount" class="text-right" t-if="has_discount > 0">
+                                <th name="discount" class="text-end" t-if="has_discount > 0">
                                     <strong>Descuento</strong>
                                 </th>
-                                <th name="subtotal" class="text-right" t-if="has_unit_price">
+                                <th name="subtotal" class="text-end" t-if="has_unit_price">
                                     <strong>Subtotal</strong>
                                 </th>
                             </tr>
@@ -70,8 +70,7 @@
                                               t-options='{"format": "dd/MM/yyyy"}'/>
                                     </td>
 
-                                    <td class="text-right" t-if="has_unit_price" name="td_price_unit">
-                                        <span t-out="float_repr(line_amounts.get('price_unit', False), 2)"/>
+                                    <td class="text-end" t-if="has_unit_price" name="td_price_unit">
                                         <t t-if="o.sale_id">
                                             <t t-foreach="o.sale_id.order_line" t-as="order_line">
                                                 <t t-if="order_line.product_id == line.product_id and order_line.price_unit > 0">
@@ -82,12 +81,12 @@
                                         </t>
                                     </td>
 
-                                    <td class="text-right" t-if="has_discount > 0">
+                                    <td class="text-end" t-if="has_discount > 0">
                                         <span t-esc="line_amounts.get('total_discount_fl', 0.0)"  t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
                                         <t t-set="has_discount" t-value="has_discount + line_amounts.get('total_discount_fl', 0.0) "/>
 
                                     </td>
-                                    <td class="text-right" t-if="has_unit_price">
+                                    <td class="text-end" t-if="has_unit_price">
                                         <span t-if="(unit_price * line.qty_done) == 0"  t-esc="line_amounts.get('total_amount', 0.0)"
                                               t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
                                         <span t-else="" t-esc="unit_price * line.qty_done" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}" />
