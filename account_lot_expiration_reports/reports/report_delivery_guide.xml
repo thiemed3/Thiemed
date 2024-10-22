@@ -45,7 +45,7 @@
                             <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
                             <t t-set="float_repr" t-value="prepared_amounts['float_repr']"/>
                             <t t-foreach="o.move_line_ids_without_package" t-as="line">
-                                <t t-set="line_amounts" t-value="total_line_amounts.get(line, {})"/>
+                                <t t-set="line_amounts" t-value="total_line_amounts.get(line.move_id, {})"/>
                                 <t t-set="unit_price" t-value="0"/>
                                 <tr style="font-size:12px">
                                     <td name="td_code">
@@ -71,14 +71,8 @@
                                     </td>
 
                                     <td class="text-end" t-if="has_unit_price" name="td_price_unit">
-                                        <t t-if="o.sale_id">
-                                            <t t-foreach="o.sale_id.order_line" t-as="order_line">
-                                                <t t-if="order_line.product_id == line.product_id and order_line.price_unit > 0">
-                                                    <span t-field="order_line.price_unit" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
-                                                     <t t-set="unit_price" t-value="order_line.price_unit"/>
-                                                </t>
-                                            </t>
-                                        </t>
+                                        <span t-esc="line_amounts.get('price_unit', 0.0)" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                        <t t-set="unit_price" t-value="line_amounts.get('price_unit', 0.0)"/>
                                     </td>
 
                                     <td class="text-end" t-if="has_discount > 0">
@@ -132,7 +126,7 @@
                                     <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
                                     <t t-set="float_repr" t-value="prepared_amounts['float_repr']"/>
                                     <t t-foreach="o.move_ids.filtered(lambda x: x.quantity > 0)" t-as="line">
-                                        <t t-set="line_amounts" t-value="total_line_amounts.get(line, {})"/>
+                                        <t t-set="line_amounts" t-value="total_line_amounts.get(line.move_id, {})"/>
                                         <tr>
                                             <td>
                                                 <span t-field="line.product_id.default_code"/>
