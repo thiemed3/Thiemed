@@ -31,7 +31,7 @@
         </template>
 
         <template id="cedible_footer" inherit_id="account.report_invoice_document">
-            <xpath expr="//div[@id='total']" position="after">
+            <xpath expr="//div[@name='comment']" position="before">
                 <div class="row">
                     <div class="col text-justify">
                         <t t-if="copia == 'CEDIBLE CON SU FACTURA'">
