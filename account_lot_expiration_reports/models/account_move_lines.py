@@ -4,9 +4,19 @@ import json
 class AccountMoveLines(models.Model):
     _inherit = 'account.move.line'
 
-    # cantidad_lote = fields.Char(string='Cantidad Lote', compute='_compute_cantidad_lote')
-    cantidad_lote = fields.Char(string='Cantidad Lote')
+    cantidad_lote = fields.Char(string='Cantidad Lote')# compute='_compute_cantidad_lote', store=True)
+    #cantidad_lote = fields.Char(string='Cantidad Lote')
     # stock_move_line_id = fields.One2many('stock.move.line', 'account_move_line_id', string='Linea de Movimiento')
+
+    # Sobrescribir el comportamiento para que pueda tomar las lineas de seccion------------------------------------------
+    def _l10n_cl_get_line_amounts(self):
+        if self.display_type != 'product':
+            return {
+                'price_subtotal': 0,
+                'line_description': self.name,
+            }
+
+        return super()._l10n_cl_get_line_amounts()
 
 
     def _compute_cantidad_lote(self):

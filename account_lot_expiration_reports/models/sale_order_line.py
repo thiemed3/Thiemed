@@ -41,7 +41,7 @@ class SaleOrderLine(models.Model):
 
     def _prepare_invoice_line(self, **optional_values):
         res = super(SaleOrderLine, self)._prepare_invoice_line()
-        
+
         move_lines = self.move_ids.mapped('move_line_ids')
         for move_line in move_lines:
             if self.product_id == move_lines.product_id:

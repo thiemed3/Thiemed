@@ -3,35 +3,35 @@
     <data>
 
         <template id="delivery_guide_cedible">
+            <style type="text/css">
+                .stilo_cedible {
+                width: 100%;
+                border: 1px solid #ccc;
+                border: 1px solid #ccc;
+                font-size: 12px;
+                text-align: justify;
+                }
+            </style>
             <div name="cedible">
-                <p t-att-style="'color: %s;' % o.company_id.primary_color" class="text-center small">
-                    <table style="border: 1px solid black;">
-                        <tbody>
-                            <tr style="border: 1px solid black;">
-                                <td colspan="2" style="border: 1px solid black; width:100%">Nombre:</td>
-                            </tr>
-                            <tr style="border: 1px solid black;">
-                                <td style="border: 1px solid black; width:50%">R.U.T.:</td>
-                                <td style="border: 1px solid black; width:50%">FECHA:</td>
-                            </tr>
-                            <tr style="border: 1px solid black;">
-                                <td style="border: 1px solid black; width:50%">RECINTO:</td>
-                                <td style="border: 1px solid black; width:50%">FIRMA:</td>
-                            </tr>
-                            <tr style="border: 1px solid black;">
-                                <td colspan="2" style="border: 1px solid black; width:100%; font-size: 9px;">
-                                    "El acuse de recibo que se declara en este acto, de acuerdo a lo dispuesto en la letra b) del Artículo 4°, y la letra c) del Artículo 5° de la Ley 19.983, acredita que la entrega de mercaderias o servicio(s) prestado(s) ha(n) sido recibido(s)"
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    CEDIBLE CON SU FACTURA
-                </p>
+                <div class="stilo_cedible">
+                    Nombre: ___________________________________________ R.U.T.:
+                    _________________________<br/>
+                    Recinto: __________________________________________ Fecha: _________________________ Firma:
+                    _______________________<br/>
+                    "El acuse de recibo que se declara en este acto, de acuerdo a lo discpuesto en la
+                    letra b) del Art
+                    4, y la letra c) del Art. 5 de la Ley 19.983, acredita que la entrega de mercaderias
+                    o servicio(s)
+                    prestado(s) ha(s) sido recibido(s)"
+                </div>
+                <div style="text-align:right;font-size:12px">
+                    CEDIBLE
+                </div>
             </div>
         </template>
 
         <template id="cedible_footer" inherit_id="account.report_invoice_document">
-            <xpath expr="//div[@id='total']" position="after">
+            <xpath expr="//div[@name='comment']" position="after">
                 <div class="row">
                     <div class="col text-justify">
                         <t t-if="copia == 'CEDIBLE CON SU FACTURA'">

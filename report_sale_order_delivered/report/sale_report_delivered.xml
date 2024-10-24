@@ -186,7 +186,7 @@
                                 <td class="text-end">
                                     <span
                                         t-att-class="oe_subtotal_footer_separator"
-                                        t-out="subtotal['formatted_amount']"
+                                        t-out="gravado"
                                     >27.00</span>
                                 </td>
                             </tr>
@@ -198,7 +198,7 @@
                         <tr t-if="'formatted_rounding_amount' in tax_totals and tax_totals['rounding_amount'] != 0">
                             <td>Rounding</td>
                             <td class="text-end">
-                                <span t-out="tax_totals['formatted_rounding_amount']">0</span>
+                                <span t-out="iva">0</span>
                             </td>
                         </tr>
 
@@ -206,7 +206,7 @@
                         <tr class="border-black o_total">
                             <td><strong>Total</strong></td>
                             <td  class="text-end">
-                                <span t-out="tax_totals['formatted_amount_total']">31.05</span>
+                                <span t-out="gravado + iva">31.05</span>
                             </td>
                         </tr>
                         </table>
