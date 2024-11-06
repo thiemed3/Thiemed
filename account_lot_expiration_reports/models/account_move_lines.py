@@ -131,20 +131,23 @@ class AccountMoveLines(models.Model):
     def get_lote_fvencimiento(self, diccionario, llave):
         return diccionario.get(llave).get('fecha_vencimiento')
 
+    
     def only_name(self, name):
-        if name and ']' in name:
-            name = name.split(']')[1]
-            return name
-        else:
-            return name
+        if name and '(' in name and ')' in name:
+            return name.split('(')[1].split(')')[0].strip()
+        return ''
 
     def only_code(self, name):
+        if name and '(' and ')' in name:
+            return name.split('(')[0].strip('[').strip()
+        return name
+
+    def only_desc(self, name):
         if name and ']' in name:
-            name = name.split(']')[0]
-            name_format = name.replace('[', '')
-            return name_format
-        else:
-            return ''
+            only_desc = name.split(']')[1].strip()
+            return only_desc
+        return name
+
 
 
 
