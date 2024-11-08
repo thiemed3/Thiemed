@@ -72,11 +72,13 @@
                                     <tr t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else ''">
                                         <t t-if="line.display_type == 'product'" name="account_invoice_line_accountable">
 
-                                            <td name="account_invoice_line_name"><span t-esc="line.only_code(line.name)"
-                                                                                       t-options="{'widget': 'text'}"/></td>
-                                            <td name="account_invoice_line_name_ref"><span t-field="line.product_id.default_code"/></td>
-                                            <td name="account_invoice_line_name"><span t-esc="line.only_name(line.name)"
-                                                                                       t-options="{'widget': 'text'}"/></td>
+
+                                            <td name="account_invoice_line_name"><span t-esc="line.only_code(line.name)" t-options="{'widget': 'text'}"/></td>
+
+                                            <td name="account_invoice_line_name_ref"><span t-esc="line.only_name(line.name)"/></td>
+
+                                            <td name="account_invoice_line_description"><span t-esc="line.only_desc(line.name)" t-options="{'widget': 'text'}"/></td>
+
 
                                             <td class="text-end">
                                                 <t t-if="linea_lote">
