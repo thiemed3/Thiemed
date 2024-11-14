@@ -73,11 +73,8 @@
                                         <t t-if="line.display_type == 'product'" name="account_invoice_line_accountable">
 
 
-                                            <td name="account_invoice_line_name"><span t-esc="line.only_code(line.name)" t-options="{'widget': 'text'}"/></td>
-
-                                            <td name="account_invoice_line_name_ref"><span t-esc="line.only_name(line.name)"/></td>
-
-                                            <td name="account_invoice_line_description"><span t-esc="line.only_desc(line.name)" t-options="{'widget': 'text'}"/></td>
+                                            <td name="account_invoice_line_name_ref"><span t-field="line.product_id.default_code"/></td>
+                                            <td name="account_invoice_line_name"><span t-esc="line.only_name(line.name)" t-options="{'widget': 'text'}"/></td>
 
 
                                             <td class="text-end">
