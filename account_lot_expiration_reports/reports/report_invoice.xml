@@ -38,7 +38,6 @@
                 <table class="table table-sm o_main_table table-borderless" name="invoice_line_table">
                     <thead>
                         <tr>
-                            <th name="th_description" class="text-start"><span>Código</span></th>
                             <th name="th_ref" class="text-start"><span>Referencia Interna</span></th>
                             <th name="th_description" class="text-start"><span>Descripcion</span></th>
                             <th name="th_quantity" class="text-end"><span>Cantidad</span></th>
