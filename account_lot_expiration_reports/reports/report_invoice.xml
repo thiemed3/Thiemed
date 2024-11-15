@@ -38,7 +38,6 @@
                 <table class="table table-sm o_main_table table-borderless" name="invoice_line_table">
                     <thead>
                         <tr>
-                            <th name="th_description" class="text-start"><span>Código</span></th>
                             <th name="th_ref" class="text-start"><span>Referencia Interna</span></th>
                             <th name="th_description" class="text-start"><span>Descripcion</span></th>
                             <th name="th_quantity" class="text-end"><span>Cantidad</span></th>
@@ -72,8 +71,6 @@
                                     <tr t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else ''">
                                         <t t-if="line.display_type == 'product'" name="account_invoice_line_accountable">
 
-                                            <td name="account_invoice_line_name"><span t-esc="line.only_code(line.name)"
-                                                                                       t-options="{'widget': 'text'}"/></td>
                                             <td name="account_invoice_line_name_ref"><span t-field="line.product_id.default_code"/></td>
                                             <td name="account_invoice_line_name"><span t-esc="line.only_name(line.name)"
                                                                                        t-options="{'widget': 'text'}"/></td>
@@ -152,7 +149,6 @@
 
                                 <tr t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else ''">
                                     <t t-if="line.display_type == 'product'" name="account_invoice_line_accountable">
-                                        <td name="account_invoice_line_name"><span t-if="line.name" t-esc="line.only_code(line.name)" t-options="{'widget': 'text'}">Bacon Burger</span></td>
                                         <td name="account_invoice_line_name_ref"><span t-field="line.product_id.default_code"/></td>
                                         <td name="account_invoice_line_name"><span t-field="line.name" t-options="{'widget': 'text'}"/></td>
                                         <td name="td_quantity" class="text-end">
