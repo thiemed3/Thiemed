@@ -19,20 +19,19 @@ class AccountMove(models.Model):
     # AGREGAR EL ID DE LA FACTURA EN LA GUIA DE DESPACHO AL CONFIRMAR LA FACTURA
     def action_post(self):
         res = super(AccountMove, self).action_post()
+        """Comprueba si la guia de despacho esta facturada y si es asi el campo is factured es true. si es nota de credito el campo es false"""
         for rec in self:
-            for lines in rec.invoice_line_ids:
-                movimientos = lines.sale_line_ids.move_ids.mapped('move_line_ids')
-                for stock_line in movimientos:
-                    if stock_line.state == 'done':
-                        if stock_line.is_factured == False:
-                            stock_line.write({'is_factured': True})
-
-
-
-
-
-
-
-
-
-
+            if rec.move_type == 'out_invoice':
+                for lines in rec.invoice_line_ids:
+                    movimientos = lines.sale_line_ids.move_ids.mapped('move_line_ids')
+                    for stock_line in movimientos:
+                        if stock_line.state == 'done':
+                            if stock_line.is_factured == False:
+                                stock_line.write({'is_factured': True})
+            elif rec.move_type == 'out_refund':
+                for lines in rec.invoice_line_ids:
+                    movimientos = lines.sale_line_ids.move_ids.mapped('move_line_ids')
+                    for stock_line in movimientos:
+                        if stock_line.state == 'done':
+                            if stock_line.is_factured == True:
+                                stock_line.write({'is_factured': False})

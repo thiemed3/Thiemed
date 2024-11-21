@@ -131,6 +131,7 @@ class AccountMoveLines(models.Model):
     def get_lote_fvencimiento(self, diccionario, llave):
         return diccionario.get(llave).get('fecha_vencimiento')
 
+    
     def only_name(self, name):
         if name and ']' in name:
             name = name.split(']')[1]
