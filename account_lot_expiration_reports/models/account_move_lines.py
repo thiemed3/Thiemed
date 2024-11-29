@@ -42,6 +42,10 @@ class AccountMoveLines(models.Model):
             cantidad_lote = json.loads(self.cantidad_lote)
 
         for key, value in cantidad_lote.items():
+            fecha_vencimiento = False
+            lot = self.env['stock.lot'].search([('name', '=', key), ('product_id', '=', self.product_id.id)])
+            if lot:
+                fecha_vencimiento = lot.expiration_date
 
             for rec in self:
                 move_lines = rec.sale_line_ids.move_ids.mapped('move_line_ids').filtered(lambda x: x.product_id == rec.product_id)
@@ -58,8 +62,7 @@ class AccountMoveLines(models.Model):
                                               'precio': sale_lines.price_unit,
                                               'ratio': 1}
                     else:
-                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)])[0].expiration_date
-                        # fecha = fecha_vencimiento.expiration_date
+
                         if fecha_vencimiento:
                             cantidad_lote[key] = {'cantidad': value,
                                                   'nombre': key,
@@ -85,8 +88,7 @@ class AccountMoveLines(models.Model):
                                               'precio': sale_lines.price_unit,
                                               'ratio': 1}
                     else:
-                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
-                        # fecha = fecha_vencimiento.expiration_date
+
                         if fecha_vencimiento:
                             cantidad_lote[key] = {'cantidad': value,
                                                   'nombre': key,
@@ -110,8 +112,7 @@ class AccountMoveLines(models.Model):
                                               'precio': rec.price_unit,
                                               'ratio': 1}
                     else:
-                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
-                        # fecha = fecha_vencimiento.expiration_date
+
                         if fecha_vencimiento:
                             cantidad_lote[key] = {'cantidad': rec.quantity,
                                                   'nombre': key,
