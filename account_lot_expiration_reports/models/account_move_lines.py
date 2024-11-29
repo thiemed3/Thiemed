@@ -42,10 +42,17 @@ class AccountMoveLines(models.Model):
             cantidad_lote = json.loads(self.cantidad_lote)
 
         for key, value in cantidad_lote.items():
+            fecha_vencimiento = False
+            lot = self.env['stock.lot'].search([('name', '=', key), ('product_id', '=', self.product_id.id)])
+            if lot:
+                fecha_vencimiento = lot.expiration_date
 
             for rec in self:
                 move_lines = rec.sale_line_ids.move_ids.mapped('move_line_ids').filtered(lambda x: x.product_id == rec.product_id)
                 sale_lines = rec.mapped('sale_line_ids').filtered(lambda x: x.product_id == rec.product_id)
+
+                ratio = int(sale_lines.product_uom.factor_inv) or 1
+                
                 if sale_lines.product_uom.uom_type == 'reference':
                     if key == 'SIN LOTE':
                         cantidad_lote[key] = {'cantidad': rec.quantity,
@@ -55,8 +62,7 @@ class AccountMoveLines(models.Model):
                                               'precio': sale_lines.price_unit,
                                               'ratio': 1}
                     else:
-                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)])[0].expiration_date
-                        # fecha = fecha_vencimiento.expiration_date
+
                         if fecha_vencimiento:
                             cantidad_lote[key] = {'cantidad': value,
                                                   'nombre': key,
@@ -82,22 +88,21 @@ class AccountMoveLines(models.Model):
                                               'precio': sale_lines.price_unit,
                                               'ratio': 1}
                     else:
-                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
-                        # fecha = fecha_vencimiento.expiration_date
+
                         if fecha_vencimiento:
                             cantidad_lote[key] = {'cantidad': value,
                                                   'nombre': key,
                                                   'fecha_vencimiento': fecha_vencimiento.strftime('%d/%m/%Y'),
                                                   'udm': move_lines.product_uom_id.name,
                                                   'precio': sale_lines.price_unit,
-                                                  'ratio': int(sale_lines.product_uom.factor_inv)}
+                                                  'ratio': ratio}
                         else:
                             cantidad_lote[key] = {'cantidad': value,
                                                   'nombre': key,
                                                   'fecha_vencimiento': '',
                                                   'udm': move_lines.product_uom_id.name,
                                                   'precio': sale_lines.price_unit,
-                                                  'ratio': int(sale_lines.product_uom.factor_inv)}
+                                                  'ratio': ratio}
                 else:
                     if key == 'SIN LOTE':
                         cantidad_lote[key] = {'cantidad': rec.quantity,
@@ -107,22 +112,21 @@ class AccountMoveLines(models.Model):
                                               'precio': rec.price_unit,
                                               'ratio': 1}
                     else:
-                        fecha_vencimiento = self.env['stock.lot'].search([('name', '=', key),('product_id', '=', self.product_id.id)]).expiration_date
-                        # fecha = fecha_vencimiento.expiration_date
+
                         if fecha_vencimiento:
                             cantidad_lote[key] = {'cantidad': rec.quantity,
                                                   'nombre': key,
                                                   'fecha_vencimiento': fecha_vencimiento.strftime('%d/%m/%Y'),
                                                   'udm': move_lines.product_uom_id.name,
                                                   'precio': sale_lines.price_unit,
-                                                  'ratio': int(sale_lines.product_uom.factor_inv)}
+                                                  'ratio': ratio}
                         else:
                             cantidad_lote[key] = {'cantidad': rec.quantity,
                                                   'nombre': key,
                                                   'fecha_vencimiento': '',
                                                   'udm': move_lines.product_uom_id.name,
                                                   'precio': sale_lines.price_unit,
-                                                  'ratio': int(sale_lines.product_uom.factor_inv)}
+                                                  'ratio': ratio}
         return cantidad_lote
 
     def get_lote_cantidad(self, diccionario, llave):
