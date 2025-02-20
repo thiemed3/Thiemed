@@ -1,0 +1,4 @@
+[submodule "soportetierranube/payroll_cl"]
+	path = soportetierranube/payroll_cl
+	url = git@github.com:soportetierranube/payroll_cl.git
+	branch = 17.0
