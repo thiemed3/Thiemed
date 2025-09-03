@@ -3,6 +3,7 @@
     <data>
 
         <template id="delivery_guide_inherit_table" inherit_id="l10n_cl_edi_stock_delivery_guide.delivery_guide_document_content">
+
             <xpath expr="//table[@t-if='o.move_ids']" position="replace">
                 <t t-if="o.move_line_ids_without_package">
                     <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
@@ -11,155 +12,68 @@
                     <table class="table table-sm">
                         <thead>
                             <tr style="font-size:12px" >
-                                <th name="th_code">
-                                    <strong>Código</strong>
-                                </th>
-                                <th name="th_product">
-                                    <strong>Producto</strong>
-                                </th>
-                                <th class="text-end">
-                                    <strong>Cantidad</strong>
-                                </th>
-                                <th groups="uom.group_uom">
-                                    <strong>Un Med</strong>
-                                </th>
-                                <th name="lote" class="text-end">
-                                    <strong>Lote</strong>
-                                </th>
-                                <th name="expiration_date" class="text-center">
-                                    <strong>Fecha Vencimiento</strong>
-                                </th>
-                                <th name="unit_price" class="text-end" t-if="has_unit_price">
-                                    <strong>Precio</strong>
-                                </th>
-                                <th name="discount" class="text-end" t-if="has_discount > 0">
-                                    <strong>Descuento</strong>
-                                </th>
-                                <th name="subtotal" class="text-end" t-if="has_unit_price">
-                                    <strong>Subtotal</strong>
-                                </th>
+                                <th name="th_code"><strong>Código</strong></th>
+                                <th name="th_product"><strong>Producto</strong></th>
+                                <th class="text-end"><strong>Cantidad</strong></th>
+                                <th groups="uom.group_uom"><strong>Un Med</strong></th>
+                                <th name="lote" class="text-end"><strong>Lote</strong></th>
+                                <th name="expiration_date" class="text-center"><strong>Fecha Vencimiento</strong></th>
+                                <th name="unit_price" class="text-end" t-if="has_unit_price"><strong>Precio</strong></th>
+                                <th name="subtotal" class="text-end" t-if="has_unit_price"><strong>Subtotal</strong></th>
                             </tr>
                         </thead>
-
                         <tbody>
                             <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
-                            <t t-set="float_repr" t-value="prepared_amounts['float_repr']"/>
                             <t t-foreach="o.move_line_ids_without_package" t-as="line">
                                 <t t-set="line_amounts" t-value="total_line_amounts.get(line.move_id, {})"/>
-                                <t t-set="unit_price" t-value="0"/>
                                 <tr style="font-size:12px">
-                                    <td name="td_code">
-                                        <span style="font-size:12px" t-field="line.product_id.default_code"/>
-                                    </td>
-                                    <td>
-                                        <span style="font-size:12px" t-field="line.product_id.name"/>
-                                        <br/>
-                                        <span t-field="line.product_id.description_picking"/>
-                                    </td>
-                                    <td class="text-end">
-                                        <span t-field="line.quantity"/>
-                                    </td>
-                                    <td groups="uom.group_uom">
-                                        <span t-field="line.product_uom_id"/>
-                                    </td>
-                                    <td class="text-end">
-                                        <span t-field="line.lot_id.name"/>
-                                    </td>
-                                    <td class="text-end">
-                                        <span t-field="line.lot_id.expiration_date"
-                                              t-options='{"format": "dd/MM/yyyy"}'/>
-                                    </td>
-
+                                    <td name="td_code"><span style="font-size:12px" t-field="line.product_id.default_code"/></td>
+                                    <td><span style="font-size:12px" t-field="line.product_id.name"/></td>
+                                    <td class="text-end"><span t-field="line.quantity"/></td>
+                                    <td groups="uom.group_uom"><span t-field="line.product_uom_id"/></td>
+                                    <td class="text-end"><span t-field="line.lot_id.name"/></td>
+                                    <td class="text-end"><span t-field="line.lot_id.expiration_date" t-options='{"format": "dd/MM/yyyy"}'/></td>
                                     <td class="text-end" t-if="has_unit_price" name="td_price_unit">
                                         <span t-esc="line_amounts.get('price_unit', 0.0)" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
-                                        <t t-set="unit_price" t-value="line_amounts.get('price_unit', 0.0)"/>
-                                    </td>
-
-                                    <td class="text-end" t-if="has_discount > 0">
-                                        <span t-esc="line_amounts.get('total_discount_fl', 0.0)"  t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
-                                        <t t-set="has_discount" t-value="has_discount + line_amounts.get('total_discount_fl', 0.0) "/>
-
                                     </td>
                                     <td class="text-end" t-if="has_unit_price">
-                                        <span t-if="(unit_price * line.qty_done) == 0"  t-esc="line_amounts.get('total_amount', 0.0)"
-                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
-                                        <span t-else="" t-esc="unit_price * line.qty_done" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}" />
+                                        <span t-esc="line_amounts.get('total_amount', 0.0)" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
                                     </td>
                                 </tr>
                             </t>
                         </tbody>
                     </table>
                 </t>
-
-                <t t-if="not o.move_line_ids_without_package">
-                    <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
-                    <t t-set="has_unit_price" t-value="prepared_amounts['has_unit_price']"/>
-                    <t t-set="has_discount" t-value="prepared_amounts['has_discount']"/>
-                   <table class="table table-sm" t-if="o.move_ids">
-                                <thead>
-                                    <tr>
-                                        <th name="th_code">
-                                            <strong>Code</strong>
-                                        </th>
-                                        <th name="th_product">
-                                            <strong>Product</strong>
-                                        </th>
-                                        <th class="text-end">
-                                            <strong>Quantity</strong>
-                                        </th>
-                                        <th groups="uom.group_uom">
-                                            <strong>UoM</strong>
-                                        </th>
-                                        <th name="unit_price" class="text-end" t-if="has_unit_price">
-                                            <strong>Unit Price</strong>
-                                        </th>
-                                        <th name="discount" class="text-end" t-if="has_discount">
-                                            <strong>Discount</strong>
-                                        </th>
-                                        <th name="subtotal" class="text-end" t-if="has_unit_price">
-                                            <strong>Value</strong>
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
-                                    <t t-set="float_repr" t-value="prepared_amounts['float_repr']"/>
-                                    <t t-foreach="o.move_ids.filtered(lambda x: x.quantity > 0)" t-as="line">
-                                        <t t-set="line_amounts" t-value="total_line_amounts.get(line.move_id, {})"/>
-                                        <tr>
-                                            <td>
-                                                <span t-field="line.product_id.default_code"/>
-                                            </td>
-                                            <td>
-                                                <span t-field="line.product_id.name"/>
-                                                <br/>
-                                                <span t-field="line.product_id.description_picking"/>
-                                            </td>
-                                            <td class="text-end">
-                                                <span t-field="line.quantity"/>
-                                            </td>
-                                            <td groups="uom.group_uom">
-                                                    <span t-field="line.product_uom_id"/>
-                                            </td>
-
-                                            <td class="text-end" t-if="has_unit_price">
-                                                <span t-out="float_repr(line_amounts.get('price_unit', False), 2)"/>
-                                            </td>
-                                            <td class="text-end" t-if="has_discount">
-                                                <span t-out="line_amounts.get('total_discount_fl', 0.0)"
-                                                      t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
-                                            </td>
-                                            <td class="text-end" t-if="has_unit_price">
-                                                <span t-out="line_amounts.get('total_amount', 0.0)"
-                                                      t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
-                                            </td>
-                                        </tr>
-                                    </t>
-                                </tbody>
-                            </table>
-                </t>
             </xpath>
+
+            <xpath expr="//div[@id='total']" position="replace">
+                <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
+                <div id="total" class="row justify-content-end">
+                    <div class="col-4">
+                        <table class="table table-sm">
+                            <tr class="border-black">
+                                <td name="td_subtotal_neto_label"><strong>Subtotal Neto</strong></td>
+                                <td class="text-end">
+                                    <span t-esc="prepared_amounts.get('amount_untaxed', 0.0)" t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td name="td_iva_label"><strong>IVA 19.00%</strong></td>
+                                <td class="text-end">
+                                    <span t-esc="prepared_amounts.get('amount_tax', 0.0)" t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                </td>
+                            </tr>
+                            <tr class="border-black o_total">
+                                <td name="td_total_label"><strong>Total</strong></td>
+                                <td class="text-end">
+                                    <span t-esc="prepared_amounts.get('amount_total', 0.0)" t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </xpath>
+
         </template>
     </data>
 </odoo>
