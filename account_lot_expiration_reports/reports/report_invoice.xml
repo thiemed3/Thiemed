@@ -3,6 +3,7 @@
   <template id="report_invoice_row_singleloop_over_studio"
             inherit_id="studio_customization.web_studio_report_ed_438b6cf4-752d-4a2b-be65-de8126967f4d"
             priority="10000010">
+
     <xpath expr="//table[@name='invoice_line_table']//t[@name='account_invoice_line_accountable']"
            position="replace">
       <t t-if="line.display_type == 'product'" name="account_invoice_line_accountable">
@@ -22,7 +23,7 @@
         </td>
 
         <td name="account_invoice_line_name">
-          <span t-esc="lv.get('component_name') or line.only_name(line.name)"/>
+          <span t-esc="line.only_name(lv.get('component_name') or line.name)"/>
         </td>
 
         <td class="text-end">
@@ -31,11 +32,15 @@
         </td>
 
         <td class="text-end">
-          <span t-esc="(lot_name or '-') if lot_name != 'SIN LOTE' else ''"/>
+            <t t-if="lot_name and lot_name != 'SIN LOTE'">
+                <span t-esc="lot_name"/>
+            </t>
         </td>
 
         <td class="text-center">
-          <span t-esc="exp_date or '-'"/>
+            <t t-if="exp_date">
+                <span t-esc="exp_date"/>
+            </t>
         </td>
 
         <td name="td_price_unit"
