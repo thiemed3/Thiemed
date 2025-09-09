@@ -8,22 +8,23 @@
                 <t t-if="o.move_line_ids_without_package">
                     <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
                     <t t-set="has_unit_price" t-value="prepared_amounts['has_unit_price']"/>
-                    <t t-set="has_discount" t-value="0"/>
+                    <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
+                    <t t-set="has_discount" t-value="any((v.get('discount') or 0.0) &gt; 0 for v in total_line_amounts.values())"/>
                     <table class="table table-sm">
                         <thead>
-                            <tr style="font-size:12px" >
+                            <tr style="font-size:12px">
                                 <th name="th_code"><strong>Código</strong></th>
                                 <th name="th_product"><strong>Producto</strong></th>
                                 <th class="text-end"><strong>Cantidad</strong></th>
                                 <th groups="uom.group_uom"><strong>Un Med</strong></th>
                                 <th name="lote" class="text-end"><strong>Lote</strong></th>
                                 <th name="expiration_date" class="text-center"><strong>Fecha Vencimiento</strong></th>
-                                <th name="unit_price" class="text-end" t-if="has_unit_price"><strong>Precio</strong></th>
+                                <th name="unit_price" class="text-end" t-if="has_unit_price"><strong>Precio unitario</strong></th>
+                                <th name="th_discount" class="text-end" t-if="has_unit_price and has_discount"><strong>Desc.%</strong></th>
                                 <th name="subtotal" class="text-end" t-if="has_unit_price"><strong>Subtotal</strong></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
                             <t t-foreach="o.move_line_ids_without_package" t-as="line">
                                 <t t-set="line_amounts" t-value="total_line_amounts.get(line.move_id, {})"/>
                                 <tr style="font-size:12px">
@@ -34,10 +35,16 @@
                                     <td class="text-end"><span t-field="line.lot_id.name"/></td>
                                     <td class="text-end"><span t-field="line.lot_id.expiration_date" t-options='{"format": "dd/MM/yyyy"}'/></td>
                                     <td class="text-end" t-if="has_unit_price" name="td_price_unit">
-                                        <span t-esc="line_amounts.get('price_unit', 0.0)" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                        <span t-esc="line_amounts.get('price_unit', 0.0)"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                    </td>
+                                    <td class="text-end" t-if="has_unit_price and has_discount" name="td_discount">
+                                        <t t-set="ldisc" t-value="line_amounts.get('discount', 0.0) or 0.0"/>
+                                        <span t-if="ldisc" t-esc="'{:g}%'.format(float(ldisc))"/>
                                     </td>
                                     <td class="text-end" t-if="has_unit_price">
-                                        <span t-esc="line_amounts.get('total_amount', 0.0)" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                                        <span t-esc="line_amounts.get('total_amount', 0.0)"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
                                     </td>
                                 </tr>
                             </t>
