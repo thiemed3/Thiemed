@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import fields, models, api
+import json
 
 
 class AccountMoveLines(models.Model):
@@ -24,6 +25,7 @@ class AccountMoveLines(models.Model):
             .filtered(lambda ml: ml.state == 'done')
         )
 
+        # --- KITS ---
         if is_kit and delivered_move_lines:
             sale_order = self.sale_line_ids[:1].order_id
             pricelist = sale_order.pricelist_id if sale_order else False
@@ -41,7 +43,7 @@ class AccountMoveLines(models.Model):
                 detail_lines[key] = {
                     'component_code': component.default_code or '',
                     'component_name': component.display_name or component.name or '',
-                    'cantidad': qty_base,  # UoM del movimiento del componente
+                    'cantidad': qty_base,
                     'nombre': lot.name if lot else '',
                     'fecha_vencimiento': lot.expiration_date.strftime('%d/%m/%Y') if (
                                 lot and lot.expiration_date) else '',
@@ -49,6 +51,7 @@ class AccountMoveLines(models.Model):
                     'precio': price,
                 }
 
+        # --- PRODUCTO NORMAL ---
         if not detail_lines:
             uom_factura = self.product_uom_id
 
@@ -60,7 +63,6 @@ class AccountMoveLines(models.Model):
                     lot = move_line.lot_id
                     key = lot.name if lot else 'SIN LOTE'
                     qty_base = getattr(move_line, 'qty_done', 0.0) or getattr(move_line, 'quantity', 0.0)
-
                     cantidad_en_udm_factura = move_line.product_uom_id._compute_quantity(
                         qty_base, uom_factura, rounding_method='HALF-UP'
                     )
@@ -89,7 +91,6 @@ class AccountMoveLines(models.Model):
                 }
 
         return detail_lines
-
 
     def only_name(self, name):
         if name and ']' in name:
