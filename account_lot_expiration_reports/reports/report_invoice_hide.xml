@@ -1,0 +1,10 @@
+<odoo>
+  <data>
+    <template id="remove_discount_amount_column"
+              inherit_id="l10n_cl.report_invoice_document"
+              priority="100000100">
+      <xpath expr="//th[@name='th_discount_currency']" position="replace"/>
+      <xpath expr="//td[@name='td_discount_currency']" position="replace"/>
+    </template>
+  </data>
+</odoo>
