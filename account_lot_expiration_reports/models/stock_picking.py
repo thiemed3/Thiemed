@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields
-from odoo.tools import float_repr 
+from odoo.tools import float_repr
 
 
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    # ------------------------ TOTALES DTE (redondeo por línea) ------------------------
     def _l10n_cl_get_tax_amounts(self):
         """
-        Recalcula totales y montos por línea para el DTE usando:
-        - Pedido de venta (precio/desc/impuestos) cuando aplica
-        - Si partner tiene "none", forzamos product o sale_order (según disponibilidad/moneda)
-        - Manejo de kits: componentes usan tarifa del componente
-        Devuelve (totals, retentions, line_amounts).
+        Calcula montos para DTE/Guía con precios de SO cuando aplica,
+        soporta kits y redondea por línea en CLP. Normaliza al final:
+        MntTotal = MntNeto + IVA (sin diferencias de $1).
         """
         totals = {
             'vat_amount': 0.0,
@@ -27,15 +26,13 @@ class StockPicking(models.Model):
         partner = self.partner_id
         company = self.company_id
         currency = company.currency_id
-
-        # --- Política de precio para guía ---
         guide_price = partner.l10n_cl_delivery_guide_price
+        
         if guide_price == 'none':
             guide_price = "sale_order" if (self.sale_id and self.sale_id.currency_id == currency) else "product"
         if guide_price == 'sale_order' and (not self.sale_id or self.sale_id.currency_id != currency):
             guide_price = 'product'
 
-        max_vat_perc = 0.0
         tax_group_ila = self.env['account.chart.template'].with_company(company).ref(
             'tax_group_ila', raise_if_not_found=False
         )
@@ -43,6 +40,7 @@ class StockPicking(models.Model):
             'tax_group_retenciones', raise_if_not_found=False
         )
         TAX19_SII_CODE = 14
+        max_vat_perc = 0.0
 
         for move in self.move_ids.filtered(lambda m: m.quantity > 0):
             product = move.product_id
@@ -51,7 +49,6 @@ class StockPicking(models.Model):
 
             qty, uom = self._qty_in_move_uom(move)
             qty = qty or 0.0
-
             sol = move.sale_line_id or (
                 self.sale_id.order_line.filtered(lambda l: l.product_id == product)[:1] if self.sale_id else False
             )
@@ -79,55 +76,63 @@ class StockPicking(models.Model):
                     taxes = product.taxes_id.filtered(lambda t: t.company_id == company)
 
             price_after_disc = price_unit * (1 - (discount or 0.0) / 100.0)
+
             if taxes:
                 tax_res = taxes.compute_all(price_after_disc, currency=currency, quantity=qty, partner=partner)
             else:
                 base = price_after_disc * qty
                 tax_res = {'total_excluded': base, 'total_included': base, 'taxes': []}
 
-            totals['total_amount'] += tax_res['total_included']
+            # ---- Redondeo por línea ----
+            line_excl = currency.round(tax_res['total_excluded'])
+            line_incl = currency.round(tax_res['total_included'])
+            totals['total_amount'] += line_incl
 
             no_vat_taxes = True
             for tax_val in tax_res.get('taxes', []):
                 tax = self.env['account.tax'].browse(tax_val['id'])
+                tax_amount_line = currency.round(tax_val['amount'])
                 if tax.l10n_cl_sii_code == TAX19_SII_CODE:
                     no_vat_taxes = False
-                    totals['vat_amount'] += tax_val['amount']
+                    totals['vat_amount'] += tax_amount_line
                     max_vat_perc = max(max_vat_perc, tax.amount)
                 elif tax.tax_group_id and (
                     (tax_group_ila and tax.tax_group_id.id == tax_group_ila.id) or
                     (tax_group_ret and tax.tax_group_id.id == tax_group_ret.id)
                 ):
                     key = (tax.l10n_cl_sii_code, tax.amount, tax.tax_group_id.name)
-                    retentions.setdefault(key, 0.0)
-                    retentions[key] += tax_val['amount']
+                    retentions[key] = retentions.get(key, 0.0) + tax_amount_line
 
             if no_vat_taxes:
-                totals['subtotal_amount_exempt'] += tax_res['total_excluded']
+                totals['subtotal_amount_exempt'] += line_excl
             else:
-                totals['subtotal_amount_taxable'] += tax_res['total_excluded']
+                totals['subtotal_amount_taxable'] += line_excl
 
             undisc_unit_excl = price_unit
-            disc_unit_excl = (tax_res['total_excluded'] / qty) if qty else price_after_disc
-            line_amounts[move] = {
-                "value": currency.round(tax_res['total_included']),
-                "total_amount": currency.round(tax_res['total_excluded']),
+            disc_unit_excl = (line_excl / qty) if qty else price_after_disc
+
+            la = {
+                "value": line_incl,                         
+                "total_amount": line_excl,                  
                 "price_unit": currency.round(undisc_unit_excl),
                 "price_unit_disc": currency.round(disc_unit_excl),
-                "exempt": no_vat_taxes and (tax_res['total_excluded'] != 0.0),
+                "exempt": no_vat_taxes and (line_excl != 0.0),
             }
+
             if discount:
                 if taxes:
                     tax_res_undisc = taxes.compute_all(price_unit, currency=currency, quantity=qty, partner=partner)
-                    base_undisc = tax_res_undisc['total_excluded']
+                    base_undisc = currency.round(tax_res_undisc['total_excluded'])
                 else:
-                    base_undisc = price_unit * qty
+                    base_undisc = currency.round(price_unit * qty)
                 disc_amount = base_undisc * discount / 100.0
-                line_amounts[move].update({
+                la.update({
                     'discount': discount,
                     'total_discount': float_repr(currency.round(disc_amount), 0),
                     'total_discount_fl': currency.round(disc_amount),
                 })
+
+            line_amounts[move] = la
 
         totals['vat_percent'] = max_vat_perc and float_repr(max_vat_perc, 2) or False
         retention_res = [
@@ -139,11 +144,20 @@ class StockPicking(models.Model):
             }
             for (code, percent, name), amount in retentions.items()
         ]
+
+        # ---- Normalización final: coherencia DTE ----
+        totals['subtotal_amount_taxable'] = currency.round(totals['subtotal_amount_taxable'])
+        totals['subtotal_amount_exempt']  = currency.round(totals['subtotal_amount_exempt'])
+        totals['vat_amount']              = currency.round(totals['vat_amount'])
+        totals['total_amount']            = currency.round(
+            totals['subtotal_amount_taxable'] + totals['subtotal_amount_exempt'] + totals['vat_amount']
+        )
+
         return totals, retention_res, line_amounts
 
-    # ---------- Helper: precio por tarifa con uom/fecha y fallback ---------- #
+    # -------------------------- Helpers usados arriba --------------------------
     def _safe_pricelist_price(self, pricelist, product, qty, partner, uom=None, date=None):
-        """Obtiene precio desde la tarifa con UoM/fecha. Si falla, cae a lst_price convertido si se puede."""
+        """Precio desde tarifa con UoM/fecha; si falla, usa lst_price convertido."""
         date = fields.Date.to_date(date) or fields.Date.context_today(self)
         uom = uom or product.uom_id
         try:
@@ -152,30 +166,25 @@ class StockPicking(models.Model):
             price = product.lst_price
             try:
                 company = self.company_id
-                from_cur = company.currency_id
-                to_cur = pricelist.currency_id
-                if from_cur and to_cur and from_cur != to_cur:
-                    price = from_cur._convert(price, to_cur, company, date, round=False)
+                if company.currency_id and pricelist.currency_id and company.currency_id != pricelist.currency_id:
+                    price = company.currency_id._convert(price, pricelist.currency_id, company, date, round=False)
             except Exception:
                 pass
             return price
 
-    # ---------- Helper: cantidad en la UoM del move (suma de move lines) ---------- #
     def _qty_in_move_uom(self, move):
-        """Devuelve (qty, uom) donde qty está expresada en la UoM del move."""
+        """Cantidad en UoM del move (suma líneas si está done)."""
         move_uom = move.product_uom
         if move.state == 'done':
             qty = 0.0
             for ml in move.move_line_ids:
                 if not ml.qty_done:
                     continue
-                qty += ml.product_uom_id._compute_quantity(
-                    ml.qty_done, move_uom, rounding_method='HALF-UP'
-                )
+                qty += ml.product_uom_id._compute_quantity(ml.qty_done, move_uom, rounding_method='HALF-UP')
             return qty or 0.0, move_uom
         return (move.product_uom_qty or 0.0), move_uom
 
-    # ---------- PDF: reutiliza los mismos montos que el DTE ---------- #
+    # ------------------ PDF: reutiliza exactamente los mismos montos ------------------
     def _prepare_pdf_values(self):
         amounts, withholdings, total_line_amounts = self._l10n_cl_get_tax_amounts()
         res = super()._prepare_pdf_values()
