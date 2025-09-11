@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields
-
+from odoo.tools import float_repr
 
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
-        def _l10n_cl_get_tax_amounts(self):
+    def _l10n_cl_get_tax_amounts(self):
         """
         Recalcula totales y montos por línea para el DTE usando:
         - Pedido de venta (precio/desc/impuestos) cuando aplica
