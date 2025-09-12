@@ -1,155 +1,103 @@
+# -*- coding: utf-8 -*-
 from odoo import fields, models, api
 import json
+
 
 class AccountMoveLines(models.Model):
     _inherit = 'account.move.line'
 
-    cantidad_lote = fields.Char(string='Cantidad Lote')# compute='_compute_cantidad_lote', store=True)
-    #cantidad_lote = fields.Char(string='Cantidad Lote')
-    # stock_move_line_id = fields.One2many('stock.move.line', 'account_move_line_id', string='Linea de Movimiento')
+    cantidad_lote = fields.Char(string='Cantidad Lote')
 
-    # Sobrescribir el comportamiento para que pueda tomar las lineas de seccion------------------------------------------
     def _l10n_cl_get_line_amounts(self):
-        if self.display_type != 'product':
-            return {
-                'price_subtotal': 0,
-                'line_description': self.name,
-            }
-
-        return super()._l10n_cl_get_line_amounts()
-
-
-    def _compute_cantidad_lote(self):
-        for rec in self:
-            cantidad_lote = {}
-
-            # RECORRER LOS MOVIENMIENTOS DE LA LINEA DE PEDIDO DE VENTA Y OBTENER EL VALOR DEL CAMPO cantidad_lote.
-            for sale_line in rec.sale_line_ids:
-                if sale_line.cantidad_lote:
-                    cantidad_lote.update(json.loads(sale_line.cantidad_lote))
-
-            if not cantidad_lote:
-                    cantidad_lote = {'SIN LOTE': sale_line.qty_invoiced}
-
-            rec.cantidad_lote = json.dumps(cantidad_lote)
+        res = super()._l10n_cl_get_line_amounts()
+        if 'line_description' not in res:
+            res['line_description'] = self.name
+        return res
 
     def get_lote_lines(self):
-        # si el diccionario esta vacio actualizar con el valor de la cantidad de la linea de factura
-        cantidad_lote = {}
-        if not self.cantidad_lote:
-            cantidad_lote = {'SIN LOTE': {}}
-        else:
-            cantidad_lote = json.loads(self.cantidad_lote)
+        self.ensure_one()
+        detail_lines = {}
 
-        for key, value in cantidad_lote.items():
-            fecha_vencimiento = False
-            lot = self.env['stock.lot'].search([('name', '=', key), ('product_id', '=', self.product_id.id)])
-            if lot:
-                fecha_vencimiento = lot.expiration_date
+        is_kit = self.product_id.bom_ids.filtered(lambda b: b.type == 'phantom')
+        delivered_move_lines = (
+            self.mapped('sale_line_ids.move_ids')
+            .mapped('move_line_ids')
+            .filtered(lambda ml: ml.state == 'done')
+        )
 
-            for rec in self:
-                move_lines = rec.sale_line_ids.move_ids.mapped('move_line_ids').filtered(lambda x: x.product_id == rec.product_id)
-                sale_lines = rec.mapped('sale_line_ids').filtered(lambda x: x.product_id == rec.product_id)
+        # --- KITS ---
+        if is_kit and delivered_move_lines:
+            sale_order = self.sale_line_ids[:1].order_id
+            pricelist = sale_order.pricelist_id if sale_order else False
+            partner = sale_order.partner_id if sale_order else self.move_id.partner_id
 
-                ratio = int(sale_lines.product_uom.factor_inv) or 1
-                
-                if sale_lines.product_uom.uom_type == 'reference':
-                    if key == 'SIN LOTE':
-                        cantidad_lote[key] = {'cantidad': rec.quantity,
-                                              'nombre': key,
-                                              'fecha_vencimiento': '',
-                                              'udm': move_lines.product_uom_id.name,
-                                              'precio': sale_lines.price_unit,
-                                              'ratio': 1}
-                    else:
+            for move_line in delivered_move_lines:
+                component = move_line.product_id
+                lot = move_line.lot_id
+                qty_base = getattr(move_line, 'qty_done', 0.0) or getattr(move_line, 'quantity', 0.0)
+                price = (
+                    pricelist._get_product_price(component, qty_base, partner)
+                    if pricelist else component.list_price
+                )
+                key = f"ml-kit-{move_line.id}"
+                detail_lines[key] = {
+                    'component_code': component.default_code or '',
+                    'component_name': component.display_name or component.name or '',
+                    'cantidad': qty_base,
+                    'nombre': lot.name if lot else '',
+                    'fecha_vencimiento': lot.expiration_date.strftime('%d/%m/%Y') if (
+                                lot and lot.expiration_date) else '',
+                    'udm': move_line.product_uom_id.name,
+                    'precio': price,
+                }
 
-                        if fecha_vencimiento:
-                            cantidad_lote[key] = {'cantidad': value,
-                                                  'nombre': key,
-                                                  'fecha_vencimiento': fecha_vencimiento.strftime('%d/%m/%Y'),
-                                                  'udm': move_lines.product_uom_id.name,
-                                                  'precio': sale_lines.price_unit,
-                                                  'ratio': 1}
-                        else:
-                            cantidad_lote[key] = {'cantidad': value,
-                                                  'nombre': key,
-                                                  'fecha_vencimiento': '',
-                                                  'udm': move_lines.product_uom_id.name,
-                                                  'precio': sale_lines.price_unit,
-                                                  'ratio': 1}
-                elif sale_lines.product_uom.uom_type == 'bigger':
+        # --- PRODUCTO NORMAL ---
+        if not detail_lines:
+            uom_factura = self.product_uom_id
 
-                    if key == 'SIN LOTE':
-                        valor = rec.quantity * sale_lines.product_uom.factor_inv
-                        cantidad_lote[key] = {'cantidad': rec.quantity,
-                                              'nombre': key,
-                                              'fecha_vencimiento': '',
-                                              'udm': move_lines.product_uom_id.name,
-                                              'precio': sale_lines.price_unit,
-                                              'ratio': 1}
-                    else:
+            if delivered_move_lines:
+                for move_line in delivered_move_lines:
+                    if move_line.product_id != self.product_id:
+                        continue
 
-                        if fecha_vencimiento:
-                            cantidad_lote[key] = {'cantidad': value,
-                                                  'nombre': key,
-                                                  'fecha_vencimiento': fecha_vencimiento.strftime('%d/%m/%Y'),
-                                                  'udm': move_lines.product_uom_id.name,
-                                                  'precio': sale_lines.price_unit,
-                                                  'ratio': ratio}
-                        else:
-                            cantidad_lote[key] = {'cantidad': value,
-                                                  'nombre': key,
-                                                  'fecha_vencimiento': '',
-                                                  'udm': move_lines.product_uom_id.name,
-                                                  'precio': sale_lines.price_unit,
-                                                  'ratio': ratio}
-                else:
-                    if key == 'SIN LOTE':
-                        cantidad_lote[key] = {'cantidad': rec.quantity,
-                                              'nombre': key,
-                                              'fecha_vencimiento': '',
-                                              'udm': move_lines.product_uom_id.name,
-                                              'precio': rec.price_unit,
-                                              'ratio': 1}
-                    else:
+                    lot = move_line.lot_id
+                    key = lot.name if lot else 'SIN LOTE'
+                    qty_base = getattr(move_line, 'qty_done', 0.0) or getattr(move_line, 'quantity', 0.0)
+                    cantidad_en_udm_factura = move_line.product_uom_id._compute_quantity(
+                        qty_base, uom_factura, rounding_method='HALF-UP'
+                    )
 
-                        if fecha_vencimiento:
-                            cantidad_lote[key] = {'cantidad': rec.quantity,
-                                                  'nombre': key,
-                                                  'fecha_vencimiento': fecha_vencimiento.strftime('%d/%m/%Y'),
-                                                  'udm': move_lines.product_uom_id.name,
-                                                  'precio': sale_lines.price_unit,
-                                                  'ratio': ratio}
-                        else:
-                            cantidad_lote[key] = {'cantidad': rec.quantity,
-                                                  'nombre': key,
-                                                  'fecha_vencimiento': '',
-                                                  'udm': move_lines.product_uom_id.name,
-                                                  'precio': sale_lines.price_unit,
-                                                  'ratio': ratio}
-        return cantidad_lote
+                    detail_lines.setdefault(key, {
+                        'component_code': self.product_id.default_code or '',
+                        'component_name': self.product_id.display_name or self.product_id.name or '',
+                        'cantidad': 0.0,
+                        'nombre': '' if key == 'SIN LOTE' else key,
+                        'fecha_vencimiento': lot.expiration_date.strftime('%d/%m/%Y') if (
+                                    lot and lot.expiration_date) else '',
+                        'udm': uom_factura.name,
+                        'precio': self.price_unit,
+                    })
+                    detail_lines[key]['cantidad'] += cantidad_en_udm_factura
 
-    def get_lote_cantidad(self, diccionario, llave):
-        return diccionario.get(llave).get('cantidad')
+            else:
+                detail_lines['main'] = {
+                    'component_code': self.product_id.default_code or '',
+                    'component_name': self.product_id.display_name or self.product_id.name or '',
+                    'cantidad': self.quantity,
+                    'nombre': '',
+                    'fecha_vencimiento': '',
+                    'udm': uom_factura.name,
+                    'precio': self.price_unit,
+                }
 
-    def get_lote_fvencimiento(self, diccionario, llave):
-        return diccionario.get(llave).get('fecha_vencimiento')
+        return detail_lines
 
-    
     def only_name(self, name):
         if name and ']' in name:
-            name = name.split(']')[1]
-            return name
-        else:
-            return name
+            return name.split(']')[1]
+        return name
 
     def only_code(self, name):
         if name and ']' in name:
-            name = name.split(']')[0]
-            name_format = name.replace('[', '')
-            return name_format
-        else:
-            return ''
-
-
-
+            return name.split(']')[0].replace('[', '')
+        return name
