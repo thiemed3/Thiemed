@@ -7,7 +7,7 @@
     'website': "http://www.tierranube.cl",
     'license': 'LGPL-3',
     'category': 'sale',
-    'version': '1.0',
+    'version': '18.0.0.1',
     # any module necessary for this one to work correctly
     'depends': ['base', 'sale', 'sale_order_medical_information'],
     # always loaded
