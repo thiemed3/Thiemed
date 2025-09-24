@@ -13,7 +13,7 @@ class SaleOrder(models.Model):
                    ('transito', 'TRANSITO'),
                    ('asistenciacirugia', 'ASISTENCIA CIRUGIA'),
                    ('consignacion', 'CONSIGNACION')],
-        string='Tipo Venta', required=True)
+        string='Tipo Venta', required=False)
 
     def _action_confirm(self):
         res = super(SaleOrder, self)._action_confirm()
