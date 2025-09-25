@@ -9,41 +9,38 @@ class AccountMoveLines(models.Model):
 
     cantidad_lote = fields.Char(string='Cantidad Lote')
 
-        def _l10n_cl_get_line_amounts(self):
-            self.ensure_one()
-            res = super()._l10n_cl_get_line_amounts()
+    def _l10n_cl_get_line_amounts(self):
+        self.ensure_one()
+        res = super()._l10n_cl_get_line_amounts()
 
-            res['line_description'] = (
-                res.get('line_description')
-                or self.name
-                or (self.product_id.display_name or self.product_id.name or '')
-            )
+        res['line_description'] = (
+            res.get('line_description')
+            or self.name
+            or (self.product_id.display_name or self.product_id.name or ''))
             
-            res['main_currency'] = res.get('main_currency') or self.move_id.currency_id or self.company_currency_id
+        res['main_currency'] = res.get('main_currency') or self.move_id.currency_id or self.company_currency_id
 
-            if self.display_type in ('line_section', 'line_note'):
-                res['price_item_document'] = res.get('price_item_document', 0.0) or 0.0
-                res['price_line_document'] = res.get('price_line_document', 0.0) or 0.0
-                res['total_discount'] = 0.0
-                return res
-
-            res['price_item_document'] = (
-                res.get('price_item_document', self.price_unit or 0.0) or 0.0
-            )
-            res['price_line_document'] = (
-                res.get('price_line_document', self.price_subtotal or 0.0) or 0.0
-            )
-
-            if self.discount:
-                qty = self.quantity or 0.0
-                base_sin_desc = (self.price_unit or 0.0) * qty
-                disc = base_sin_desc * (self.discount / 100.0)
-                cur = (self.move_id.currency_id or self.company_currency_id)
-                res['total_discount'] = cur.round(disc) if cur else disc
-            else:
-                res['total_discount'] = 0.0
-
+        if self.display_type in ('line_section', 'line_note'):
+            res['price_item_document'] = res.get('price_item_document', 0.0) or 0.0
+            res['price_line_document'] = res.get('price_line_document', 0.0) or 0.0
+            res['total_discount'] = 0.0
             return res
+
+        res['price_item_document'] = (
+            res.get('price_item_document', self.price_unit or 0.0) or 0.0)
+        res['price_line_document'] = (
+            res.get('price_line_document', self.price_subtotal or 0.0) or 0.0)
+
+        if self.discount:
+            qty = self.quantity or 0.0
+            base_sin_desc = (self.price_unit or 0.0) * qty
+            disc = base_sin_desc * (self.discount / 100.0)
+            cur = (self.move_id.currency_id or self.company_currency_id)
+            res['total_discount'] = cur.round(disc) if cur else disc
+        else:
+            res['total_discount'] = 0.0
+
+        return res
 
     def get_lote_lines(self):
         self.ensure_one()
