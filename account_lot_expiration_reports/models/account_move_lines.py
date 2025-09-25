@@ -21,10 +21,13 @@ class AccountMoveLines(models.Model):
         if self.discount:
             qty = self.quantity or 0.0
             base_sin_desc = (self.price_unit or 0.0) * qty
-            res['total_discount'] = float_repr(
-                float_round(base_sin_desc * (self.discount / 100.0), precision_digits=0),
-                0
-            )
+            total_desc_fl = float_round(base_sin_desc * (self.discount / 100.0), precision_digits=0)
+            res['total_discount'] = total_desc_fl           
+            res['total_discount_str'] = float_repr(total_desc_fl, 0) 
+        else:
+            res['total_discount'] = 0.0
+            res['total_discount_str'] = '0'
+        return res
 
         name = self.name or (self.product_id.display_name or self.product_id.name) or ''
         if ']' in name and name.startswith('['):
@@ -35,12 +38,6 @@ class AccountMoveLines(models.Model):
         return res
 
     def get_lote_lines(self):
-        """
-        Devuelve un dict de líneas de detalle por lote para la línea de factura.
-        CAMBIOS CLAVE:
-          - Producto normal: tope por la cantidad facturada (self.quantity).
-          - Kit (phantom): se aplica un ratio = min(1, kits_facturados/kits_entregados) a las qty de sus componentes.
-        """
         self.ensure_one()
         detail_lines = {}
 
