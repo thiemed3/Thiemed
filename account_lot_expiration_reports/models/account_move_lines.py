@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import fields, models, api
+from odoo.tools import float_round, float_repr
 import json
 
 
@@ -9,63 +10,118 @@ class AccountMoveLines(models.Model):
     cantidad_lote = fields.Char(string='Cantidad Lote')
 
     def _l10n_cl_get_line_amounts(self):
+        
+        self.ensure_one()
         res = super()._l10n_cl_get_line_amounts()
-        if 'line_description' not in res:
-            res['line_description'] = self.name
+        move_currency = self.move_id.currency_id or self.company_currency_id
+        res['price_item_document'] = self.price_unit or 0.0
+        res['price_line_document'] = self.price_subtotal or 0.0
+        res['main_currency'] = move_currency
+
+        if self.discount:
+            qty = self.quantity or 0.0
+            base_sin_desc = (self.price_unit or 0.0) * qty
+            res['total_discount'] = float_repr(
+                float_round(base_sin_desc * (self.discount / 100.0), precision_digits=0),
+                0
+            )
+
+        name = self.name or (self.product_id.display_name or self.product_id.name) or ''
+        if ']' in name and name.startswith('['):
+            res['line_description'] = name.split(']', 1)[1].lstrip()
+        else:
+            res['line_description'] = name
+
         return res
 
     def get_lote_lines(self):
+        """
+        Devuelve un dict de líneas de detalle por lote para la línea de factura.
+        CAMBIOS CLAVE:
+          - Producto normal: tope por la cantidad facturada (self.quantity).
+          - Kit (phantom): se aplica un ratio = min(1, kits_facturados/kits_entregados) a las qty de sus componentes.
+        """
         self.ensure_one()
         detail_lines = {}
 
-        is_kit = self.product_id.bom_ids.filtered(lambda b: b.type == 'phantom')
+        is_kit = self.product_id.bom_ids.filtered(lambda b: b.type == 'phantom')[:1]
         delivered_move_lines = (
             self.mapped('sale_line_ids.move_ids')
             .mapped('move_line_ids')
             .filtered(lambda ml: ml.state == 'done')
         )
 
-        # --- KITS ---
         if is_kit and delivered_move_lines:
             sale_order = self.sale_line_ids[:1].order_id
             pricelist = sale_order.pricelist_id if sale_order else False
             partner = sale_order.partner_id if sale_order else self.move_id.partner_id
 
+            kits_delivered_candidates = []
+            for bl in is_kit.bom_line_ids:
+                total_comp = 0.0
+                for ml in delivered_move_lines.filtered(lambda m: m.product_id == bl.product_id):
+                    if not ml.qty_done:
+                        continue
+                    total_comp += ml.product_uom_id._compute_quantity(
+                        ml.qty_done, bl.product_uom_id, rounding_method='HALF-UP'
+                    )
+                if bl.product_qty > 0:
+                    kits_eq = total_comp / bl.product_qty
+                    kits_delivered_candidates.append(kits_eq)
+
+            kits_delivered = min(kits_delivered_candidates) if kits_delivered_candidates else 0.0
+            kits_invoiced = self.quantity  
+            ratio = 1.0
+            if kits_delivered > 0:
+                ratio = min(1.0, kits_invoiced / kits_delivered)
+
             for move_line in delivered_move_lines:
                 component = move_line.product_id
                 lot = move_line.lot_id
-                qty_base = getattr(move_line, 'qty_done', 0.0) or getattr(move_line, 'quantity', 0.0)
-                price = (
-                    pricelist._get_product_price(component, qty_base, partner)
-                    if pricelist else component.list_price
-                )
+                qty_base = (getattr(move_line, 'qty_done', 0.0) or getattr(move_line, 'quantity', 0.0)) or 0.0
+                qty_base *= ratio
+
+                if pricelist:
+                    price = pricelist._get_product_price(component, qty_base, partner)
+                else:
+                    price = component.list_price
+
                 key = f"ml-kit-{move_line.id}"
                 detail_lines[key] = {
                     'component_code': component.default_code or '',
                     'component_name': component.display_name or component.name or '',
-                    'cantidad': qty_base,
+                    'cantidad': qty_base, 
                     'nombre': lot.name if lot else '',
                     'fecha_vencimiento': lot.expiration_date.strftime('%d/%m/%Y') if (
-                                lot and lot.expiration_date) else '',
+                        lot and lot.expiration_date) else '',
                     'udm': move_line.product_uom_id.name,
                     'precio': price,
                 }
 
-        # --- PRODUCTO NORMAL ---
         if not detail_lines:
             uom_factura = self.product_uom_id
 
             if delivered_move_lines:
+                remaining = float(self.quantity or 0.0)
+
                 for move_line in delivered_move_lines:
                     if move_line.product_id != self.product_id:
                         continue
+                    if remaining <= 0:
+                        break
 
                     lot = move_line.lot_id
                     key = lot.name if lot else 'SIN LOTE'
-                    qty_base = getattr(move_line, 'qty_done', 0.0) or getattr(move_line, 'quantity', 0.0)
-                    cantidad_en_udm_factura = move_line.product_uom_id._compute_quantity(
+                    qty_base = (getattr(move_line, 'qty_done', 0.0) or getattr(move_line, 'quantity', 0.0)) or 0.0
+
+                    qty_in_invoice_uom = move_line.product_uom_id._compute_quantity(
                         qty_base, uom_factura, rounding_method='HALF-UP'
                     )
+
+                    take = min(qty_in_invoice_uom, remaining)
+                    if take <= 0:
+                        continue
+                    remaining -= take
 
                     detail_lines.setdefault(key, {
                         'component_code': self.product_id.default_code or '',
@@ -73,11 +129,11 @@ class AccountMoveLines(models.Model):
                         'cantidad': 0.0,
                         'nombre': '' if key == 'SIN LOTE' else key,
                         'fecha_vencimiento': lot.expiration_date.strftime('%d/%m/%Y') if (
-                                    lot and lot.expiration_date) else '',
-                        'udm': uom_factura.name,
-                        'precio': self.price_unit,
+                            lot and lot.expiration_date) else '',
+                        'udm': uom_factura.name,        
+                        'precio': self.price_unit,      
                     })
-                    detail_lines[key]['cantidad'] += cantidad_en_udm_factura
+                    detail_lines[key]['cantidad'] += take
 
             else:
                 detail_lines['main'] = {
