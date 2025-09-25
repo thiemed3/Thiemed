@@ -29,7 +29,7 @@
         <t t-set="has_lote"
            t-value="bool(lv) and (lv.get('cantidad') or lv.get('nombre') or lv.get('udm'))"/>
 
-        <!-- ===================== CON LOTES ===================== -->
+        <!-- ===================== MODO LOTE ===================== -->
         <t t-if="has_lote">
           <t t-set="qty"        t-value="lv.get('cantidad') or 0.0"/>
           <t t-set="uom"        t-value="lv.get('udm') or (line.product_uom_id and line.product_uom_id.name) or ''"/>
@@ -37,7 +37,6 @@
           <t t-set="exp_date"   t-value="lv.get('fecha_vencimiento') or ''"/>
           <t t-set="ratio"      t-value="(lv.get('ratio') or 1.0) or 1.0"/>
           <t t-set="price_comp" t-value="lv.get('precio') if lv.get('precio') is not None else line.price_unit"/>
-
           <t t-set="unit_price"       t-value="price_comp / (ratio or 1.0)"/>
           <t t-set="discount_factor"  t-value="(1 - (line.discount or 0.0)/100.0)"/>
           <t t-set="subtotal"         t-value="unit_price * qty * discount_factor"/>
@@ -88,7 +87,7 @@
           </td>
         </t>
 
-        <!-- ===================== SIN LOTES ===================== -->
+        <!-- ===================== MODO SIMPLE ===================== -->
         <t t-else="">
           <td name="account_invoice_line_name_ref">
             <span t-esc="line.product_id.default_code or ''"/>
@@ -115,13 +114,20 @@
 
           <td name="td_discount" t-if="display_discount"
               t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
-            <span class="text-nowrap" t-esc="'{:g}%'.format(float(line.discount or 0.0))"/>
+            <span class="text-nowrap"
+                t-out="line_amounts.get('total_discount_fl', 0.0)"
+                t-options="{'widget': 'monetary', 'display_currency': line_amounts['main_currency']}"/>
           </td>
 
           <t t-set="taxes" t-value="', '.join([(tax.invoice_label or tax.name) for tax in line.tax_ids])"/>
           <td name="td_taxes"
               t-attf-class="text-start {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }} {{ 'text-nowrap' if len(taxes) &lt; 10 else '' }}">
-            <span id="line_tax_ids" t-out="taxes"/>
+            <t t-if="taxes">
+              <span id="line_tax_ids" t-out="taxes"/>
+            </t>
+            <t t-else="">
+              <span>&#160;</span>
+            </t>
           </td>
 
           <td name="td_subtotal" class="text-end">
