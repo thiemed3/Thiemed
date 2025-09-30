@@ -9,7 +9,7 @@
     # Check https://github.com/odoo/odoo/blob/master/odoo/addons/base/module/module_data.xml
     # for the full list
     'category': 'sale',
-    'version': '1.1',
+    'version': '18.0.0.1',
     # any module necessary for this one to work correctly
     'depends': ['base', 'sale'],
     # always loaded

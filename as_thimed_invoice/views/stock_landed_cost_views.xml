@@ -11,7 +11,7 @@
             <xpath expr="//field[@name='account_move_id']" position="after">
                 <field name="analytic_tag_id"/>
             </xpath>
-            <xpath expr="//field[@name='valuation_adjustment_lines']/tree/field[@name='additional_landed_cost']" position="after">
+            <xpath expr="//field[@name='valuation_adjustment_lines']/list/field[@name='additional_landed_cost']" position="after">
                 <field name="new_cost"/>
             </xpath>
         </field>

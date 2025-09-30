@@ -9,7 +9,7 @@
             <field name="arch" type="xml">
                 <notebook position="inside">
                     <page string="Cross Reference Documents" name="cross_reference_docs">
-                        <field name="l10n_cl_reference_ids" mode="tree" readonly="False">
+                        <field name="l10n_cl_reference_ids" mode="list" readonly="False">
                             <form>
                                 <group>
                                     <field name="origin_doc_number" required="True"/>
@@ -19,13 +19,13 @@
                                     <field name="date"/>
                                 </group>
                             </form>
-                            <tree>
+                            <list>
                                 <field name="origin_doc_number" required="True"/>
                                 <field name="l10n_cl_reference_doc_type_id" required="True"/>
                                 <field name="reference_doc_code"/>
                                 <field name="reason"/>
                                 <field name="date"/>
-                            </tree>
+                            </list>
                         </field>
                     </page>
                 </notebook>

@@ -5,7 +5,7 @@
     'author': "Tierranube",
     'website': "https://www.tierranube.cl",
     'category': 'Accounting/Localizations/EDI',
-    'version': '0.1',
+    'version': '18.0.0.1',
     'license': 'AGPL-3',
     'depends': ['l10n_cl_edi'],
     'data': [
