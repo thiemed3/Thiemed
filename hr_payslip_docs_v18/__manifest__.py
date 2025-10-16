@@ -39,7 +39,6 @@
         "l10n_cl_hr",
         "l10n_cl_hr_payroll",
         "l10n_cl_hr_payroll_reports",
-        "l10n_cl_hr_previred"
         "documents",       # App Documentos (Enterprise)
         "mail",           # Sistema de correo
         "base_automation", # Automatizaciones
