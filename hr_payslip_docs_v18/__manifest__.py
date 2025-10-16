@@ -38,6 +38,8 @@
         "hr_payroll_portal",
         "l10n_cl_hr",
         "l10n_cl_hr_payroll",# App Documentos (Enterprise)
+        "l10n_cl_hr_payroll_reports",
+        "l10n_cl_hr_previred",
         "mail",           # Sistema de correo
         "base_automation", # Automatizaciones
         "account_monetary_correction",
