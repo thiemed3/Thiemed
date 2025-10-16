@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- 
+      REGLAS DE SEGURIDAD PARA DOCUMENTOS DE NÓMINA
+      ==============================================
+      
+      Estas reglas controlan el acceso a los documentos PDF generados 
+      en la aplicación Documents que están vinculados a hr.payslip.
+    -->
+    
+    <!-- 
+      HR Payroll Managers: Acceso completo a todos los documentos de nómina 
+    -->
+    <record id="rule_documents_payslip_hr_manager" model="ir.rule">
+        <field name="name">Docs Nómina - HR Payroll Manager (todos)</field>
+        <field name="model_id" ref="documents.model_documents_document"/>
+        <field name="domain_force">[('res_model', '=', 'hr.payslip')]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+    
+    <!-- 
+      HR Payroll Users: Acceso de lectura a todos los documentos de nómina 
+    -->
+    <record id="rule_documents_payslip_hr_user" model="ir.rule">
+        <field name="name">Docs Nómina - HR Payroll User (lectura)</field>
+        <field name="model_id" ref="documents.model_documents_document"/>
+        <field name="domain_force">[('res_model', '=', 'hr.payslip')]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    
+    <!-- 
+      Empleados: Solo acceso de lectura a sus propios documentos de nómina
+      Filtro: owner_id = usuario actual
+    -->
+    <record id="rule_documents_payslip_employee_own" model="ir.rule">
+        <field name="name">Docs Nómina - Empleado (propios)</field>
+        <field name="model_id" ref="documents.model_documents_document"/>
+        <field name="domain_force">[
+            ('res_model', '=', 'hr.payslip'),
+            ('owner_id', '=', user.id)
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+</odoo>
