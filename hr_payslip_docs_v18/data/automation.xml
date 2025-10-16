@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+            <!--AUTOMATIZACIÓN: GENERACIÓN Y ENVÍO AUTOMÁTICO DE NÓMINAS
+              =========================================================
+              Cuando una nómina cambia a estado 'done' (confirmado), se ejecuta
+              automáticamente la generación del PDF y el envío por correo.
+              Control de idempotencia: Solo se ejecuta si x_doc_sent = False-->
+            <!-- Acción de servidor: Lógica de generación y envío -->
+            <record id="action_server_payslip_auto_generate" model="ir.actions.server">
+                <field name="name">Payslip: Autogenerar documento y enviar correo</field>
+                <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
+                <field name="state">code</field>
+                <field name="code"><![CDATA[
+                    # Ejecutar el método que genera el documento y envía el correo
+                    if records:
+                        records.action_generate_document_and_send_email()
+                ]]></field>
+                <field name="usage">base_automation</field>
+            </record>
+            <!-- Regla de automatización: Trigger al confirmar nómina -->
+            <record id="base_automation_payslip_done" model="base.automation">
+                <field name="name">Payslip: Generar y enviar al confirmar (estado-done)</field>
+                <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
+                <!-- Trigger: Al escribir (cuando cambia state a 'done') -->
+                <field name="trigger">on_write</field>
+                <!--Filtro: Solo nóminas confirmadas que NO han sido procesadas- state = 'done'- x_doc_sent = False-->
+                <field name="filter_domain">[('state', '=', 'done'), ('x_doc_sent', '=', False)]</field>
+                <!-- Acción a ejecutar -->
+                <field name="action_server_id" ref="action_server_payslip_auto_generate"/>
+                <!-- Activa por defecto -->
+                <field name="active" eval="True"/>
+            </record>
+    </data>
+</odoo>
