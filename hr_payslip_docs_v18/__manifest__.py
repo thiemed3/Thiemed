@@ -37,9 +37,7 @@
         "hr_contract_history",
         "hr_payroll_portal",
         "l10n_cl_hr",
-        "l10n_cl_hr_payroll",
-        "l10n_cl_hr_payroll_reports",
-        "documents",       # App Documentos (Enterprise)
+        "l10n_cl_hr_payroll",# App Documentos (Enterprise)
         "mail",           # Sistema de correo
         "base_automation", # Automatizaciones
         "account_monetary_correction",
@@ -62,7 +60,4 @@
     "installable": True,
     "application": False,
     "auto_install": False,  # Cambiado a False para instalación manual
-    "external_dependencies": {
-        "python": [],
-    },
 }
