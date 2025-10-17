@@ -8,7 +8,7 @@
     "description": """
         Módulo complementario para Odoo 18 Enterprise - Payroll Chile
         ================================================================
-        
+
         Funcionalidades:
         ----------------
         * Generación automática de PDF de nómina al confirmar (estado 'done')
@@ -17,50 +17,39 @@
         * Acciones manuales disponibles desde listado de nóminas
         * Control de idempotencia (no duplica documentos ni correos)
         * Seguridad: empleados solo ven sus propios documentos
-        
+
         Compatibilidad:
         ---------------
         * Odoo 18.0 Enterprise
-        * Requiere: hr_payroll, documents, mail
         * Probado con localización Chile (l10n_cl)
-        
+
         Autor: Natalie Aliaga
         Sitio: https://www.tierranube.cl
     """,
-    "version": "18.0",
+    "version": "18.0.1.0",  # Buena práctica cambiar la versión al hacer cambios
     "author": "Natalie Aliaga",
     "website": "https://www.tierranube.cl",
     "license": "LGPL-3",
     "category": "Human Resources/Payroll",
     "depends": [
-        "hr_payroll",      # Módulo base de nómina
-        "hr_contract_history",
-        "hr_payroll_portal",
-        "l10n_cl_hr",
-        "l10n_cl_hr_payroll",
-        "l10n_cl_hr_payroll_reports",
-        "l10n_cl_hr_previred",
-        "documents",
-        "mail",
-        "base_automation", 
-        "account_monetary_correction",
+        "hr_payroll",  # Base de Nóminas
+        "documents",  # Para guardar el PDF
+        "mail",  # Para enviar el correo
+        "base_automation",  # Para las acciones automáticas
+        "l10n_cl_hr_payroll",  # Lógica y reglas de la nómina de Chile
+        "l10n_cl_hr_payroll_reports",  # Plantilla del reporte PDF de la nómina de Chile
     ],
     "data": [
         # Seguridad (siempre primero)
         "security/ir.model.access.csv",
         "security/hr_payslip_security.xml",
-        
+
         # Datos y configuración
         "data/mail_template.xml",
         "data/payslip_actions.xml",
         "data/automation.xml",
-        
-        # Vistas (si las hay)
-        # "views/hr_payslip_views.xml",
     ],
-    "demo": [],
-    "images": [],
     "installable": True,
     "application": False,
-    "auto_install": False,  # Cambiado a False para instalación manual
+    "auto_install": False,
 }
