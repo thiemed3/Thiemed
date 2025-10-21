@@ -91,102 +91,97 @@ class HrPayslip(models.Model):
     # Core: Generar PDF + Documento
     # ------------------------------------
     def _generate_document_and_attachment(self, payroll_folder):
-    """Genera el PDF del recibo, crea/actualiza el adjunto y el documento."""
-    self.ensure_one()
+        """Genera el PDF del recibo, crea/actualiza el adjunto y el documento."""
+        self.ensure_one()
 
-    # 1) Buscar el reporte con fallback a localización CL
-    report = (
-        self.env.ref("hr_payroll.action_report_payslip", raise_if_not_found=False)
-        or self.env.ref("l10n_cl_hr_payroll.action_report_payslip", raise_if_not_found=False)
-    )
-    if not report:
-        raise UserError(_("No se encontró el reporte de nómina (hr_payroll/l10n_cl_hr_payroll)."))
+        # 1) Buscar el reporte con fallback a localización CL
+        report = (
+                self.env.ref("hr_payroll.action_report_payslip", raise_if_not_found=False)
+                or self.env.ref("l10n_cl_hr_payroll.action_report_payslip", raise_if_not_found=False)
+        )
+        if not report:
+            raise UserError(_("No se encontró el reporte de nómina (hr_payroll/l10n_cl_hr_payroll)."))
 
-    # 2) Renderizar PDF (sudo por si el usuario no puede imprimir reportes)
-    pdf_content, _ = report.sudo()._render_qweb_pdf(self.id)
-    if not pdf_content:
-        raise UserError(_("No fue posible generar el PDF del recibo."))
+        # 2) Renderizar PDF
+        pdf_content, _ = report._render_qweb_pdf(self.id)
+        if not pdf_content:
+            raise UserError(_("No fue posible generar el PDF del recibo."))
 
-    # 3) Nombre de archivo estable e idempotente
-    slip_code = self.number or self.name or f"slip_{self.id}"
-    filename = f"Payslip_{slip_code.replace('/', '_')}.pdf"
+        # 3) Nombre de archivo estable e idempotente
+        slip_code = self.number or self.name or f"slip_{self.id}"
+        filename = f"Payslip_{slip_code.replace('/', '_')}.pdf"
 
-    # 4) Crear/actualizar adjunto binario (sudo para evitar AccessError)
-    Attachment = self.env["ir.attachment"].sudo()
-    attachment = Attachment.search([
-        ("res_model", "=", "hr.payslip"),
-        ("res_id", "=", self.id),
-        ("name", "=", filename),
-        ("mimetype", "=", "application/pdf"),
-    ], limit=1)
-
-    vals_att = {
-        "name": filename,
-        "res_model": "hr.payslip",
-        "res_id": self.id,
-        "type": "binary",
-        "mimetype": "application/pdf",
-        "datas": base64.b64encode(pdf_content),
-    }
-    if attachment:
-        attachment.write(vals_att)
-    else:
-        attachment = Attachment.create(vals_att)
-
-    # 5) Asegurar documento en la carpeta de Documentos (sudo y checks)
-    if not self.env.registry.get("documents.document"):
-        raise UserError(_(
-            "No se encontró el modelo 'documents.document' en el registro actual. "
-            "Reinicia el servidor si acabas de instalar 'Documents'."
-        ))
-
-    owner_user = self._get_internal_owner_for_employee(self) or self.env.user
-    Document = self.env["documents.document"].sudo()
-
-    # Intento 1: por attachment
-    document = Document.search([("attachment_id", "=", attachment.id)], limit=1)
-    # Intento 2: por vínculo al recurso + nombre (idempotencia)
-    if not document:
-        document = Document.search([
+        # 4) Crear/actualizar adjunto binario
+        Attachment = self.env["ir.attachment"]
+        attachment = Attachment.search([
             ("res_model", "=", "hr.payslip"),
             ("res_id", "=", self.id),
             ("name", "=", filename),
+            ("mimetype", "=", "application/pdf"),
         ], limit=1)
 
-    vals_doc = {
-        "folder_id": payroll_folder.sudo().id,
-        "owner_id": owner_user.id,
-        "name": filename,
-        "partner_id": (self.employee_id.address_home_id.id if self.employee_id.address_home_id else False),
-        "res_model": "hr.payslip",
-        "res_id": self.id,
-        "company_id": self.company_id.id if self.company_id else False,
-        "attachment_id": attachment.id,
-    }
-    if document:
-        document.write(vals_doc)
-    else:
-        document = Document.create(vals_doc)
+        vals_att = {
+            "name": filename,
+            "res_model": "hr.payslip",
+            "res_id": self.id,
+            "type": "binary",
+            "mimetype": "application/pdf",
+            "datas": base64.b64encode(pdf_content),
+        }
+        if attachment:
+            attachment.write(vals_att)
+        else:
+            attachment = Attachment.create(vals_att)
 
-    # 6) Enlazar en la nómina y mensajería
-    self.x_document_id = document.id
+        # 5) Asegurar documento en la carpeta de Documentos
+        owner_user = self._get_internal_owner_for_employee(self) or self.env.user
+        Document = self.env["documents.document"]
 
-    if not self._get_internal_owner_for_employee(self):
+        # Buscar por attachment, y si no aparece (p.ej. si cambió el adjunto),
+        # buscar por res_model/res_id/name para mantener idempotencia.
+        document = Document.search([
+            ("attachment_id", "=", attachment.id),
+        ], limit=1)
+        if not document:
+            document = Document.search([
+                ("res_model", "=", "hr.payslip"),
+                ("res_id", "=", self.id),
+                ("name", "=", filename),
+            ], limit=1)
+
+        vals_doc = {
+            "folder_id": payroll_folder.id,
+            "owner_id": owner_user.id,
+            "name": filename,
+            "partner_id": (self.employee_id.address_home_id.id if self.employee_id.address_home_id else False),
+            "res_model": "hr.payslip",
+            "res_id": self.id,
+            "company_id": self.company_id.id if self.company_id else False,
+            "attachment_id": attachment.id,
+        }
+        if document:
+            document.write(vals_doc)
+        else:
+            document = Document.create(vals_doc)
+
+        # 6) Enlazar en la nómina y mensajería
+        self.x_document_id = document.id
+
+        if not self._get_internal_owner_for_employee(self):
+            self.message_post(
+                body=_(
+                    "⚠️ El empleado <b>%s</b> no tiene usuario interno. "
+                    "El PDF se guardó en Documentos, pero el empleado no podrá verlo "
+                    "hasta que tenga un usuario interno asignado."
+                ) % (self.employee_id.name,),
+                message_type="comment",
+            )
+
         self.message_post(
-            body=_(
-                "⚠️ El empleado <b>%s</b> no tiene usuario interno. "
-                "El PDF se guardó en Documentos, pero el empleado no podrá verlo "
-                "hasta que tenga un usuario interno asignado."
-            ) % (self.employee_id.name,),
-            message_type="comment",
+            body=_("📄 Documento generado/actualizado en Documentos: %s") % filename,
+            message_type="notification",
+            attachment_ids=[attachment.id],
         )
-
-    self.message_post(
-        body=_("📄 Documento generado/actualizado en Documentos: %s") % filename,
-        message_type="notification",
-        attachment_ids=[attachment.id],
-    )
-
 
     # -----------------------------
     # Envío de Correo
