@@ -49,8 +49,10 @@ class HrPayslip(models.Model):
         return False
 
     def _get_or_create_payroll_folder(self, company):
-        Folder = self.env["documents.folder"]
-        group_user = self.env.ref("base.group_user")
+        """Crea/obtiene la carpeta Payroll con sudo para evitar problemas de permisos."""
+        # ⬇️ CAMBIO: sudo en modelos de Documents
+        Folder = self.env["documents.folder"].sudo()
+        group_user = self.env.ref("base.group_user").sudo()
         payroll_folder_name = self._get_payroll_folder_name()
 
         root_name_candidates = self._get_root_folder_names()
@@ -96,14 +98,14 @@ class HrPayslip(models.Model):
 
         # 1) Buscar el reporte con fallback a localización CL
         report = (
-                self.env.ref("hr_payroll.action_report_payslip", raise_if_not_found=False)
-                or self.env.ref("l10n_cl_hr_payroll.action_report_payslip", raise_if_not_found=False)
+            self.env.ref("hr_payroll.action_report_payslip", raise_if_not_found=False)
+            or self.env.ref("l10n_cl_hr_payroll.action_report_payslip", raise_if_not_found=False)
         )
         if not report:
             raise UserError(_("No se encontró el reporte de nómina (hr_payroll/l10n_cl_hr_payroll)."))
 
-        # 2) Renderizar PDF
-        pdf_content, _ = report._render_qweb_pdf(self.id)
+        # 2) Renderizar PDF (⬇️ CAMBIO: sudo para evitar problemas de permisos)
+        pdf_content, _ = report.sudo()._render_qweb_pdf(self.id)
         if not pdf_content:
             raise UserError(_("No fue posible generar el PDF del recibo."))
 
@@ -111,8 +113,8 @@ class HrPayslip(models.Model):
         slip_code = self.number or self.name or f"slip_{self.id}"
         filename = f"Payslip_{slip_code.replace('/', '_')}.pdf"
 
-        # 4) Crear/actualizar adjunto binario
-        Attachment = self.env["ir.attachment"]
+        # 4) Crear/actualizar adjunto binario (⬇️ CAMBIO: sudo en ir.attachment)
+        Attachment = self.env["ir.attachment"].sudo()
         attachment = Attachment.search([
             ("res_model", "=", "hr.payslip"),
             ("res_id", "=", self.id),
@@ -135,13 +137,19 @@ class HrPayslip(models.Model):
 
         # 5) Asegurar documento en la carpeta de Documentos
         owner_user = self._get_internal_owner_for_employee(self) or self.env.user
-        Document = self.env["documents.document"]
 
-        # Buscar por attachment, y si no aparece (p.ej. si cambió el adjunto),
-        # buscar por res_model/res_id/name para mantener idempotencia.
-        document = Document.search([
-            ("attachment_id", "=", attachment.id),
-        ], limit=1)
+        # Guard suave si no está cargado Documents (instalación reciente)
+        if not self.env.registry.get("documents.document") or not self.env.registry.get("documents.folder"):
+            raise UserError(_(
+                "No se encontró el modelo 'documents.document/folder' en el registro actual. "
+                "Asegúrate de tener 'Documents' instalado y reinicia el servidor si lo instalaste recién."
+            ))
+
+        # ⬇️ CAMBIO: sudo en documents.document
+        Document = self.env["documents.document"].sudo()
+
+        # Buscar por attachment, y si no aparece, por res_model/res_id/name
+        document = Document.search([("attachment_id", "=", attachment.id)], limit=1)
         if not document:
             document = Document.search([
                 ("res_model", "=", "hr.payslip"),
@@ -150,7 +158,8 @@ class HrPayslip(models.Model):
             ], limit=1)
 
         vals_doc = {
-            "folder_id": payroll_folder.id,
+            # ⬇️ CAMBIO: asegurar id con sudo por si la carpeta tiene ACL estricta
+            "folder_id": payroll_folder.sudo().id,
             "owner_id": owner_user.id,
             "name": filename,
             "partner_id": (self.employee_id.address_home_id.id if self.employee_id.address_home_id else False),
@@ -195,9 +204,9 @@ class HrPayslip(models.Model):
         email_to = self._get_employee_email()
         if not email_to:
             raise UserError(
-                _("El empleado %s no tiene correo configurado (laboral o privado).") % self.employee_id.name)
+                _("El empleado %s no tiene correo configurado (laboral o privado).") % self.employee_id.name
+            )
 
-        # FIX: id correcto
         template = self.env.ref("hr_payslip_docs_v18.mail_template_payslip_to_employee")
         lang = self.employee_id.user_id.lang or self.env.user.lang
         template.with_context(lang=lang).send_mail(
