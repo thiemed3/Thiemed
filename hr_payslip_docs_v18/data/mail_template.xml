@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+    <record id="mail_template_payslip_to_employee" model="mail.template">
+      <field name="name">[RRHH] Envío de Recibo de Nómina</field>
+      <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
+      <field name="subject">Tu recibo de nómina - ${object.employee_id.name or ''}</field>
+      <field name="email_from">${(object.company_id.email or user.email or '')}</field>
+      <field name="use_default_to">False</field>
+      <field name="body_html" type="html">
+        <p>Hola ${object.employee_id.name or ''},</p>
+        <p>Adjuntamos tu recibo de nómina correspondiente a <strong>${object.name or ''}</strong>.</p>
+        <p>Si tienes dudas, por favor responde a este correo.</p>
+        <p>Saludos,<br/>${object.company_id.name or ''} - RRHH</p>
+      </field>
+      <field name="auto_delete" eval="True"/>
+    </record>
+  </data>
+</odoo>
