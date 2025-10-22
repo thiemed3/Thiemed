@@ -1,13 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Extensión de hr.payslip para:
-- Renderizar el PDF del recibo (prioriza plantillas QWeb, fallback a acción).
-- Crear/actualizar adjunto y documento en Documentos (con o sin carpeta/workspace).
-- Enviar el correo al empleado.
-- Acciones separadas: generar, enviar y generar+enviar.
-Compatible con Odoo 18 y tolerante a diferencias de modelos en Documentos.
-"""
-
 import base64
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
@@ -117,9 +108,7 @@ class HrPayslip(models.Model):
     # Reporte de nómina: plantillas QWeb seguras + fallback a acción
     # -------------------------------------------------------------------------
     def _payslip_qweb_templates(self):
-        """
-        Secuencia de plantillas QWeb a probar. Ajusta si usas otras.
-        """
+        """Secuencia de plantillas QWeb a probar. Ajusta si usas otras."""
         return [
             "hr_payroll.report_payslip_lang",      # plantilla estándar multi-idioma
             "hr_payroll.report_payslip",           # alternativa estándar (si existe)
@@ -183,7 +172,6 @@ class HrPayslip(models.Model):
                 )
                 return filename, pdf_content
             except Exception:
-                # probar siguiente plantilla
                 continue
 
         # 2) Fallback por acción de reporte
@@ -202,19 +190,6 @@ class HrPayslip(models.Model):
         self.ensure_one()
         return "Payslip_%s.pdf" % (
             (self.number or self.name or ("slip_%s" % self.id)).replace("/", "_")
-        )
-
-    def _find_payslip_attachment(self):
-        """Busca el adjunto esperado del recibo."""
-        self.ensure_one()
-        Attachment = self.env["ir.attachment"].sudo()
-        return Attachment.search(
-            [
-                ("res_model", "=", "hr.payslip"),
-                ("res_id", "=", self.id),
-                ("name", "=", self._expected_filename()),
-            ],
-            limit=1,
         )
 
     def _generate_document_and_attachment(self, payroll_folder=None):
@@ -311,7 +286,7 @@ class HrPayslip(models.Model):
         return attachment
 
     # -------------------------------------------------------------------------
-    # Email
+    # Email (usado por la acción combinada)
     # -------------------------------------------------------------------------
     def _get_employee_email(self):
         """Devuelve el correo del empleado (laboral o privado) o cadena vacía."""
@@ -370,7 +345,7 @@ class HrPayslip(models.Model):
         return res
 
     # -------------------------------------------------------------------------
-    # Acciones públicas
+    # Acciones públicas (solo 2)
     # -------------------------------------------------------------------------
     def action_generate_payslip_document(self):
         """
