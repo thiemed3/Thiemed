@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+Extensión de hr.payslip para:
+- Renderizar el PDF del recibo (prioriza plantillas QWeb, fallback a acción).
+- Crear/actualizar adjunto y documento en Documentos (con o sin carpeta/workspace).
+- Enviar el correo al empleado.
+- Acciones separadas: generar, enviar y generar+enviar.
+Compatible con Odoo 18 y tolerante a diferencias de modelos en Documentos.
+"""
+
 import base64
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
@@ -7,8 +16,6 @@ from odoo.exceptions import UserError
 class HrPayslip(models.Model):
     _inherit = "hr.payslip"
 
-    # En tu base existe documents.document; si en otra base no existiera,
-    # este campo requeriría que el módulo 'documents' esté instalado.
     x_document_id = fields.Many2one(
         "documents.document",
         string="Documento",
@@ -21,7 +28,7 @@ class HrPayslip(models.Model):
     )
 
     # -------------------------------------------------------------------------
-    # Helpers: Documentos (compatibilidad con diferentes nombres de modelo/campos)
+    # Helpers: Documentos (compatibilidad con diferentes nombres de modelo)
     # -------------------------------------------------------------------------
     def _documents_models(self):
         """
@@ -44,7 +51,7 @@ class HrPayslip(models.Model):
         """
         Devuelve una carpeta/workspace 'Payroll' si el modelo de carpetas existe.
         Si no existe modelo de carpeta, devuelve None (y el flujo no falla).
-        Maneja diferencias de nombres de campos entre implementations.
+        Maneja diferencias de nombres de campos entre implementaciones.
         """
         folder_model, _ = self._documents_models()
         if not folder_model:
@@ -52,17 +59,22 @@ class HrPayslip(models.Model):
 
         Folder = self.env[folder_model].sudo()
 
-        # Campos potencialmente distintos según el modelo
-        parent_field = "parent_folder_id" if "parent_folder_id" in Folder._fields else (
-            "parent_id" if "parent_id" in Folder._fields else None
+        # Campos que pueden variar entre modelos
+        parent_field = (
+            "parent_folder_id"
+            if "parent_folder_id" in Folder._fields
+            else ("parent_id" if "parent_id" in Folder._fields else None)
         )
         company_field = "company_id" if "company_id" in Folder._fields else None
 
         ICP = self.env["ir.config_parameter"].sudo()
-        root_names = (ICP.get_param(
-            "hr_payslip_docs.root_folder_names",
-            default="Shared,Compartidos,Workspace,Documents,Documentos",
-        ) or "").split(",")
+        root_names = (
+            ICP.get_param(
+                "hr_payslip_docs.root_folder_names",
+                default="Shared,Compartidos,Workspace,Documents,Documentos",
+            )
+            or ""
+        ).split(",")
         root_names = [n.strip() for n in root_names if n.strip()]
 
         payroll_name = ICP.get_param(
@@ -102,8 +114,18 @@ class HrPayslip(models.Model):
         return payroll
 
     # -------------------------------------------------------------------------
-    # Reporte de nómina (robusto)
+    # Reporte de nómina: plantillas QWeb seguras + fallback a acción
     # -------------------------------------------------------------------------
+    def _payslip_qweb_templates(self):
+        """
+        Secuencia de plantillas QWeb a probar. Ajusta si usas otras.
+        """
+        return [
+            "hr_payroll.report_payslip_lang",      # plantilla estándar multi-idioma
+            "hr_payroll.report_payslip",           # alternativa estándar (si existe)
+            "l10n_cl_hr_payroll.report_payslip",   # posible plantilla CL
+        ]
+
     def _get_payslip_report(self):
         """
         Devuelve un ir.actions.report válido para hr.payslip.
@@ -130,16 +152,43 @@ class HrPayslip(models.Model):
             return rep
 
         # 3) Nada encontrado
-        raise UserError(_(
-            "No se encontró ninguna acción de reporte para Recibo de nómina. "
-            "Actualiza 'hr_payroll' (y/o 'l10n_cl_hr_payroll') o crea un reporte QWeb para 'hr.payslip'."
-        ))
+        raise UserError(
+            _(
+                "No se encontró ninguna acción de reporte para Recibo de nómina. "
+                "Actualiza 'hr_payroll' (y/o 'l10n_cl_hr_payroll') o crea un "
+                "reporte QWeb para 'hr.payslip'."
+            )
+        )
 
     def _render_payslip_pdf(self):
-        """Renderiza el PDF del recibo y devuelve (filename, pdf_bytes)."""
+        """
+        Renderiza el PDF del recibo priorizando plantillas QWeb (no requieren
+        ir.actions.report). Si todas fallan, hace fallback a una acción válida.
+        """
         self.ensure_one()
+        Report = self.env["ir.actions.report"].sudo()
+        slip_id = self.sudo().id
+
+        # 1) Por plantilla QWeb (robusto ante acciones rotas)
+        for tmpl in self._payslip_qweb_templates():
+            view = self.env.ref(tmpl, raise_if_not_found=False)
+            if not (view and view.exists()):
+                continue
+            try:
+                pdf_content, _ = Report._render_qweb_pdf(tmpl, [slip_id])
+                filename = "Payslip_%s.pdf" % (
+                    (self.number or self.name or ("slip_%s" % self.id)).replace(
+                        "/", "_"
+                    )
+                )
+                return filename, pdf_content
+            except Exception:
+                # probar siguiente plantilla
+                continue
+
+        # 2) Fallback por acción de reporte
         report = self._get_payslip_report()
-        pdf_content, _ = report._render_qweb_pdf(self.sudo().id)
+        pdf_content, _ = report._render_qweb_pdf(slip_id)
         filename = "Payslip_%s.pdf" % (
             (self.number or self.name or ("slip_%s" % self.id)).replace("/", "_")
         )
@@ -171,7 +220,7 @@ class HrPayslip(models.Model):
     def _generate_document_and_attachment(self, payroll_folder=None):
         """
         Siempre genera/actualiza el adjunto PDF del recibo.
-        Si existen modelos de Documentos, también crea/actualiza el documents.document.
+        Si existen modelos de Documentos, también crea/actualiza el documento.
         """
         self.ensure_one()
         slip = self.sudo()
@@ -252,7 +301,10 @@ class HrPayslip(models.Model):
             slip.x_document_id = doc.id
         else:
             slip.message_post(
-                body=_("PDF generado y adjuntado (app Documentos no disponible o sin modelo de documento)."),
+                body=_(
+                    "PDF generado y adjuntado (app Documentos no disponible "
+                    "o sin modelo de documento)."
+                ),
                 attachment_ids=[attachment.id],
             )
 
@@ -322,8 +374,8 @@ class HrPayslip(models.Model):
     # -------------------------------------------------------------------------
     def action_generate_payslip_document(self):
         """
-        SOLO GENERAR: crea/actualiza el PDF y el documento (si aplica), sin enviar correo.
-        Ideal para revisión previa.
+        SOLO GENERAR: crea/actualiza el PDF y el documento (si aplica), sin enviar
+        correo. Ideal para revisión previa.
         """
         for company, slips in self._group_by_company().items():
             folder = self._get_or_create_payroll_folder(company)
@@ -331,7 +383,9 @@ class HrPayslip(models.Model):
                 try:
                     slip._generate_document_and_attachment(folder)
                 except Exception as exc:  # pylint: disable=broad-except
-                    slip.sudo().message_post(body=_("Error generando documento: %s") % exc)
+                    slip.sudo().message_post(
+                        body=_("Error generando documento: %s") % exc
+                    )
         return True
 
     def action_send_payslip_email_only(self):
