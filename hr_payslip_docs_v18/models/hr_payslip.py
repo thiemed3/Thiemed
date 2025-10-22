@@ -388,28 +388,6 @@ class HrPayslip(models.Model):
                     )
         return True
 
-    def action_send_payslip_email_only(self):
-        """
-        SOLO ENVIAR: envía correo si ya existe el PDF.
-        Si no existe, avisa en el chatter y no envía.
-        """
-        for slip in self.sudo():
-            try:
-                att = slip._find_payslip_attachment()
-                if not att:
-                    slip.message_post(
-                        body=_(
-                            "No se envió correo: el PDF aún no está generado. "
-                            "Ejecuta primero 'Generar documento'."
-                        )
-                    )
-                    continue
-                if slip._send_email(attachment=att):
-                    slip.x_doc_sent = True
-            except Exception as exc:  # pylint: disable=broad-except
-                slip.message_post(body=_("Error enviando correo: %s") % exc)
-        return True
-
     def action_generate_document_and_send_email(self):
         """
         GENERAR + ENVIAR: flujo completo.
