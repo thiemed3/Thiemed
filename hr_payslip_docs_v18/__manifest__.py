@@ -4,12 +4,7 @@
     'summary': "Genera PDF de nómina, lo archiva en Documentos y lo envía por correo al confirmar la nómina.",
     'description': """
         Módulo complementario para Odoo 18 -Payroll Chile
-        * Generación automática de PDF al confirmar (estado 'done')
-        * Guarda en Documentos (carpeta 'Nóminas')
-        * Envío por correo al empleado
-        * Acciones manuales desde listado
-        * Seguridad por empleado
-    """,
+        * Generación automática de PDF""",
     'version': '18.0',
     'author': 'Natalie Aliaga',
     'website': 'https://www.tierranube.cl',
