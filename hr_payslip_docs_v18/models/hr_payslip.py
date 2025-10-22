@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+Extensión de hr.payslip para:
+- Renderizar el PDF del recibo.
+- Crear/actualizar adjunto y documento en Documentos (con o sin carpeta/workspace).
+- Enviar el correo al empleado.
+- Acciones: generar, enviar y generar+enviar.
+Compatible con Odoo 18 y tolerante a diferencias de modelos en Documentos.
+"""
+
 import base64
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
@@ -7,18 +16,29 @@ from odoo.exceptions import UserError
 class HrPayslip(models.Model):
     _inherit = "hr.payslip"
 
+    # En tu base existe documents.document; si en otra base no existiera,
+    # este campo requeriría que el módulo 'documents' esté instalado.
     x_document_id = fields.Many2one(
-        "documents.document", string="Documento", copy=False
+        "documents.document",
+        string="Documento",
+        copy=False,
     )
     x_doc_sent = fields.Boolean(
-        string="Enviado a empleado", default=False, copy=False
+        string="Enviado a empleado",
+        default=False,
+        copy=False,
     )
 
-    # -------------------------------
-    # Helpers de compatibilidad
-    # -------------------------------
+    # -------------------------------------------------------------------------
+    # Helpers: Documentos (compatibilidad con diferentes nombres de modelo/campos)
+    # -------------------------------------------------------------------------
     def _documents_models(self):
-        """Detecta cómo se llama el modelo de carpeta (si existe) y si existe documents.document."""
+        """
+        Detecta los nombres de modelos disponibles de Documentos.
+        Devuelve (folder_model, document_model).
+        folder_model puede ser 'documents.folder', 'documents.workspace' o None.
+        document_model es 'documents.document' o None.
+        """
         env = self.env
         folder_model = None
         if "documents.folder" in env:
@@ -31,16 +51,23 @@ class HrPayslip(models.Model):
 
     def _get_or_create_payroll_folder(self, company):
         """
-        Devuelve la carpeta 'Payroll' si hay modelo de carpetas; si no, devuelve None.
-        Evita KeyError cuando no existe documents.folder/workspace.
+        Devuelve una carpeta/workspace 'Payroll' si el modelo de carpetas existe.
+        Si no existe modelo de carpeta, devuelve None (y el flujo no falla).
+        Maneja diferencias de nombres de campos entre implementations.
         """
         folder_model, _ = self._documents_models()
         if not folder_model:
             return None
 
         Folder = self.env[folder_model].sudo()
-        ICP = self.env["ir.config_parameter"].sudo()
 
+        # Campos potencialmente distintos según el modelo
+        parent_field = "parent_folder_id" if "parent_folder_id" in Folder._fields else (
+            "parent_id" if "parent_id" in Folder._fields else None
+        )
+        company_field = "company_id" if "company_id" in Folder._fields else None
+
+        ICP = self.env["ir.config_parameter"].sudo()
         root_names = (ICP.get_param(
             "hr_payslip_docs.root_folder_names",
             default="Shared,Compartidos,Workspace,Documents,Documentos",
@@ -52,51 +79,108 @@ class HrPayslip(models.Model):
             default="Payroll",
         )
 
-        # Buscar raíz en la compañía
-        root = Folder.search([
-            ("name", "in", root_names),
-            ("parent_folder_id", "=", False),
-            ("company_id", "=", company.id or False),
-        ], limit=1)
-        if not root:
-            root = Folder.create({
-                "name": (root_names[0] if root_names else "Documents"),
-                "company_id": company.id or False,
-            })
+        # --- Buscar/crear raíz ---
+        domain_root = [("name", "in", root_names)]
+        if parent_field:
+            domain_root.append((parent_field, "=", False))
+        if company_field:
+            domain_root.append((company_field, "=", company.id or False))
 
-        # Buscar/crear carpeta Payroll
-        payroll = Folder.search([
-            ("name", "=", payroll_name),
-            ("parent_folder_id", "=", root.id),
-            ("company_id", "=", company.id or False),
-        ], limit=1)
+        root = Folder.search(domain_root, limit=1)
+        if not root:
+            vals_root = {"name": (root_names[0] if root_names else "Documents")}
+            if company_field:
+                vals_root[company_field] = company.id or False
+            root = Folder.create(vals_root)
+
+        # --- Buscar/crear 'Payroll' debajo de la raíz ---
+        domain_payroll = [("name", "=", payroll_name)]
+        if parent_field:
+            domain_payroll.append((parent_field, "=", root.id))
+        if company_field:
+            domain_payroll.append((company_field, "=", company.id or False))
+
+        payroll = Folder.search(domain_payroll, limit=1)
         if not payroll:
-            payroll = Folder.create({
-                "name": payroll_name,
-                "parent_folder_id": root.id,
-                "company_id": company.id or False,
-            })
+            vals_payroll = {"name": payroll_name}
+            if parent_field:
+                vals_payroll[parent_field] = root.id
+            if company_field:
+                vals_payroll[company_field] = company.id or False
+            payroll = Folder.create(vals_payroll)
         return payroll
 
-    def _render_payslip_pdf(self):
-        """Renderiza el PDF del recibo usando el reporte de nómina (estándar o CL)."""
+    # -------------------------------------------------------------------------
+    # Reporte de nómina (robusto)
+    # -------------------------------------------------------------------------
+    def _get_payslip_report(self):
+        """
+        Devuelve un ir.actions.report válido para hr.payslip.
+        Intenta por XML-ID estándar, luego por búsqueda del modelo.
+        """
         self.ensure_one()
-        report = (
-            self.env.ref("hr_payroll.action_report_payslip", raise_if_not_found=False)
-            or self.env.ref("l10n_cl_hr_payroll.action_report_payslip", raise_if_not_found=False)
+        Report = self.env["ir.actions.report"].sudo()
+
+        # 1) Por XML-ID (estándar y CL)
+        for xmlid in (
+            "hr_payroll.action_report_payslip",
+            "l10n_cl_hr_payroll.action_report_payslip",
+        ):
+            rep = self.env.ref(xmlid, raise_if_not_found=False)
+            if rep and rep.exists():
+                return rep.sudo()
+
+        # 2) Fallback: cualquier QWeb de hr.payslip
+        rep = Report.search(
+            [("model", "=", "hr.payslip"), ("report_type", "in", ["qweb-pdf", "qweb"])],
+            limit=1,
         )
-        if not report:
-            raise UserError(_("No se encontró el reporte de nómina para generar el PDF."))
+        if rep:
+            return rep
+
+        # 3) Nada encontrado
+        raise UserError(_(
+            "No se encontró ninguna acción de reporte para Recibo de nómina. "
+            "Actualiza 'hr_payroll' (y/o 'l10n_cl_hr_payroll') o crea un reporte QWeb para 'hr.payslip'."
+        ))
+
+    def _render_payslip_pdf(self):
+        """Renderiza el PDF del recibo y devuelve (filename, pdf_bytes)."""
+        self.ensure_one()
+        report = self._get_payslip_report()
         pdf_content, _ = report._render_qweb_pdf(self.sudo().id)
         filename = "Payslip_%s.pdf" % (
             (self.number or self.name or ("slip_%s" % self.id)).replace("/", "_")
         )
         return filename, pdf_content
 
+    # -------------------------------------------------------------------------
+    # Generación de adjunto + documento
+    # -------------------------------------------------------------------------
+    def _expected_filename(self):
+        """Nombre de archivo esperado para el adjunto/documento."""
+        self.ensure_one()
+        return "Payslip_%s.pdf" % (
+            (self.number or self.name or ("slip_%s" % self.id)).replace("/", "_")
+        )
+
+    def _find_payslip_attachment(self):
+        """Busca el adjunto esperado del recibo."""
+        self.ensure_one()
+        Attachment = self.env["ir.attachment"].sudo()
+        return Attachment.search(
+            [
+                ("res_model", "=", "hr.payslip"),
+                ("res_id", "=", self.id),
+                ("name", "=", self._expected_filename()),
+            ],
+            limit=1,
+        )
+
     def _generate_document_and_attachment(self, payroll_folder=None):
         """
         Siempre genera/actualiza el adjunto PDF del recibo.
-        Si existen modelos de Documentos, también crea/actualiza documents.document.
+        Si existen modelos de Documentos, también crea/actualiza el documents.document.
         """
         self.ensure_one()
         slip = self.sudo()
@@ -106,46 +190,62 @@ class HrPayslip(models.Model):
 
         # 2) Crear/actualizar adjunto
         Attachment = self.env["ir.attachment"].sudo()
-        attachment = Attachment.search([
-            ("res_model", "=", "hr.payslip"),
-            ("res_id", "=", slip.id),
-            ("name", "=", filename),
-        ], limit=1)
+        attachment = Attachment.search(
+            [
+                ("res_model", "=", "hr.payslip"),
+                ("res_id", "=", slip.id),
+                ("name", "=", filename),
+            ],
+            limit=1,
+        )
         datas_b64 = base64.b64encode(pdf_content)
         if attachment:
             attachment.write({"datas": datas_b64})
         else:
-            attachment = Attachment.create({
-                "name": filename,
-                "res_model": "hr.payslip",
-                "res_id": slip.id,
-                "type": "binary",
-                "mimetype": "application/pdf",
-                "datas": datas_b64,
-            })
+            attachment = Attachment.create(
+                {
+                    "name": filename,
+                    "res_model": "hr.payslip",
+                    "res_id": slip.id,
+                    "type": "binary",
+                    "mimetype": "application/pdf",
+                    "datas": datas_b64,
+                }
+            )
 
-        # 3) Crear/actualizar documento (si existe documents.document)
+        # 3) Crear/actualizar documento en Documentos (si existe el modelo)
         folder_model, document_model = self._documents_models()
         if document_model:
             Document = self.env[document_model].sudo()
+
+            # Campo de carpeta puede llamarse 'folder_id' o 'workspace_id'
+            folder_field = None
+            for candidate in ("folder_id", "workspace_id"):
+                if candidate in Document._fields:
+                    folder_field = candidate
+                    break
+
             vals_doc = {
                 "name": filename,
                 "res_model": "hr.payslip",
                 "res_id": slip.id,
                 "attachment_id": attachment.id,
             }
-            # Asignar folder solo si el campo existe y recibimos carpeta válida
-            if payroll_folder and "folder_id" in Document._fields:
-                vals_doc["folder_id"] = payroll_folder.id
+            if payroll_folder and folder_field:
+                vals_doc[folder_field] = payroll_folder.id
 
-            # Propietario: usuario del empleado si es interno
-            if slip.employee_id.user_id and slip.employee_id.user_id.has_group("base.group_user"):
+            # Propietario: usuario interno del empleado (si corresponde)
+            if (
+                slip.employee_id.user_id
+                and slip.employee_id.user_id.has_group("base.group_user")
+                and "owner_id" in Document._fields
+            ):
                 vals_doc["owner_id"] = slip.employee_id.user_id.id
 
-            doc = Document.search([
-                ("res_model", "=", "hr.payslip"),
-                ("res_id", "=", slip.id),
-            ], limit=1)
+            doc = Document.search(
+                [("res_model", "=", "hr.payslip"), ("res_id", "=", slip.id)],
+                limit=1,
+            )
             if doc:
                 doc.write(vals_doc)
                 slip.message_post(
@@ -161,22 +261,26 @@ class HrPayslip(models.Model):
             slip.x_document_id = doc.id
         else:
             slip.message_post(
-                body=_("PDF generado y adjuntado (app Documentos sin modelo de documentos disponible)."),
+                body=_("PDF generado y adjuntado (app Documentos no disponible o sin modelo de documento)."),
                 attachment_ids=[attachment.id],
             )
 
         return attachment
 
-    # -------------------------------
+    # -------------------------------------------------------------------------
     # Email
-    # -------------------------------
+    # -------------------------------------------------------------------------
     def _get_employee_email(self):
+        """Devuelve el correo del empleado (laboral o privado) o cadena vacía."""
         self.ensure_one()
         return self.employee_id.work_email or self.employee_id.private_email or ""
 
-    def _send_email(self):
-        """Envía el email al empleado usando la plantilla.
-        La plantilla adjunta el PDF automáticamente vía report_template_ids."""
+    def _send_email(self, attachment=None):
+        """
+        Envía el email al empleado usando la plantilla del módulo.
+        - Si se pasa `attachment`, se adjunta explícitamente (independiente de la plantilla).
+        - Registra el resultado en el chatter y devuelve True/False.
+        """
         self.ensure_one()
         slip = self.sudo()
 
@@ -194,11 +298,15 @@ class HrPayslip(models.Model):
             return False
 
         try:
-            # La plantilla tiene email_to evaluado con object, por lo que no pasamos email_values
+            email_values = {}
+            if attachment:
+                email_values["attachment_ids"] = [(4, attachment.id)]
+
             template.send_mail(
                 slip.id,
                 force_send=True,
                 raise_exception=False,
+                email_values=email_values,
             )
             slip.message_post(body=_("Recibo enviado a: %s") % email)
             return True
@@ -206,11 +314,11 @@ class HrPayslip(models.Model):
             slip.message_post(body=_("Error al enviar correo: %s") % exc)
             return False
 
-    # -------------------------------
-    # Acción masiva / Cron
-    # -------------------------------
+    # -------------------------------------------------------------------------
+    # Agrupación por compañía
+    # -------------------------------------------------------------------------
     def _group_by_company(self):
-        """Agrupa los slips por compañía."""
+        """Agrupa los slips por compañía para crear carpetas en su contexto."""
         res = {}
         for slip in self:
             key = slip.company_id
@@ -218,14 +326,56 @@ class HrPayslip(models.Model):
             res[key] |= slip
         return res
 
+    # -------------------------------------------------------------------------
+    # Acciones públicas
+    # -------------------------------------------------------------------------
+    def action_generate_payslip_document(self):
+        """
+        SOLO GENERAR: crea/actualiza el PDF y el documento (si aplica), sin enviar correo.
+        Ideal para revisión previa.
+        """
+        for company, slips in self._group_by_company().items():
+            folder = self._get_or_create_payroll_folder(company)
+            for slip in slips:
+                try:
+                    slip._generate_document_and_attachment(folder)
+                except Exception as exc:  # pylint: disable=broad-except
+                    slip.sudo().message_post(body=_("Error generando documento: %s") % exc)
+        return True
+
+    def action_send_payslip_email_only(self):
+        """
+        SOLO ENVIAR: envía correo si ya existe el PDF.
+        Si no existe, avisa en el chatter y no envía.
+        """
+        for slip in self.sudo():
+            try:
+                att = slip._find_payslip_attachment()
+                if not att:
+                    slip.message_post(
+                        body=_(
+                            "No se envió correo: el PDF aún no está generado. "
+                            "Ejecuta primero 'Generar documento'."
+                        )
+                    )
+                    continue
+                if slip._send_email(attachment=att):
+                    slip.x_doc_sent = True
+            except Exception as exc:  # pylint: disable=broad-except
+                slip.message_post(body=_("Error enviando correo: %s") % exc)
+        return True
+
     def action_generate_document_and_send_email(self):
-        """Acción masiva: genera documento/adjunto y envía correo."""
+        """
+        GENERAR + ENVIAR: flujo completo.
+        Idempotente: actualiza adjunto/documento y reenvía si procede.
+        """
         for company, slips in self._group_by_company().items():
             payroll_folder = self._get_or_create_payroll_folder(company)
             for slip in slips:
                 try:
-                    slip._generate_document_and_attachment(payroll_folder)
-                    if slip._send_email():
+                    att = slip._generate_document_and_attachment(payroll_folder)
+                    if slip._send_email(attachment=att):
                         slip.x_doc_sent = True
                 except Exception as exc:  # pylint: disable=broad-except
                     slip.message_post(body=_("Error procesando recibo: %s") % exc)
