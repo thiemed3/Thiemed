@@ -1,13 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Extensión de hr.payslip para:
-- Renderizar el PDF del recibo.
-- Crear/actualizar adjunto y documento en Documentos (con o sin carpeta/workspace).
-- Enviar el correo al empleado.
-- Acciones: generar, enviar y generar+enviar.
-Compatible con Odoo 18 y tolerante a diferencias de modelos en Documentos.
-"""
-
 import base64
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
