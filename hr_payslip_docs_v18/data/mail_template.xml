@@ -7,9 +7,16 @@
       <field name="subject">Tu recibo de nómina - ${object.employee_id.name or ''}</field>
       <field name="email_from">${(object.company_id.email or user.email or '')}</field>
       <field name="use_default_to">False</field>
+      <!-- Opcional: envía al correo laboral o privado del empleado -->
+      <field name="email_to">${object.employee_id.work_email or object.employee_id.private_email or ''}</field>
+      <field name="report_template" ref="hr_payroll.action_report_payslip"/>
+      <field name="report_name">
+        Payslip_${(object.number or object.name or ('slip_%s' % object.id)).replace('/', '_')}
+      </field>
       <field name="body_html" type="html">
         <p>Hola ${object.employee_id.name or ''},</p>
-        <p>Adjuntamos tu recibo de nómina correspondiente a <strong>${object.name or ''}</strong>.</p>
+        <p>Adjuntamos tu recibo de nómina correspondiente a
+           <strong>${object.name or ''}</strong>.</p>
         <p>Si tienes dudas, por favor responde a este correo.</p>
         <p>Saludos,<br/>${object.company_id.name or ''} - RRHH</p>
       </field>
