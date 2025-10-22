@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <data>
-
     <!-- (ya existente) Generar + Enviar -->
     <record id="action_payslip_generate_document_and_send" model="ir.actions.server">
       <field name="name">Generar Documento y Enviar Nómina</field>
@@ -21,16 +20,5 @@
       <field name="binding_model_id" ref="hr_payroll.model_hr_payslip"/>
       <field name="binding_type">action</field>
     </record>
-
-    <!-- NUEVA: solo enviar -->
-    <record id="action_payslip_send_email_only" model="ir.actions.server">
-      <field name="name">Enviar nómina a empleado(s) (sin generar)</field>
-      <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
-      <field name="state">code</field>
-      <field name="code">records.action_send_payslip_email_only()</field>
-      <field name="binding_model_id" ref="hr_payroll.model_hr_payslip"/>
-      <field name="binding_type">action</field>
-    </record>
-
   </data>
 </odoo>
