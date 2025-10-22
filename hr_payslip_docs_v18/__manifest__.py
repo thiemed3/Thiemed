@@ -10,7 +10,7 @@
         * Acciones manuales desde listado
         * Seguridad por empleado
     """,
-    'version': '18.0.1.0',
+    'version': '18.0',
     'author': 'Natalie Aliaga',
     'website': 'https://www.tierranube.cl',
     'license': 'LGPL-3',
@@ -21,7 +21,6 @@
         'hr',
         'hr_payroll',
         'documents',
-
     ],
     'data': [
         'security/ir.model.access.csv',
