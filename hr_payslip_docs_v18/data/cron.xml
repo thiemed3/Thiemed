@@ -5,9 +5,7 @@
       <field name="name">Payslips: Generar PDF y Enviar</field>
       <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
       <field name="state">code</field>
-      <field name="code"><![CDATA[
-model.search([('state', '=', 'done'), ('doc_sent', '=', False)], limit=100).action_generate_document_and_send_email()
-      ]]></field>
+      <field name="code">model.search([('state', '=', 'done'), ('x_doc_sent', '=', False)], limit=100).action_generate_document_and_send_email()</field>
       <field name="interval_type">hours</field>
       <field name="interval_number">1</field>
       <field name="active">True</field>
