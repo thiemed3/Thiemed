@@ -3,6 +3,8 @@ from odoo import fields, models, api
 from odoo.tools import float_round, float_repr
 import json
 
+import logging
+_logger = logging.getLogger(__name__)
 
 class AccountMoveLines(models.Model):
     _inherit = 'account.move.line'
@@ -44,6 +46,9 @@ class AccountMoveLines(models.Model):
 
     def get_lote_lines(self):
         self.ensure_one()
+
+        date_to_use = self.move_id.invoice_date or self.move_id.date or fields.Date.context_today(self)
+
         detail_lines = {}
 
         is_kit = self.product_id.bom_ids.filtered(lambda b: b.type == 'phantom')[:1]
@@ -83,21 +88,32 @@ class AccountMoveLines(models.Model):
                 qty_base = (getattr(move_line, 'qty_done', 0.0) or getattr(move_line, 'quantity', 0.0)) or 0.0
                 qty_base *= ratio
 
+                price = component.list_price
+
                 if pricelist:
-                    price = pricelist._get_product_price(component, qty_base, partner)
-                else:
-                    price = component.list_price
+                    if pricelist.company_id:
+                        company_to_use = self.move_id.company_id
+                        price = pricelist.with_company(company_to_use)._get_product_price(
+                            component, qty_base, partner, date=date_to_use
+                        )
+                    else:
+                        _logger.warning(
+                            f"ADVERTENCIA: La tarifa '{pricelist.name}' no tiene compañía asignada"
+                            f" No se puede calcular el precio del componente '{component.default_code}'."
+                            f" Usando 'list_price' ({price}) como respaldo."
+                        )
+                        
 
                 key = f"ml-kit-{move_line.id}"
                 detail_lines[key] = {
                     'component_code': component.default_code or '',
                     'component_name': component.display_name or component.name or '',
-                    'cantidad': qty_base, 
+                    'cantidad': qty_base,
                     'nombre': lot.name if lot else '',
                     'fecha_vencimiento': lot.expiration_date.strftime('%d/%m/%Y') if (
-                        lot and lot.expiration_date) else '',
+                            lot and lot.expiration_date) else '',
                     'udm': move_line.product_uom_id.name,
-                    'precio': price,
+                    'precio': price, 
                 }
 
         if not detail_lines:
