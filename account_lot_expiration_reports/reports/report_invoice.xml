@@ -1,142 +1,205 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-  <template id="fix_studio_subtotal_on_lots"
-            inherit_id="studio_customization.web_studio_report_ed_438b6cf4-752d-4a2b-be65-de8126967f4d"
-            priority="10000009">
+  <!-- ====== Cabeceras extra ====== -->
+  <template id="ale_inv_add_ref_header_cl"
+            inherit_id="l10n_cl.report_invoice_document"
+            priority="1000019">
+    <xpath expr="//table[@name='invoice_line_table']//th[@name='th_description']" position="before">
+      <th name="th_ref" class="text-start"><span>Referencia Interna</span></th>
+    </xpath>
+  </template>
 
-    <xpath expr="//tbody[@class='invoice_tbody']//t[@t-foreach='lotes' and @t-as='linea_lote']/t[@t-set='current_subtotal' and @t-value='current_subtotal + line.price_subtotal']"
-           position="replace">
-      <t t-if="linea_lote_index == 0">
-        <t t-set="current_subtotal" t-value="current_subtotal + line.price_subtotal"/>
-      </t>
+  <template id="ale_inv_add_lot_headers_cl"
+            inherit_id="l10n_cl.report_invoice_document"
+            priority="1000020">
+    <xpath expr="//table[@name='invoice_line_table']//th[@name='th_quantity']" position="after">
+      <th name="th_lot" class="text-end"><span>Lote</span></th>
+      <th name="th_expiry" class="text-center"><span>Fecha Vencimiento</span></th>
+    </xpath>
+  </template>
+
+  <!-- Renombrar “Importe” -> “Monto” -->
+  <template id="ale_inv_rename_subtotal_label_cl"
+            inherit_id="l10n_cl.report_invoice_document"
+            priority="1000022">
+    <xpath expr="//table[@name='invoice_line_table']//th[@name='th_subtotal']/span" position="replace">
+      <span>Monto</span>
+    </xpath>
+  </template>
+
+  <!-- ====== LOTES (conservado tal cual) ====== -->
+  <template id="ale_inv_split_lots_cl"
+            inherit_id="l10n_cl.report_invoice_document"
+            priority="1000021">
+
+    <!-- Prep 1ª subfila -->
+    <xpath expr="//t[@name='account_invoice_line_accountable']/td[@name='account_invoice_line_name']"
+           position="before">
+      <t t-set="lotes" t-value="line.get_lote_lines() or {}"/>
+      <t t-set="ordered_keys" t-value="list(lotes.keys())"/>
+      <t t-set="first_key" t-value="ordered_keys and ordered_keys[0] or False"/>
+      <t t-set="lv" t-value="(first_key and lotes.get(first_key)) or {}"/>
+
+      <t t-set="qty_first" t-value="(lv.get('cantidad') if lv else line.quantity) or 0.0"/>
+      <t t-set="uom_first" t-value="lv.get('udm') or (line.product_uom_id and line.product_uom_id.name)"/>
+      <t t-set="lot_first" t-value="lv.get('nombre') or ''"/>
+      <t t-set="exp_first" t-value="lv.get('fecha_vencimiento') or ''"/>
+      <t t-set="ref_first" t-value="(lv.get('component_code') if lv else (line.product_id.default_code or ''))"/>
     </xpath>
 
-    <xpath expr="//tbody[@class='invoice_tbody']//t[@t-foreach='lotes' and @t-as='linea_lote']/t[@t-set='current_subtotal' and @t-value='current_subtotal + line.price_total']"
+    <!-- Ref + Descripción -->
+    <xpath expr="//t[@name='account_invoice_line_accountable']/td[@name='account_invoice_line_name']"
+           position="replace">
+      <td name="account_invoice_line_name_ref" class="text-start">
+        <span t-esc="ref_first"/>
+      </td>
+      <td name="account_invoice_line_name" class="text-start">
+        <span t-esc="line.only_name(lv.get('component_name') or (line.name or line.product_id.display_name))"/>
+      </td>
+    </xpath>
+
+    <!-- Cantidad (0 dec) -->
+    <xpath expr="//t[@name='account_invoice_line_accountable']/td[@name='td_quantity']"
+           position="replace">
+      <td name="td_quantity" class="text-end">
+        <span t-out="qty_first" t-options="{'widget': 'float', 'precision': 0}"/>
+        <span t-field="line.product_uom_id" groups="uom.group_uom"/>
+      </td>
+    </xpath>
+
+    <!-- Lote / Vencimiento (1ª subfila) -->
+    <xpath expr="//t[@name='account_invoice_line_accountable']/td[@name='td_quantity']"
+           position="after">
+      <td name="td_lot" class="text-end">
+        <t t-if="lot_first and lot_first != 'SIN LOTE'"><span t-esc="lot_first"/></t>
+      </td>
+      <td name="td_expiry" class="text-center">
+        <t t-if="exp_first"><span t-esc="exp_first"/></t>
+      </td>
+    </xpath>
+
+    <!-- Subfilas por lote -->
+    <xpath expr="//tr[.//t[@name='account_invoice_line_accountable']]" position="after">
+      <t t-if="lotes and len(ordered_keys) &gt; 1">
+        <t t-foreach="ordered_keys[1:]" t-as="k">
+          <t t-set="lv2" t-value="lotes.get(k) or {}"/>
+          <t t-set="qty2" t-value="lv2.get('cantidad') or 0.0"/>
+          <t t-set="uom2" t-value="lv2.get('udm') or (line.product_uom_id and line.product_uom_id.name)"/>
+          <t t-set="lot2" t-value="lv2.get('nombre') or ''"/>
+          <t t-set="exp2" t-value="lv2.get('fecha_vencimiento') or ''"/>
+          <t t-set="ref2" t-value="lv2.get('component_code') or (line.product_id.default_code or '')"/>
+
+          <tr>
+            <td class="text-start"><span t-esc="ref2"/></td>
+            <td class="text-start">
+              <span t-esc="line.only_name(lv2.get('component_name') or (line.name or line.product_id.display_name))"/>
+            </td>
+            <td class="text-end">
+              <span t-out="qty2" t-options="{'widget': 'float', 'precision': 0}"/>
+              <t t-if="uom2"><span class="ms-1" t-esc="uom2"/></t>
+            </td>
+            <td class="text-end">
+              <t t-if="lot2 and lot2 != 'SIN LOTE'"><span t-esc="lot2"/></t>
+            </td>
+            <td class="text-center">
+              <t t-if="exp2"><span t-esc="exp2"/></t>
+            </td>
+            <td t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+              <span class="text-nowrap"><span t-esc="o.currency_id.symbol or '$'"/><t> </t><span>0</span></span>
+            </td>
+            <td t-if="display_discount" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span class="text-nowrap">0</span></td>
+            <td t-if="display_discount" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+              <span class="text-nowrap"><span t-esc="o.currency_id.symbol or '$'"/><t> </t><span>0</span></span>
+            </td>
+            <td class="text-end">
+              <span class="text-nowrap"><span t-esc="o.currency_id.symbol or '$'"/><t> </t><span>0</span></span>
+            </td>
+          </tr>
+        </t>
+      </t>
+    </xpath>
+  </template>
+
+  <!-- Precio unitario $ y 0 decimales -->
+  <template id="ale_inv_price_unit_format_cl"
+            inherit_id="l10n_cl.report_invoice_document"
+            priority="1000031">
+    <xpath expr="//t[@name='account_invoice_line_accountable']/td[@name='td_price_unit']/span" position="replace">
+      <span class="text-nowrap">
+        <span t-esc="o.currency_id.symbol or '$'"/><t> </t>
+        <span t-out="line_amounts['price_item_document']" t-options="{'widget': 'float', 'precision': 0}"/>
+      </span>
+    </xpath>
+  </template>
+
+  <!-- Footer estable -->
+  <template id="ale_inv_footer_fix_cl"
+            inherit_id="l10n_cl.report_invoice_document"
+            priority="1000030">
+    <xpath expr="//div[@id='right-elements']" position="attributes">
+      <attribute name="style" add="page-break-inside: avoid;"/>
+    </xpath>
+    <xpath expr="//div[@id='right-elements']" position="after">
+      <div style="clear: both;"></div>
+    </xpath>
+    <xpath expr="//div[@id='payment_term']" position="before">
+      <div class="clearfix" style="clear: both;"></div>
+    </xpath>
+    <xpath expr="//div[@name='transferable-legend']" position="attributes">
+      <attribute name="style" add="page-break-inside: avoid;"/>
+    </xpath>
+    <xpath expr="//div[@id='payment_term']" position="attributes">
+      <attribute name="style" add="page-break-inside: avoid;"/>
+    </xpath>
+  </template>
+
+  <!-- Totales en moneda de compañía: sólo si corresponde -->
+  <template id="guard_company_currency_totals_in_base"
+            inherit_id="account.report_invoice_document"
+            priority="1000502">
+    <xpath expr="//div[@id='right-elements']//t[@t-call='account.document_tax_totals_company_currency_template']"
+           position="replace">
+      <t t-if="o.tax_totals and o.tax_totals.get('display_in_company_currency')">
+        <t t-set="tax_totals" t-value="o.tax_totals"/>
+        <t t-call="account.document_tax_totals_company_currency_template"/>
+      </t>
+    </xpath>
+  </template>
+
+  <!-- Quitar cualquier CEDIBLE absoluto de otros módulos -->
+  <!--template id="ale_remove_abs_cedible"
+            inherit_id="account.report_invoice_document"
+            priority="100060">
+    <xpath expr="//div[contains(@class,'cedible-footer')]" position="replace">
+      <div/>
+    </xpath>
+  </template-->
+
+  <!-- Insertar CEDIBLE justo debajo de los totales (como Studio) -->
+  <template id="ale_insert_cedible_under_totals_cl"
+            inherit_id="l10n_cl.report_invoice_document"
+            priority="100061">
+    <xpath expr="//div[@id='right-elements']" position="inside">
+      <t t-if="copia == 'CEDIBLE CON SU FACTURA'">
+        <div class="row mt-3" style="page-break-inside: avoid; clear: both;">
+          <div class="col-12">
+            <t t-call="l10n_cl_edi_account_accountant.delivery_guide_cedible"/>
+          </div>
+        </div>
+      </t>
+    </xpath>
+  </template>
+
+  <!-- Quita el cedible que Studio insertó al final (después de 'comment') -->
+  <template id="kill_studio_cedible_footer"
+            inherit_id="account.report_invoice_document"
+            priority="2000000">
+    <!-- Borra el t-call del cedible dentro de #payment_term -->
+    <xpath expr="//div[@id='payment_term']//t[@t-call='l10n_cl_edi_account_accountant.delivery_guide_cedible']"
            position="replace">
       <t/>
     </xpath>
   </template>
 
-  <template id="report_invoice_row_singleloop_over_studio"
-            inherit_id="studio_customization.web_studio_report_ed_438b6cf4-752d-4a2b-be65-de8126967f4d"
-            priority="10000010">
-
-    <xpath expr="//table[@name='invoice_line_table']//t[@name='account_invoice_line_accountable']"
-           position="replace">
-      <t t-if="line.display_type == 'product'" name="account_invoice_line_accountable">
-        <t t-set="lv" t-value="lotes.get(linea_lote) or {}"/>
-        <t t-set="has_lote"
-           t-value="bool(lv) and (lv.get('cantidad') or lv.get('nombre') or lv.get('udm'))"/>
-
-        <!-- ===================== MODO LOTE ===================== -->
-        <t t-if="has_lote">
-          <t t-set="qty"        t-value="lv.get('cantidad') or 0.0"/>
-          <t t-set="uom"        t-value="lv.get('udm') or (line.product_uom_id and line.product_uom_id.name) or ''"/>
-          <t t-set="lot_name"   t-value="lv.get('nombre') or ''"/>
-          <t t-set="exp_date"   t-value="lv.get('fecha_vencimiento') or ''"/>
-          <t t-set="ratio"      t-value="(lv.get('ratio') or 1.0) or 1.0"/>
-          <t t-set="price_comp" t-value="lv.get('precio') if lv.get('precio') is not None else line.price_unit"/>
-          <t t-set="unit_price"       t-value="price_comp / (ratio or 1.0)"/>
-          <t t-set="discount_factor"  t-value="(1 - (line.discount or 0.0)/100.0)"/>
-          <t t-set="subtotal"         t-value="unit_price * qty * discount_factor"/>
-
-          <td name="account_invoice_line_name_ref">
-            <span t-esc="lv.get('component_code') or (line.product_id.default_code or '')"/>
-          </td>
-
-          <td name="account_invoice_line_name">
-            <span t-esc="line.only_name(lv.get('component_name') or line.name)"/>
-          </td>
-
-          <td name="td_quantity" class="text-end">
-            <span t-esc="('{0:.6f}'.format(qty)).rstrip('0').rstrip('.')"/>
-            <t t-if="uom"><span class="ms-1" t-esc="uom"/></t>
-          </td>
-
-          <td class="text-end">
-            <t t-if="lot_name and lot_name != 'SIN LOTE'"><span t-esc="lot_name"/></t>
-          </td>
-
-          <td class="text-center">
-            <t t-if="exp_date"><span t-esc="exp_date"/></t>
-          </td>
-
-          <td name="td_price_unit"
-              t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
-            <span class="text-nowrap"
-                  t-out="unit_price"
-                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-          </td>
-
-          <td name="td_discount" t-if="display_discount"
-              t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
-            <span class="text-nowrap" t-esc="'{:g}%'.format(float(line.discount or 0.0))"/>
-          </td>
-
-          <t t-set="taxes" t-value="', '.join([(tax.invoice_label or tax.name) for tax in line.tax_ids])"/>
-          <td name="td_taxes"
-              t-attf-class="text-start {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }} {{ 'text-nowrap' if len(taxes) &lt; 10 else '' }}">
-            <span id="line_tax_ids" t-out="taxes"/>
-          </td>
-
-          <td name="td_subtotal" class="text-end">
-            <span class="text-nowrap"
-                  t-out="subtotal"
-                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-          </td>
-        </t>
-
-        <!-- ===================== MODO SIMPLE ===================== -->
-        <t t-else="">
-          <td name="account_invoice_line_name_ref">
-            <span t-esc="line.product_id.default_code or ''"/>
-          </td>
-
-          <td name="account_invoice_line_name">
-            <span t-esc="line.only_name(line.name)"/>
-          </td>
-
-          <td name="td_quantity" class="text-end">
-            <span t-field="line.quantity"/>
-            <t t-if="line.product_uom_id"><span class="ms-1" t-field="line.product_uom_id"/></t>
-          </td>
-
-          <td class="text-end"></td>
-          <td class="text-center"></td>
-
-          <td name="td_price_unit"
-              t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
-            <span class="text-nowrap"
-                  t-field="line.price_unit"
-                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-          </td>
-
-          <td name="td_discount" t-if="display_discount"
-              t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
-            <span class="text-nowrap"
-                t-out="line_amounts.get('total_discount_fl', 0.0)"
-                t-options="{'widget': 'monetary', 'display_currency': line_amounts['main_currency']}"/>
-          </td>
-
-          <t t-set="taxes" t-value="', '.join([(tax.invoice_label or tax.name) for tax in line.tax_ids])"/>
-          <td name="td_taxes"
-              t-attf-class="text-start {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }} {{ 'text-nowrap' if len(taxes) &lt; 10 else '' }}">
-            <t t-if="taxes">
-              <span id="line_tax_ids" t-out="taxes"/>
-            </t>
-            <t t-else="">
-              <span>&#160;</span>
-            </t>
-          </td>
-
-          <td name="td_subtotal" class="text-end">
-            <span class="text-nowrap"
-                  t-field="line.price_subtotal"
-                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-          </td>
-        </t>
-      </t>
-    </xpath>
-  </template>
 </odoo>
