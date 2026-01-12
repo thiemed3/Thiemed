@@ -134,7 +134,7 @@
   </template>
 
   <!-- Footer estable -->
-  <template id="ale_inv_footer_fix_cl"
+  <!--template id="ale_inv_footer_fix_cl"
             inherit_id="l10n_cl.report_invoice_document"
             priority="1000030">
     <xpath expr="//div[@id='right-elements']" position="attributes">
@@ -152,7 +152,7 @@
     <xpath expr="//div[@id='payment_term']" position="attributes">
       <attribute name="style" add="page-break-inside: avoid;"/>
     </xpath>
-  </template>
+  </template-->
 
   <!-- Totales en moneda de compañía: sólo si corresponde -->
   <template id="guard_company_currency_totals_in_base"
