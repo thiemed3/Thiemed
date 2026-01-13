@@ -28,7 +28,7 @@
     </xpath>
   </template>
 
-  <!-- ====== LOTES (conservado tal cual) ====== -->
+  <!-- ====== LOTES ====== -->
   <template id="ale_inv_split_lots_cl"
             inherit_id="l10n_cl.report_invoice_document"
             priority="1000021">
@@ -133,27 +133,6 @@
     </xpath>
   </template>
 
-  <!-- Footer estable -->
-  <!--template id="ale_inv_footer_fix_cl"
-            inherit_id="l10n_cl.report_invoice_document"
-            priority="1000030">
-    <xpath expr="//div[@id='right-elements']" position="attributes">
-      <attribute name="style" add="page-break-inside: avoid;"/>
-    </xpath>
-    <xpath expr="//div[@id='right-elements']" position="after">
-      <div style="clear: both;"></div>
-    </xpath>
-    <xpath expr="//div[@id='payment_term']" position="before">
-      <div class="clearfix" style="clear: both;"></div>
-    </xpath>
-    <xpath expr="//div[@name='transferable-legend']" position="attributes">
-      <attribute name="style" add="page-break-inside: avoid;"/>
-    </xpath>
-    <xpath expr="//div[@id='payment_term']" position="attributes">
-      <attribute name="style" add="page-break-inside: avoid;"/>
-    </xpath>
-  </template-->
-
   <!-- Totales en moneda de compañía: sólo si corresponde -->
   <template id="guard_company_currency_totals_in_base"
             inherit_id="account.report_invoice_document"
@@ -166,15 +145,6 @@
       </t>
     </xpath>
   </template>
-
-  <!-- Quitar cualquier CEDIBLE absoluto de otros módulos -->
-  <!--template id="ale_remove_abs_cedible"
-            inherit_id="account.report_invoice_document"
-            priority="100060">
-    <xpath expr="//div[contains(@class,'cedible-footer')]" position="replace">
-      <div/>
-    </xpath>
-  </template-->
 
   <!-- Insertar CEDIBLE justo debajo de los totales (como Studio) -->
   <template id="ale_insert_cedible_under_totals_cl"
