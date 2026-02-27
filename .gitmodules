@@ -2,3 +2,8 @@
 	path = soportetierranube/payroll_cl
 	url = git@github.com:soportetierranube/payroll_cl.git
 	branch = 18.0
+
+[submodule "soportetierranube/inventory_cl"]
+	path = soportetierranube/inventory_cl
+	url = git@github.com:soportetierranube/inventory_cl.git
+	branch = 18.0
