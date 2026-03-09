@@ -1,0 +1,22 @@
+{
+    'name': "Instituciones y medicos",
+    'summary': "Modulo para liminar la creacion de productos y clientes desde la vista de ventas",
+    'description': "",
+    'author': "Tierranube(Matias V)",
+    'website': "http://www.tierranube.cl",
+    "category": "Contacts",
+    'version': '18.0.0.1',
+    # any module necessary for this one to work correctly
+    'depends': ['contacts'],
+    # always loaded
+    'data': [
+        "security/ir.model.access.csv",
+        "views/medical_link_views.xml",
+        "views/res_partner_views.xml",
+        "views/partner_role_deactivate_wizard_views.xml",
+    ],
+    'license': 'LGPL-3',
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}

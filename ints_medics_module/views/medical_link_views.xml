@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_res_partner_medical_link_list" model="ir.ui.view">
+        <field name="name">res.partner.medical.link.list</field>
+        <field name="model">res.partner.medical.link</field>
+        <field name="arch" type="xml">
+            <list string="Vínculos Médico - Institución">
+                <field name="doctor_id" domain="[('is_company','=',False), ('is_doctor','=',True)]"/>
+                <field name="institution_id" domain="[('is_company','=',True), ('is_institution','=',True)]"/>
+                <field name="job_position"/>
+                <field name="influence_level"/>
+                <field name="institutional_email"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_res_partner_medical_link_form" model="ir.ui.view">
+        <field name="name">res.partner.medical.link.form</field>
+        <field name="model">res.partner.medical.link</field>
+        <field name="arch" type="xml">
+            <form string="Vínculo Médico - Institución">
+                <sheet>
+                    <group>
+                        <field name="doctor_id" domain="[('is_company','=',False), ('is_doctor','=',True)]"/>
+                        <field name="institution_id" domain="[('is_company','=',True), ('is_institution','=',True)]"/>
+                    </group>
+                    <group>
+                        <field name="job_position"/>
+                        <field name="influence_level"/>
+                        <field name="institutional_email"/>
+                    </group>
+                    <group>
+                        <field name="notes"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
