@@ -1,0 +1,1 @@
+from . import partner_role_deactivate_wizard
