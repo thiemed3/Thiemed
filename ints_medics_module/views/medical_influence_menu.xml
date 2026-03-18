@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <menuitem id="menu_medical_links_root"
+              name="Vínculos médico institución"
+              parent="contacts.res_partner_menu_config"
+              sequence="90"/>
+
+    <menuitem id="menu_medical_influence"
+              name="Influencia"
+              parent="menu_medical_links_root"
+              action="action_res_partner_medical_influence"
+              sequence="10"/>
+</odoo>

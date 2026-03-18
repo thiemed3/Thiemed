@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_partner_form_inherit_medical_links" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.medical.links</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Mostrar checkbox "Es médico" (solo para personas) -->
+            <xpath expr="//field[@name='title']" position="after">
+                <field name="is_doctor" invisible="company_type != 'person'"/>
+                <field name="is_institution" invisible="company_type != 'company'"/>
+            </xpath>
+
+            <xpath expr="//field[@name='company_type']" position="attributes">
+                <attribute name="readonly">is_doctor or is_institution</attribute>
+            </xpath>
+
+            <!-- Agregar pestañas -->
+            <xpath expr="//notebook" position="inside">
+
+                <!-- Pestaña para Instituciones (visible SOLO si es médico persona) -->
+                <page string="Instituciones"
+                      name="tab_instituciones"
+                      invisible="is_company or not is_doctor">
+                    <field name="institution_link_ids">
+                        <list editable="bottom">
+                            <field name="institution_id" domain="[('is_company','=',True), ('is_institution','=',True)]"/>
+                            <field name="job_position"/>
+                            <field name="influence_level"/>
+                            <field name="influence_ids" string="Influencia" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                            <field name="institutional_email"/>
+                            <field name="notes"/>
+                            <!--field name="active"/-->
+                        </list>
+                    </field>
+                </page>
+
+                <!-- Pestaña para Médicos (visible SOLO si es institución/compañía) -->
+                <page string="Médicos"
+                      name="tab_medicos"
+                      invisible="not is_company or not is_institution">
+                    <field name="doctor_link_ids">
+                        <list editable="bottom">
+                            <field name="doctor_id" domain="[('is_company','=',False), ('is_doctor','=',True)]"/>
+                            <field name="job_position"/>
+                            <field name="influence_level"/>
+                            <field name="influence_ids" string="Influencia" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                            <field name="institutional_email"/>
+
+                            <!-- Extras para parecerse al ejemplo (opcionales) -->
+                            <field name="doctor_phone" readonly="1"/>
+                            <field name="doctor_email" readonly="1"/>
+                            <field name="doctor_city" readonly="1"/>
+                            <field name="doctor_tags" widget="many2many_tags" readonly="1"/>
+
+                            <field name="notes"/>
+                            <!--field name="active"/-->
+                        </list>
+                    </field>
+                </page>
+
+            </xpath>
+        </field>
+    </record>
+</odoo>
