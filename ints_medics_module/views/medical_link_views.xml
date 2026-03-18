@@ -10,7 +10,6 @@
                 <field name="job_position"/>
                 <field name="influence_level"/>
                 <field name="institutional_email"/>
-                <field name="active"/>
             </list>
         </field>
     </record>
@@ -27,12 +26,12 @@
                     </group>
                     <group>
                         <field name="job_position"/>
-                        <field name="influence_level"/>
+                        <field name="influence_level" string="Relevancia"/>
+                        <field name="influence_ids" string="Influencia" widget="many2many_tags" options="{'color_field': 'color'}"/>
                         <field name="institutional_email"/>
                     </group>
                     <group>
                         <field name="notes"/>
-                        <field name="active"/>
                     </group>
                 </sheet>
             </form>
