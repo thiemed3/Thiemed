@@ -28,6 +28,7 @@
                             <field name="institution_id" domain="[('is_company','=',True), ('is_institution','=',True)]"/>
                             <field name="job_position"/>
                             <field name="influence_level"/>
+                            <field name="influence_ids" string="Influencia" widget="many2many_tags" options="{'color_field': 'color'}"/>
                             <field name="institutional_email"/>
                             <field name="notes"/>
                             <!--field name="active"/-->
@@ -44,6 +45,7 @@
                             <field name="doctor_id" domain="[('is_company','=',False), ('is_doctor','=',True)]"/>
                             <field name="job_position"/>
                             <field name="influence_level"/>
+                            <field name="influence_ids" string="Influencia" widget="many2many_tags" options="{'color_field': 'color'}"/>
                             <field name="institutional_email"/>
 
                             <!-- Extras para parecerse al ejemplo (opcionales) -->
