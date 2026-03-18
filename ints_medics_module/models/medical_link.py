@@ -8,12 +8,19 @@ class ResPartnerMedicalLink(models.Model):
     _description = "Vínculo Médico - Institución"
     _order = "influence_level desc, id desc"
 
+    allowed_doctor_ids = fields.Many2many(
+        "res.partner",
+        compute="_compute_allowed_doctor_ids",
+        string="Médicos disponibles",
+        compute_sudo=True,
+    )
+
     doctor_id = fields.Many2one(
         "res.partner",
         string="Médico",
         required=True,
         index=True,
-        domain=[("is_company", "=", False), ("is_doctor", "=", True)],
+        domain="[('id', 'in', allowed_doctor_ids)]",
     )
 
     institution_id = fields.Many2one(
@@ -25,21 +32,26 @@ class ResPartnerMedicalLink(models.Model):
     )
 
     job_position = fields.Char(string="Puesto de trabajo")
+
     influence_level = fields.Selection(
-        [
-            ("1", "Baja"),
-            ("2", "Media"),
-            ("3", "Alta"),
-        ],
-        string="Relevancia / Influencia",
+        [("1", "Baja"), ("2", "Media"), ("3", "Alta")],
+        string="Relevancia",
         default="2",
         required=True,
     )
-    institutional_email = fields.Char(string="Correo institucional")
-    notes = fields.Text(string="Notas")
-    active = fields.Boolean(default=True)
 
-    # Campos “helper” (solo para mostrar info en la tabla)
+    influence_ids = fields.Many2many(
+        comodel_name="res.partner.medical.influence",
+        relation="res_partner_medical_link_influence_rel",
+        column1="link_id",
+        column2="influence_id",
+        string="Influencia",
+    )
+
+    institutional_email = fields.Char(string="Correo institucional")
+    notes = fields.Text(string="Notas")  
+
+    # Campos helper
     doctor_phone = fields.Char(related="doctor_id.phone", readonly=True)
     doctor_email = fields.Char(related="doctor_id.email", readonly=True)
     doctor_city = fields.Char(related="doctor_id.city", readonly=True)
@@ -50,13 +62,6 @@ class ResPartnerMedicalLink(models.Model):
          "Este vínculo Médico–Institución ya existe."),
     ]
 
-    allowed_doctor_ids = fields.Many2many(
-        "res.partner",
-        compute="_compute_allowed_doctor_ids",
-        string="Médicos disponibles",
-        compute_sudo=True,
-    )
-
     @api.depends("institution_id")
     def _compute_allowed_doctor_ids(self):
         Partner = self.env["res.partner"]
@@ -65,10 +70,8 @@ class ResPartnerMedicalLink(models.Model):
                 rec.allowed_doctor_ids = Partner.browse()
                 continue
 
-            # Médicos ya asignados a esta institución
             assigned = self.search([("institution_id", "=", rec.institution_id.id)]).mapped("doctor_id").ids
 
-            # Médicos disponibles (personas marcadas como médico) EXCLUYENDO los ya asignados
             rec.allowed_doctor_ids = Partner.search([
                 ("is_company", "=", False),
                 ("is_doctor", "=", True),
@@ -86,9 +89,6 @@ class ResPartnerMedicalLink(models.Model):
 
             if rec.institution_id and not rec.institution_id.is_company:
                 raise ValidationError("El campo 'Institución' debe ser una Compañía.")
-
-            if rec.institution_id and not rec.institution_id.is_institution:
-                raise ValidationError("La institución seleccionada no está marcada como 'Es institución'.")
 
             if rec.institution_id and not rec.institution_id.is_institution:
                 raise ValidationError("La institución seleccionada no está marcada como 'Es institución'.")
