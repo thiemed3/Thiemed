@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_res_partner_medical_link_user,res.partner.medical.link user,model_res_partner_medical_link,base.group_user,1,1,1,1
+access_res_partner_medical_influence_user,res.partner.medical.influence user,model_res_partner_medical_influence,base.group_user,1,1,1,1
 access_partner_role_deactivate_wizard_user,partner.role.deactivate.wizard user,model_partner_role_deactivate_wizard,base.group_user,1,1,1,1
