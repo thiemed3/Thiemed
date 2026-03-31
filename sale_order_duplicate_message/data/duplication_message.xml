@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="sale_order_duplicate_origin_message">
+        <p>
+            Este pedido de venta se duplicó desde:
+            <a href="#"
+               t-att-data-oe-model="origin._name"
+               t-att-data-oe-id="origin.id">
+                <t t-out="origin.display_name"/>
+            </a>
+        </p>
+    </template>
+</odoo>
