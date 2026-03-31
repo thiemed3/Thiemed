@@ -10,7 +10,7 @@
             </list>
         </field>
     </record>
-    
+
     <record id="action_res_partner_medical_influence" model="ir.actions.act_window">
         <field name="name">Influencia</field>
         <field name="res_model">res.partner.medical.influence</field>

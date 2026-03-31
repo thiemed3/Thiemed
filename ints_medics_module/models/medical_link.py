@@ -49,7 +49,7 @@ class ResPartnerMedicalLink(models.Model):
     )
 
     institutional_email = fields.Char(string="Correo institucional")
-    notes = fields.Text(string="Notas")
+    notes = fields.Text(string="Notas")  
 
     # Campos helper
     doctor_phone = fields.Char(related="doctor_id.phone", readonly=True)
