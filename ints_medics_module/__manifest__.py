@@ -14,6 +14,7 @@
         "views/medical_link_views.xml",
         "views/res_partner_views.xml",
         "views/partner_role_deactivate_wizard_views.xml",
+        "views/res_partner_search.xml",
     ],
     'license': 'LGPL-3',
     'installable': True,
