@@ -21,6 +21,57 @@ class ResPartner(models.Model):
         string="Médicos",
     )
 
+
+    institution_ids = fields.Many2many(
+        comodel_name="res.partner",
+        string="Instituciones",
+        compute="_compute_institution_ids",
+        search="_search_institution_ids",
+        compute_sudo=True,
+    )
+
+    @api.depends("institution_link_ids.institution_id")
+    def _compute_institution_ids(self):
+        for partner in self:
+            partner.institution_ids = partner.institution_link_ids.mapped("institution_id")
+
+    def _search_institution_ids(self, operator, value):
+        """Permite que la barra de búsqueda filtre doctores por nombre/id de institución."""
+        Partner = self.env["res.partner"].sudo()
+
+        # Caso texto: "Buscar Instituciones para: clinica"
+        if operator in ("ilike", "like", "=ilike", "=like"):
+            insts = Partner.search([
+                ("is_company", "=", True),
+                ("is_institution", "=", True),
+                ("name", operator, value),
+            ])
+            return [("institution_link_ids.institution_id", "in", insts.ids)]
+
+        # Caso selección por IDs (cuando eliges institución desde widget)
+        if operator in ("=", "in"):
+            ids = value if isinstance(value, (list, tuple)) else [value]
+            return [("institution_link_ids.institution_id", "in", ids)]
+
+        # Negaciones
+        if operator in ("!=", "not in"):
+            ids = value if isinstance(value, (list, tuple)) else [value]
+            return ["|",
+                    ("institution_link_ids", "=", False),
+                    ("institution_link_ids.institution_id", "not in", ids)]
+
+        if operator in ("not ilike", "not like"):
+            insts = Partner.search([
+                ("is_company", "=", True),
+                ("is_institution", "=", True),
+                ("name", "ilike", value),
+            ])
+            return ["|",
+                    ("institution_link_ids", "=", False),
+                    ("institution_link_ids.institution_id", "not in", insts.ids)]
+
+        return []
+
     # -------------------------
     # UX: avisos inmediatos
     # -------------------------

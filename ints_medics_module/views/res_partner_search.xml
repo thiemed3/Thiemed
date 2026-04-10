@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_res_partner_filter_inherit_medical_links" model="ir.ui.view">
+        <field name="name">res.partner.search.inherit.medical.links</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="institution_ids" string="Instituciones"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
