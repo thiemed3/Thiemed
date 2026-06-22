@@ -17,7 +17,7 @@ class TestHomologationModel(TransactionCase):
         )
         self.partner = self.env["res.partner"].create({
             "name": "Xilong Test",
-            "competitor": True,
+            "supplier_rank": 1,
         })
         self.product = self.env["product.product"].create({
             "name": "Tijera Metzenbaum 14cm",
@@ -76,10 +76,10 @@ class TestHomologationModel(TransactionCase):
         )
 
     def test_05_competitor_partner_field(self):
-        """Verify competitor flag on partner."""
-        self.assertTrue(self.partner.competitor)
+        """Verify supplier_rank flag on partner."""
+        self.assertTrue(self.partner.supplier_rank > 0)
         non_comp = self.env["res.partner"].create({"name": "Clínica Test"})
-        self.assertFalse(non_comp.competitor)
+        self.assertFalse(non_comp.supplier_rank)
 
     def test_06_cross_homologation_action(self):
         """action_find_cross_homologations returns window action."""
@@ -104,7 +104,7 @@ class TestHomologationModel(TransactionCase):
         self.homologation.action_validate()
         other_partner = self.env["res.partner"].create({
             "name": "Other Competitor",
-            "competitor": True,
+            "supplier_rank": 1,
         })
         dup = self.env["product.homologation"].create({
             "competitor_id": other_partner.id,

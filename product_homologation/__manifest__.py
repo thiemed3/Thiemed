@@ -8,12 +8,11 @@
     'depends': ['base', 'sale', 'product', 'contacts', 'crm', 'sale_crm'],
     'data': [
         'security/ir.model.access.csv',
-        'views/res_partner_views.xml',
+        'data/sequence_data.xml',
         'views/product_homologation_views.xml',
         'views/product_homologation_phase3_views.xml',
         'views/product_homologation_quote_views.xml',
         'views/product_homologation_rule_views.xml',
-        'views/homologation_import_wizard_views.xml',
         'views/product_homologation_menu.xml',
         'views/crm_lead_views.xml',
     ],

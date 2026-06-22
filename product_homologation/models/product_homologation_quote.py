@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import fields, models, api
 
 
 class ProductHomologationQuote(models.Model):
@@ -8,6 +8,15 @@ class ProductHomologationQuote(models.Model):
     _rec_name = "name"
 
     name = fields.Char(string="Referencia", required=True, index=True, default="Nuevo")
+
+    @api.model
+    def create(self, vals):
+        if "name" not in vals or vals.get("name") == "Nuevo":
+            vals["name"] = (
+                self.env["ir.sequence"].next_by_code("product.homologation.quote")
+                or "Nuevo"
+            )
+        return super().create(vals)
     lead_id = fields.Many2one("crm.lead", string="Oportunidad CRM")
     partner_id = fields.Many2one(
         "res.partner",

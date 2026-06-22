@@ -16,7 +16,7 @@ class TestHomologationQuote(TransactionCase):
         )
         self.partner = self.env["res.partner"].create({
             "name": "Cliente CRM",
-            "competitor": True,
+            "supplier_rank": 1,
         })
         self.customer = self.env["res.partner"].create({
             "name": "Clínica Test",
@@ -124,7 +124,7 @@ class TestHomologationQuote(TransactionCase):
         so = quote.sale_order_id
         self.assertEqual(so.partner_id, self.customer)
         self.assertEqual(so.opportunity_id, self.lead)
-        self.assertEqual(so.origin, "PRE-005")
+        self.assertEqual(so.origin, quote.name)
 
         so_line = so.order_line[0]
         self.assertEqual(so_line.product_id, self.product)
@@ -163,7 +163,6 @@ class TestHomologationQuote(TransactionCase):
         """Full UI simulation: create quote, add lines, convert to SO."""
         quote_form = Form(self.env["product.homologation.quote"])
         quote_form.partner_id = self.customer
-        quote_form.name = "UI-TEST-001"
         with quote_form.line_ids.new() as line:
             line.customer_code = "CMP-BIS-001"
             line.quantity = 2

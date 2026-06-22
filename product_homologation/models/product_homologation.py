@@ -16,7 +16,7 @@ class ProductHomologation(models.Model):
         "res.partner",
         string="Competidor/Marca",
         required=True,
-        domain=[("competitor", "=", True)],
+        domain=[("supplier_rank", ">", 0)],
         help="Marca o competidor al que pertenece el código del cliente. "
              "Ej: Xilong, Johnson, etc.",
     )

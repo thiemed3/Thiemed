@@ -63,6 +63,7 @@ class ProductHomologationQuoteLine(models.Model):
         domain = [("customer_code", "=", self.customer_code)]
         match = Homologation.search(domain, limit=1)
         if match and match.product_id:
+            self.customer_description = match.customer_description
             self.product_id = match.product_id
             self.homologation_id = match
             self.state = "matched"
@@ -73,3 +74,40 @@ class ProductHomologationQuoteLine(models.Model):
             self.state = "matched"
         elif not self.product_id:
             self.state = "pending"
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        lines = super().create(vals_list)
+        lines._ensure_homologation()
+        return lines
+
+    def write(self, vals):
+        result = super().write(vals)
+        if "customer_code" in vals or "product_id" in vals:
+            self._ensure_homologation()
+        return result
+
+    def _ensure_homologation(self):
+        for line in self:
+            if not line.customer_code or not line.product_id:
+                continue
+            Homologation = self.env["product.homologation"]
+            existing = Homologation.search([
+                ("customer_code", "=", line.customer_code),
+                ("product_id", "=", line.product_id.id),
+            ], limit=1)
+            if existing:
+                if line.homologation_id != existing:
+                    line.homologation_id = existing
+                continue
+            competitor = line.product_id.seller_ids[:1].partner_id
+            if not competitor:
+                continue
+            hom = Homologation.create({
+                "competitor_id": competitor.id,
+                "customer_code": line.customer_code,
+                "customer_description": line.customer_description or line.product_id.name,
+                "product_id": line.product_id.id,
+                "state": "draft",
+            })
+            line.homologation_id = hom

@@ -1,6 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_product_homologation_user,product.homologation user,model_product_homologation,base.group_user,1,1,1,1
-access_product_homologation_import_wizard_user,product.homologation.import.wizard user,model_product_homologation_import_wizard,base.group_user,1,1,1,1
 access_product_homologation_quote_user,product.homologation.quote user,model_product_homologation_quote,base.group_user,1,1,1,1
 access_product_homologation_quote_line_user,product.homologation.quote.line user,model_product_homologation_quote_line,base.group_user,1,1,1,1
 access_product_homologation_rule_user,product.homologation.rule user,model_product_homologation_rule,base.group_user,1,1,1,1
