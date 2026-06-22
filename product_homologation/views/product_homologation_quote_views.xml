@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_product_homologation_quote_tree" model="ir.ui.view">
+        <field name="name">product.homologation.quote.tree</field>
+        <field name="model">product.homologation.quote</field>
+        <field name="arch" type="xml">
+            <list string="Precotizaciones" multi_edit="1">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="lead_id" optional="show"/>
+                <field name="line_count"/>
+                <field name="matched_count"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'homologated'"
+                       decoration-warning="state == 'draft' or state == 'in_progress'"
+                       decoration-info="state == 'converted'"
+                       decoration-danger="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_quote_form" model="ir.ui.view">
+        <field name="name">product.homologation.quote.form</field>
+        <field name="model">product.homologation.quote</field>
+        <field name="arch" type="xml">
+            <form string="Precotización">
+                <header>
+                    <button name="action_confirm_homologation" type="object"
+                            string="Homologar todo" invisible="state not in ('draft','in_progress')"
+                            class="btn-primary"/>
+                    <button name="action_convert_to_sale" type="object"
+                            string="Convertir a presupuesto" invisible="state != 'homologated'"
+                            class="btn-success"/>
+                    <button name="action_draft" type="object"
+                            string="Volver a borrador" invisible="state not in ('in_progress','homologated')"/>
+                    <button name="action_cancel" type="object"
+                            string="Cancelar" invisible="state in ('converted','cancelled')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <field name="lead_id" invisible="1"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                        </group>
+                        <group>
+                            <field name="line_count"/>
+                            <field name="matched_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="lines" string="Líneas">
+                            <field name="line_ids">
+                                <list editable="bottom" multi_edit="1">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="customer_code"/>
+                                    <field name="customer_description"/>
+                                    <field name="product_id"
+                                           context="{'partner_id': parent.partner_id}"/>
+                                    <field name="homologation_id" optional="show"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'matched'"
+                                           decoration-danger="state == 'unmatched'"
+                                           decoration-muted="state == 'pending'"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit" sum="Total"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="notes" string="Notas">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="sale_order_id"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_quote_search" model="ir.ui.view">
+        <field name="name">product.homologation.quote.search</field>
+        <field name="model">product.homologation.quote</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="lead_id"/>
+                <filter name="state_draft" string="Borrador"
+                        domain="[('state','=','draft')]"/>
+                <filter name="state_homologated" string="Homologado"
+                        domain="[('state','=','homologated')]"/>
+                <filter name="state_converted" string="Convertido"
+                        domain="[('state','=','converted')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_product_homologation_quote" model="ir.actions.act_window">
+        <field name="name">Precotizaciones</field>
+        <field name="res_model">product.homologation.quote</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_product_homologation_quote_search"/>
+    </record>
+</odoo>

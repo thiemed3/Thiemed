@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_product_homologation_form_inherit_phase3" model="ir.ui.view">
+        <field name="name">product.homologation.form.inherit.phase3</field>
+        <field name="model">product.homologation</field>
+        <field name="inherit_id" ref="view_product_homologation_form"/>
+        <field name="arch" type="xml">
+            <field name="precision_pct" position="after">
+                <field name="normalized_description" readonly="1"/>
+            </field>
+            <xpath expr="//sheet" position="inside">
+                <group string="Posibles duplicados"
+                       invisible="not duplicate_homologation_ids">
+                    <field name="duplicate_homologation_ids" nolabel="1">
+                        <list>
+                            <field name="customer_code"/>
+                            <field name="competitor_id"/>
+                            <field name="product_id"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                </group>
+            </xpath>
+            <div class="oe_chatter" position="before">
+                <group>
+                    <button name="action_find_cross_homologations" type="object"
+                            string="Ver homologaciones cruzadas (mismo producto)"
+                            class="btn-secondary"
+                            invisible="not product_id"/>
+                </group>
+            </div>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_validation_tree" model="ir.ui.view">
+        <field name="name">product.homologation.validation.tree</field>
+        <field name="model">product.homologation</field>
+        <field name="arch" type="xml">
+            <list string="Homologaciones pendientes de validación"
+                  multi_edit="1"
+                  editable="top">
+                <field name="customer_code"/>
+                <field name="customer_description"/>
+                <field name="competitor_id"/>
+                <field name="product_id"/>
+                <field name="precision_pct"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_product_homologation_validation" model="ir.actions.act_window">
+        <field name="name">Validar homologaciones</field>
+        <field name="res_model">product.homologation</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[("state", "in", ("draft",))]</field>
+        <field name="context">{'default_state': 'draft'}</field>
+        <field name="search_view_id" ref="view_product_homologation_search"/>
+    </record>
+
+    <record id="action_product_homologation_batch_validate" model="ir.actions.server">
+        <field name="name">Validar seleccionadas</field>
+        <field name="model_id" ref="model_product_homologation"/>
+        <field name="binding_model_id" ref="model_product_homologation"/>
+        <field name="state">code</field>
+        <field name="code">
+            records.action_validate()
+        </field>
+    </record>
+</odoo>
