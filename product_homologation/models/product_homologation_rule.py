@@ -21,7 +21,7 @@ class ProductHomologationRule(models.Model):
     preferred_competitor_id = fields.Many2one(
         "res.partner",
         string="Competidor preferido",
-        domain=[("competitor", "=", True)],
+        domain=[("supplier_rank", ">", 0)],
         help="Solo aplica para reglas de tipo 'Marca/competidor preferido'.",
     )
     priority = fields.Integer(string="Prioridad", default=10, help="Menor número = mayor prioridad")

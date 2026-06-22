@@ -11,11 +11,11 @@
               action="action_product_homologation"
               sequence="10"/>
 
-    <menuitem id="menu_product_homologation_import"
+    <!--menuitem id="menu_product_homologation_import"
               name="Importar desde Excel"
               parent="menu_homologation_root"
               action="action_product_homologation_import"
-              sequence="20"/>
+              sequence="20"/-->
 
     <menuitem id="menu_product_homologation_quote"
               name="Precotizaciones"

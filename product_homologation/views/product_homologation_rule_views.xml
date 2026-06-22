@@ -27,9 +27,9 @@
                             <field name="priority"/>
                         </group>
                         <group>
-                            <field name="preferred_competitor_id"
-                                   invisible="rule_type != 'preferred_competitor'"
-                                   required="rule_type == 'preferred_competitor'"/>
+                <field name="preferred_competitor_id"
+                       invisible="rule_type != 'preferred_competitor'"
+                       required="rule_type == 'preferred_competitor'"/>
                             <field name="active"/>
                         </group>
                     </group>
