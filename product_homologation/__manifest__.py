@@ -5,7 +5,7 @@
     'website': "http://www.tierranube.cl",
     'category': 'Sales',
     'version': '18.0.0.1',
-    'depends': ['base', 'sale', 'product', 'contacts', 'crm', 'sale_crm'],
+    'depends': ['base', 'sale', 'product', 'contacts', 'crm', 'sale_crm', 'mail'],
     'data': [
         'security/ir.model.access.csv',
         'data/sequence_data.xml',
