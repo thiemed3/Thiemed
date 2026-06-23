@@ -5,6 +5,7 @@ class ProductHomologationQuote(models.Model):
     _name = "product.homologation.quote"
     _description = "Precotización de homologación"
     _order = "id desc"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _rec_name = "name"
 
     name = fields.Char(string="Referencia", required=True, index=True, default="Nuevo")
@@ -17,12 +18,13 @@ class ProductHomologationQuote(models.Model):
                 or "Nuevo"
             )
         return super().create(vals)
-    lead_id = fields.Many2one("crm.lead", string="Oportunidad CRM")
+    lead_id = fields.Many2one("crm.lead", string="Oportunidad CRM", tracking=True)
     partner_id = fields.Many2one(
         "res.partner",
         string="Cliente",
         required=True,
         domain=[("active", "=", True)],
+        tracking=True
     )
     line_ids = fields.One2many(
         "product.homologation.quote.line",
@@ -40,11 +42,13 @@ class ProductHomologationQuote(models.Model):
         string="Estado",
         default="draft",
         required=True,
+        tracking=True
     )
     sale_order_id = fields.Many2one(
         "sale.order",
         string="Presupuesto generado",
         readonly=True,
+        tracking=True
     )
     line_count = fields.Integer(
         string="Líneas",
