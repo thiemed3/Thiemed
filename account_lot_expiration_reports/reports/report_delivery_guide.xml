@@ -29,7 +29,13 @@
                                 <t t-set="line_amounts" t-value="total_line_amounts.get(line.move_id, {})"/>
                                 <tr style="font-size:12px">
                                     <td name="td_code"><span style="font-size:12px" t-field="line.product_id.default_code"/></td>
-                                    <td><span style="font-size:12px" t-field="line.product_id.name"/></td>
+                                    <td name="td_product">
+                                        <span style="font-size:12px" t-field="line.product_id.name"/>
+                                        <t t-if="line.product_id.description_picking">
+                                            <br/>
+                                            <span style="font-size:12px" t-field="line.product_id.description_picking"/>
+                                        </t>
+                                    </td>
                                     <td class="text-end"><span t-field="line.quantity"/></td>
                                     <td groups="uom.group_uom"><span t-field="line.product_uom_id"/></td>
                                     <td class="text-end"><span t-field="line.lot_id.name"/></td>
