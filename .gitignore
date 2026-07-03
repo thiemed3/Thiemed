@@ -39,3 +39,5 @@ setup/win32/static/postgresql*.exe
 /share/
 /src/
 *.pyc
+opencode.json
+AGENTS.md
