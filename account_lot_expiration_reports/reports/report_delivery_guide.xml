@@ -30,11 +30,8 @@
                                 <tr style="font-size:12px">
                                     <td name="td_code"><span style="font-size:12px" t-field="line.product_id.default_code"/></td>
                                     <td name="td_product">
-                                        <span style="font-size:12px" t-field="line.product_id.name"/>
-                                        <t t-if="line.product_id.description_picking">
-                                            <br/>
-                                            <span style="font-size:12px" t-field="line.product_id.description_picking"/>
-                                        </t>
+                                        <span t-if="line.move_id.sale_line_id" style="font-size:12px" t-field="line.move_id.sale_line_id.name" t-options="{'widget': 'text'}"/>
+                                        <span t-else="" style="font-size:12px" t-field="line.product_id.name"/>
                                     </td>
                                     <td class="text-end"><span t-field="line.quantity"/></td>
                                     <td groups="uom.group_uom"><span t-field="line.product_uom_id"/></td>
