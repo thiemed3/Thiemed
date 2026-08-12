@@ -6,7 +6,7 @@
     'website': "http://www.tierranube.cl",
     'license': 'LGPL-3',
     'category': 'sale',
-    'version': '18.0.0.1',
+    'version': '19.0.0.1',
     'depends': ['sale'],
     'data': [
         'data/duplication_message.xml',
