@@ -57,10 +57,10 @@ class ResPartnerMedicalLink(models.Model):
     doctor_city = fields.Char(related="doctor_id.city", readonly=True)
     doctor_tags = fields.Many2many(related="doctor_id.category_id", readonly=True, string="Etiquetas")
 
-    _sql_constraints = [
-        ("uniq_doctor_institution", "unique(doctor_id, institution_id)",
-         "Este vínculo Médico–Institución ya existe."),
-    ]
+    _uniq_doctor_institution = models.Constraint(
+        "unique(doctor_id, institution_id)",
+        "Este vínculo Médico–Institución ya existe.",
+    )
 
     @api.depends("institution_id")
     def _compute_allowed_doctor_ids(self):

@@ -10,6 +10,7 @@ class ResPartnerMedicalInfluence(models.Model):
     name = fields.Char(string="Nombre", required=True, index=True)
     color = fields.Integer(string="Color")
 
-    _sql_constraints = [
-        ("uniq_name", "unique(name)", "Ya existe una influencia con este nombre."),
-    ]
+    _uniq_name = models.Constraint(
+        "unique(name)",
+        "Ya existe una influencia con este nombre.",
+    )
