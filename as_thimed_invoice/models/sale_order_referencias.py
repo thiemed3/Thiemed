@@ -5,7 +5,7 @@ from odoo.tools.translate import _
 
 
 class PosOrder(models.Model):
-    _inherit = 'l10n_cl.account.invoice.reference'
+    _inherit = 'l10n_cl.edi.reference'
 
     so_id = fields.Many2one(
             'sale.order',
@@ -20,7 +20,6 @@ class PosOrder(models.Model):
     def gte_refrencia(self):
         if self._origin.so_id:
             self._origin.so_id.as_reference = self._origin.origin_doc_number
-
 
 
 

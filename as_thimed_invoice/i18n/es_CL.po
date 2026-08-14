@@ -16,14 +16,14 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: as_thimed_invoice
-#: model:ir.model.fields,field_description:as_thimed_invoice.field_stock_landed_cost_analytic_tag_id
-msgid "Analytic tag"
-msgstr "Etiqueta analítica"
+#: model:ir.model.fields,field_description:as_thimed_invoice.field_stock_landed_cost_analytic_account_id
+msgid "Analytic Account"
+msgstr "Cuenta analítica"
 
 #. module: as_thimed_invoice
-#: model:ir.model.fields,help:as_thimed_invoice.field_stock_landed_cost_analytic_tag_id
-msgid "Analytic tag associated with the invoice. E.g. DIM1"
-msgstr "Etiqueta analítica asociada a la factura. E.j. DIM1"
+#: model:ir.model.fields,help:as_thimed_invoice.field_stock_landed_cost_analytic_account_id
+msgid "Analytic account used to find vendor bill lines that generate landed cost lines."
+msgstr "Cuenta analítica usada para buscar líneas de facturas de proveedor que generan líneas de costes en destino."
 
 #. module: as_thimed_invoice
 #: model:product.product,name:as_thimed_invoice.product_product_landed_cost

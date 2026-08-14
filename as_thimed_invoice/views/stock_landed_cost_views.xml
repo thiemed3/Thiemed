@@ -6,10 +6,10 @@
         <field name="inherit_id" ref="stock_landed_costs.view_stock_landed_cost_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header/button[1]" position="after">
-                <button name="search_tags" string="Buscar" class="oe_highlight" type="object"/>
+                <button name="search_analytic_account" string="Buscar" class="oe_highlight" type="object" invisible="state != 'draft'"/>
             </xpath>
             <xpath expr="//field[@name='account_move_id']" position="after">
-                <field name="analytic_tag_id"/>
+                <field name="analytic_account_id"/>
             </xpath>
             <xpath expr="//field[@name='valuation_adjustment_lines']/list/field[@name='additional_landed_cost']" position="after">
                 <field name="new_cost"/>
