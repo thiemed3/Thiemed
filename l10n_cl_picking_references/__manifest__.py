@@ -1,7 +1,7 @@
 {
     'name': "Referencias en stock",
     'category': 'stock',
-    'version': '18.0.0.1',
+    'version': '19.0.0.1',
     'author': 'Pedro Arroyo - Tierranube',
     'description': """
     """,
@@ -21,5 +21,4 @@
     'auto_install': False,
     'application': False,
 }
-
 
