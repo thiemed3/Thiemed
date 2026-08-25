@@ -5,11 +5,14 @@
         <field name="model">product.homologation</field>
         <field name="arch" type="xml">
             <list string="Homologaciones" editable="bottom" multi_edit="1">
-                <field name="competitor_id"/>
+                <field name="competitor_id" context="{'default_supplier_rank': 1}"/>
                 <field name="customer_code"/>
                 <field name="customer_description" optional="show"/>
+                <field name="observation" optional="hide"/>
                 <field name="product_id"/>
                 <field name="product_default_code" optional="show"/>
+                <field name="homologation_level" optional="show"/>
+                <field name="precision_pct" optional="show"/>
                 <field name="state" widget="badge" decoration-success="state == 'validated'" decoration-warning="state == 'draft'" decoration-danger="state == 'rejected'"/>
                 <field name="validator_id" optional="show"/>
             </list>
@@ -30,24 +33,29 @@
                             class="btn-danger"/>
                     <button name="action_draft" type="object"
                             string="Volver a borrador" invisible="state not in ('validated','rejected')"/>
-                    <field name="state" widget="statusbar"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,validated,rejected"/>
                 </header>
                 <sheet>
                     <group>
                         <group>
-                            <field name="competitor_id"/>
+                            <field name="competitor_id" context="{'default_supplier_rank': 1}"/>
                             <field name="customer_code"/>
                             <field name="customer_description"/>
+                            <field name="observation"/>
                         </group>
                         <group>
                             <field name="product_id"/>
                             <field name="product_default_code"/>
+                            <field name="homologation_level"/>
                             <field name="precision_pct"/>
+                            <field name="validator_id" readonly="1"/>
                         </group>
                     </group>
                 </sheet>
                 <div class="oe_chatter">
-                    <field name="validator_id"/>
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
                 </div>
             </form>
         </field>

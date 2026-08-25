@@ -56,13 +56,31 @@
                                 <list editable="bottom" multi_edit="1">
                                     <field name="sequence" widget="handle"/>
                                     <field name="customer_code"/>
+                                    <field name="competitor_id" optional="show" context="{'default_supplier_rank': 1}"/>
                                     <field name="customer_description"/>
+                                    <field name="observation" string="Obs. precotización" optional="hide"/>
                                     <field name="product_id"
                                            context="{'partner_id': parent.partner_id}"/>
-                                    <field name="homologation_id" optional="show" readonly="1"/>
-                                    <field name="state" widget="badge"
-                                           decoration-success="state == 'matched'"
-                                           decoration-danger="state == 'unmatched'"
+                                    <field name="homologation_id" optional="show" options="{'no_create': True}"/>
+                                    <field name="match_status" widget="badge" optional="show"
+                                           decoration-success="match_status == 'validated'"
+                                           decoration-warning="match_status in ('pending','alternatives','draft')"
+                                           decoration-danger="match_status in ('unmatched','rejected')"/>
+                                    <field name="homologation_level" optional="show" readonly="1"/>
+                                    <field name="homologation_precision_pct" optional="show" readonly="1"/>
+                                    <field name="homologation_observation" optional="hide" readonly="1"/>
+                                    <field name="homologation_state" optional="hide" readonly="1"/>
+                                    <field name="homologation_create_uid" optional="hide" readonly="1"/>
+                                    <field name="homologation_validator_id" optional="hide" readonly="1"/>
+                                    <field name="possible_homologation_count" optional="show" readonly="1"/>
+                                    <button name="action_open_possible_homologations" type="object"
+                                            string="Ver alternativas"
+                                            invisible="possible_homologation_count == 0"/>
+                                    <field name="possible_homologation_ids" widget="many2many_tags" optional="hide" readonly="1"/>
+                                    <field name="state" widget="badge" optional="hide"
+                                           decoration-success="match_status == 'validated'"
+                                           decoration-warning="match_status in ('pending','alternatives','draft')"
+                                           decoration-danger="match_status in ('unmatched','rejected')"
                                            decoration-muted="state == 'pending'"/>
                                     <field name="quantity"/>
                                     <field name="price_unit" sum="Total"/>

@@ -2,6 +2,7 @@ import logging
 import re
 
 from odoo import fields, models, api
+from odoo.osv import expression
 
 _logger = logging.getLogger(__name__)
 
@@ -9,26 +10,37 @@ _logger = logging.getLogger(__name__)
 class ProductHomologation(models.Model):
     _name = "product.homologation"
     _description = "Homologación de Productos"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "competitor_id, customer_code"
     _rec_name = "customer_code"
+
+    HOMOLOGATION_LEVEL_PRECISION = {
+        "exact": 100.0,
+        "near": 90.0,
+        "approximate": 80.0,
+        "best": 70.0,
+    }
 
     competitor_id = fields.Many2one(
         "res.partner",
         string="Competidor/Marca",
-        required=True,
         domain=[("supplier_rank", ">", 0)],
         help="Marca o competidor al que pertenece el código del cliente. "
              "Ej: Xilong, Johnson, etc.",
     )
     customer_code = fields.Char(
         string="Código del cliente",
-        required=True,
         index=True,
         help="Código que usa el cliente/competidor para este producto.",
     )
     customer_description = fields.Text(
         string="Descripción del cliente",
+        required=True,
         help="Descripción original del producto tal como la entrega el cliente.",
+    )
+    observation = fields.Text(
+        string="Observación",
+        help="Observación interna opcional sobre la homologación.",
     )
     product_id = fields.Many2one(
         "product.product",
@@ -42,8 +54,22 @@ class ProductHomologation(models.Model):
         string="Código interno",
         readonly=True,
     )
+    homologation_level = fields.Selection(
+        [
+            ("exact", "Coincidencia exacta"),
+            ("near", "Coincidencia cercana"),
+            ("approximate", "Coincidencia aproximada"),
+            ("best", "Mejor opción"),
+        ],
+        string="Nivel de homologación",
+        default="exact",
+        tracking=True,
+        help="Nivel manual de cercanía definido por el validador.",
+    )
     precision_pct = fields.Float(
         string="Precisión (%)",
+        default=100.0,
+        tracking=True,
         help="Porcentaje de precisión de la equivalencia. "
              "Útil cuando no hay match exacto (ej. tijera 14cm vs 16cm).",
     )
@@ -59,11 +85,13 @@ class ProductHomologation(models.Model):
         string="Estado",
         default="draft",
         required=True,
+        tracking=True,
     )
     validator_id = fields.Many2one(
         "res.users",
         string="Validado por",
         readonly=True,
+        tracking=True,
     )
     active = fields.Boolean(default=True)
     company_id = fields.Many2one(
@@ -89,35 +117,57 @@ class ProductHomologation(models.Model):
         ),
     ]
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get("customer_code"):
+                vals["customer_code"] = vals["customer_code"].strip()
+            if vals.get("homologation_level") and "precision_pct" not in vals:
+                vals["precision_pct"] = self._precision_from_level(vals["homologation_level"])
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if vals.get("customer_code"):
+            vals = vals.copy()
+            vals["customer_code"] = vals["customer_code"].strip()
+        if vals.get("homologation_level") and "precision_pct" not in vals:
+            vals = vals.copy()
+            vals["precision_pct"] = self._precision_from_level(vals["homologation_level"])
+        return super().write(vals)
+
+    @api.onchange("homologation_level")
+    def _onchange_homologation_level(self):
+        for rec in self:
+            rec.precision_pct = rec._precision_from_level(rec.homologation_level)
+
+    def _precision_from_level(self, level):
+        return self.HOMOLOGATION_LEVEL_PRECISION.get(level or "exact", 0.0)
+
     @api.depends("customer_code", "competitor_id", "product_id")
     def _compute_duplicates(self):
         for rec in self:
-            domain = [
-                ("id", "!=", rec.id),
-                "|",
-                ("competitor_id", "=", rec.competitor_id.id),
-                ("customer_code", "=", rec.customer_code),
-            ]
+            domains = []
+            if rec.customer_code:
+                domains.append([("customer_code", "=ilike", rec.customer_code.strip())])
             if rec.product_id:
-                domain = [
-                    ("id", "!=", rec.id),
-                    "|",
-                    "&",
-                    ("competitor_id", "=", rec.competitor_id.id),
-                    ("customer_code", "=", rec.customer_code),
-                    "&",
-                    ("product_id", "=", rec.product_id.id),
-                    ("customer_code", "=", rec.customer_code),
-                ]
+                domains.append([("product_id", "=", rec.product_id.id)])
+            if not domains:
+                rec.duplicate_homologation_ids = False
+                continue
+            domain = expression.OR(domains)
+            if rec.ids:
+                domain = [("id", "not in", rec.ids)] + domain
             rec.duplicate_homologation_ids = self.search(domain, limit=10)
 
     @api.constrains("competitor_id", "customer_code", "product_id")
     def _check_duplicate_suggestion(self):
         for rec in self:
+            if not rec.competitor_id or not rec.customer_code or not rec.product_id:
+                continue
             dup = self.search([
                 ("id", "!=", rec.id),
                 ("competitor_id", "=", rec.competitor_id.id),
-                ("customer_code", "=", rec.customer_code),
+                ("customer_code", "=ilike", rec.customer_code.strip()),
                 ("product_id", "!=", rec.product_id.id),
             ], limit=1)
             if dup:
@@ -147,16 +197,16 @@ class ProductHomologation(models.Model):
         return t.strip()
 
     def action_validate(self):
-        self.state = "validated"
-        self.validator_id = self.env.user
+        self.write({"state": "validated", "validator_id": self.env.user.id})
+        self.env[
+            "product.homologation.quote.line"
+        ]._reconcile_after_homologation_validation(self)
 
     def action_reject(self):
-        self.state = "rejected"
-        self.validator_id = self.env.user
+        self.write({"state": "rejected", "validator_id": self.env.user.id})
 
     def action_draft(self):
-        self.state = "draft"
-        self.validator_id = False
+        self.write({"state": "draft", "validator_id": False})
 
     def action_find_cross_homologations(self):
         self.ensure_one()

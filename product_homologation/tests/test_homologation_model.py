@@ -1,6 +1,7 @@
 from odoo.tests.common import TransactionCase
 from odoo.exceptions import ValidationError, UserError
 from odoo.tests import Form
+from odoo.tools.safe_eval import safe_eval
 
 
 class TestHomologationModel(TransactionCase):
@@ -49,6 +50,7 @@ class TestHomologationModel(TransactionCase):
             self.env["product.homologation"].create({
                 "competitor_id": self.partner.id,
                 "customer_code": "XIL-SC-001",
+                "customer_description": "Duplicate scissors",
                 "product_id": self.product.id,
             })
 
@@ -87,6 +89,7 @@ class TestHomologationModel(TransactionCase):
         h2 = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "XIL-SC-002",
+            "customer_description": "Second scissors",
             "product_id": self.product.id,
             "state": "validated",
         })
@@ -109,6 +112,7 @@ class TestHomologationModel(TransactionCase):
         dup = self.env["product.homologation"].create({
             "competitor_id": other_partner.id,
             "customer_code": "OTHER-001",
+            "customer_description": "Other competitor product",
             "product_id": self.product_b.id,
         })
         dup._compute_duplicates()
@@ -118,6 +122,7 @@ class TestHomologationModel(TransactionCase):
         h2 = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "XIL-SC-099",
+            "customer_description": "Batch validate product",
             "product_id": self.product.id,
             "state": "draft",
         })
@@ -135,3 +140,89 @@ class TestHomologationModel(TransactionCase):
         record = form.save()
         self.assertEqual(record.customer_code, "FORM-TEST-001")
         self.assertEqual(record.product_id, self.product)
+
+    def test_11_optional_competitor_and_code(self):
+        """Competitor and customer code are optional in V1."""
+        record = self.env["product.homologation"].create({
+            "customer_description": "Product without customer code",
+            "product_id": self.product.id,
+        })
+        self.assertFalse(record.competitor_id)
+        self.assertFalse(record.customer_code)
+
+    def test_12_homologation_level_sets_precision(self):
+        """Manual homologation level suggests the expected precision."""
+        exact = self.env["product.homologation"].create({
+            "customer_description": "Exact product",
+            "product_id": self.product.id,
+            "homologation_level": "exact",
+        })
+        near = self.env["product.homologation"].create({
+            "customer_description": "Near product",
+            "product_id": self.product_b.id,
+            "homologation_level": "near",
+        })
+
+        self.assertEqual(exact.precision_pct, 100.0)
+        self.assertEqual(near.precision_pct, 90.0)
+
+        near.write({"homologation_level": "approximate"})
+        self.assertEqual(near.precision_pct, 80.0)
+
+    def test_13_observation_is_preserved(self):
+        """Homologation observation remains stored independently."""
+        self.homologation.write({"observation": "10 mm longer than requested"})
+        self.assertEqual(self.homologation.observation, "10 mm longer than requested")
+
+    def test_14_action_reject_draft_records_validator(self):
+        """PH-020-A: draft homologation can be rejected by a validator."""
+        self.homologation.action_reject()
+
+        self.assertEqual(self.homologation.state, "rejected")
+        self.assertEqual(self.homologation.validator_id, self.env.user)
+
+    def test_15_batch_reject_server_action(self):
+        """PH-020-B: server action rejects multiple draft homologations."""
+        h2 = self.env["product.homologation"].create({
+            "competitor_id": self.partner.id,
+            "customer_code": "XIL-SC-REJ-002",
+            "customer_description": "Batch reject product",
+            "product_id": self.product_b.id,
+            "state": "draft",
+        })
+        action = self.env.ref(
+            "product_homologation.action_product_homologation_batch_reject"
+        )
+
+        action.with_context(
+            active_model="product.homologation",
+            active_id=self.homologation.id,
+            active_ids=(self.homologation | h2).ids,
+        ).run()
+
+        self.assertEqual(self.homologation.state, "rejected")
+        self.assertEqual(h2.state, "rejected")
+        self.assertEqual(self.homologation.validator_id, self.env.user)
+        self.assertEqual(h2.validator_id, self.env.user)
+
+    def test_16_validated_not_in_validation_action_domain(self):
+        """PH-020-C: validated records leave the validation worklist."""
+        action = self.env.ref(
+            "product_homologation.action_product_homologation_validation"
+        )
+        self.homologation.action_validate()
+
+        pending = self.env["product.homologation"].search(safe_eval(action.domain))
+
+        self.assertNotIn(self.homologation, pending)
+
+    def test_17_rejected_not_in_validation_action_domain(self):
+        """PH-020-D: rejected records leave the validation worklist."""
+        action = self.env.ref(
+            "product_homologation.action_product_homologation_validation"
+        )
+        self.homologation.action_reject()
+
+        pending = self.env["product.homologation"].search(safe_eval(action.domain))
+
+        self.assertNotIn(self.homologation, pending)
