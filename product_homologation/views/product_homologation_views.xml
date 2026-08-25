@@ -61,6 +61,56 @@
         </field>
     </record>
 
+    <record id="view_product_homologation_possible_tree" model="ir.ui.view">
+        <field name="name">product.homologation.possible.tree</field>
+        <field name="model">product.homologation</field>
+        <field name="arch" type="xml">
+            <list string="Alternativas de homologación" create="0" edit="0" delete="0">
+                <button name="action_apply_to_quote_line" type="object"
+                        string="Seleccionar" class="btn-primary"/>
+                <field name="competitor_id"/>
+                <field name="customer_code"/>
+                <field name="customer_description"/>
+                <field name="product_id"/>
+                <field name="product_default_code"/>
+                <field name="homologation_level"/>
+                <field name="precision_pct"/>
+                <field name="observation" optional="hide"/>
+                <field name="state" widget="badge" decoration-success="state == 'validated'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_possible_form" model="ir.ui.view">
+        <field name="name">product.homologation.possible.form</field>
+        <field name="model">product.homologation</field>
+        <field name="arch" type="xml">
+            <form string="Alternativa de homologación" create="0" edit="0" delete="0">
+                <header>
+                    <button name="action_apply_to_quote_line" type="object"
+                            string="Seleccionar" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="competitor_id"/>
+                            <field name="customer_code"/>
+                            <field name="customer_description"/>
+                            <field name="observation"/>
+                        </group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="product_default_code"/>
+                            <field name="homologation_level"/>
+                            <field name="precision_pct"/>
+                            <field name="state"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
     <record id="view_product_homologation_search" model="ir.ui.view">
         <field name="name">product.homologation.search</field>
         <field name="model">product.homologation</field>

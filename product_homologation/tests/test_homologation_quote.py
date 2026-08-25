@@ -64,6 +64,41 @@ class TestHomologationQuote(TransactionCase):
         line._onchange_customer_code()
         return line
 
+    def _create_validated_alternatives(self, code="ODSH-RULE-001"):
+        other_partner = self.env["res.partner"].create({
+            "name": "Competidor ODSH Alternativo",
+            "supplier_rank": 1,
+        })
+        first = self.env["product.homologation"].create({
+            "competitor_id": self.partner.id,
+            "customer_code": code,
+            "customer_description": "ODSH alternative A",
+            "product_id": self.product.id,
+            "state": "validated",
+            "homologation_level": "near",
+        })
+        second = self.env["product.homologation"].create({
+            "competitor_id": other_partner.id,
+            "customer_code": code,
+            "customer_description": "ODSH alternative B",
+            "product_id": self.product_b.id,
+            "state": "validated",
+            "homologation_level": "exact",
+        })
+        return first | second
+
+    def _saved_quote_line_for_code(self, code):
+        quote = self.env["product.homologation.quote"].create({
+            "partner_id": self.customer.id,
+            "name": "PRE-SAVED-ALTERNATIVES",
+        })
+        form = Form(quote)
+        with form.line_ids.new() as line:
+            line.customer_code = code
+            line.customer_description = "Line with several alternatives"
+        quote = form.save()
+        return quote.line_ids[0]
+
     def test_01_create_quote_from_lead(self):
         """Quote can be created from CRM lead."""
         quote = self.env["product.homologation.quote"].create({
@@ -695,3 +730,270 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.match_status, "rejected")
         self.assertFalse(line.possible_homologation_ids)
         self.assertEqual(quote.matched_count, 0)
+
+    def test_30_ph023_transient_multiple_alternatives_cannot_open_button(self):
+        """PH-023-A: new unsaved lines detect alternatives but cannot show the action."""
+        alternatives = self._create_validated_alternatives()
+
+        line = self._transient_line_for_code("ODSH-RULE-001")
+
+        self.assertFalse(line.product_id)
+        self.assertFalse(line.homologation_id)
+        self.assertEqual(line.state, "unmatched")
+        self.assertEqual(line.match_status, "alternatives")
+        self.assertEqual(line.possible_homologation_count, 2)
+        self.assertEqual(set(line.possible_homologation_ids.ids), set(alternatives.ids))
+        self.assertFalse(line.can_open_possible_homologations)
+
+    def test_31_ph024_saved_line_keeps_real_alternative_count(self):
+        """PH-024-B: after saving, alternatives remain reconciled and counted."""
+        alternatives = self._create_validated_alternatives()
+        self.env["product.homologation.rule"].create({
+            "name": "TEST - Priorizar mayor precision",
+            "rule_type": "highest_precision",
+        })
+
+        line = self._saved_quote_line_for_code("ODSH-RULE-001")
+
+        self.assertFalse(line.product_id)
+        self.assertFalse(line.homologation_id)
+        self.assertEqual(line.state, "unmatched")
+        self.assertEqual(line.match_status, "alternatives")
+        self.assertEqual(line.possible_homologation_count, 2)
+        self.assertEqual(set(line.possible_homologation_ids.ids), set(alternatives.ids))
+        self.assertTrue(line.can_open_possible_homologations)
+
+    def test_32_ph024_action_opens_exactly_validated_alternatives(self):
+        """PH-024-C: the alternatives action only targets compatible validated records."""
+        alternatives = self._create_validated_alternatives()
+        self.env["product.homologation"].create({
+            "competitor_id": self.partner.id,
+            "customer_code": "ODSH-RULE-OTHER",
+            "customer_description": "Other code",
+            "product_id": self.product.id,
+            "state": "validated",
+        })
+        line = self._saved_quote_line_for_code("ODSH-RULE-001")
+
+        action = line.action_open_possible_homologations()
+
+        self.assertEqual(action["res_model"], "product.homologation")
+        self.assertEqual(set(action["domain"][0][2]), set(alternatives.ids))
+
+    def test_33_ph024_manual_selection_applies_homologation_and_product(self):
+        """PH-024-D: choosing one alternative applies the selected homologation."""
+        alternatives = self._create_validated_alternatives()
+        selected = alternatives.filtered(lambda h: h.product_id == self.product_b)
+        line = self._saved_quote_line_for_code("ODSH-RULE-001")
+
+        line.write({"homologation_id": selected.id})
+
+        self.assertEqual(line.homologation_id, selected)
+        self.assertEqual(line.product_id, self.product_b)
+        self.assertEqual(line.state, "matched")
+        self.assertEqual(line.match_status, "validated")
+
+    def test_34_ph024_manual_selection_clears_alternatives(self):
+        """PH-024-E: after manual selection the line no longer exposes alternatives."""
+        alternatives = self._create_validated_alternatives()
+        selected = alternatives.filtered(lambda h: h.product_id == self.product)
+        line = self._saved_quote_line_for_code("ODSH-RULE-001")
+
+        line.write({"homologation_id": selected.id})
+
+        self.assertFalse(line.possible_homologation_ids)
+        self.assertEqual(line.possible_homologation_count, 0)
+        self.assertFalse(line.can_open_possible_homologations)
+
+    def test_35_ph024_single_validated_still_auto_applies(self):
+        """PH-024-F: one validated homologation keeps the existing automatic match."""
+        line = self._saved_quote_line_for_code("CMP-BIS-001")
+
+        self.assertEqual(line.homologation_id, self.homologation)
+        self.assertEqual(line.product_id, self.product)
+        self.assertEqual(line.state, "matched")
+        self.assertEqual(line.match_status, "validated")
+        self.assertEqual(line.possible_homologation_count, 0)
+
+    def test_36_ph024_draft_and_rejected_are_not_alternatives(self):
+        """PH-024-G: draft/rejected records never populate possible alternatives."""
+        other_partner = self.env["res.partner"].create({
+            "name": "Competidor Draft Rejected",
+            "supplier_rank": 1,
+        })
+        draft = self.env["product.homologation"].create({
+            "competitor_id": self.partner.id,
+            "customer_code": "ODSH-DRAFT-REJECTED",
+            "customer_description": "Draft option",
+            "product_id": self.product.id,
+            "state": "draft",
+        })
+        rejected = self.env["product.homologation"].create({
+            "competitor_id": other_partner.id,
+            "customer_code": "ODSH-DRAFT-REJECTED",
+            "customer_description": "Rejected option",
+            "product_id": self.product_b.id,
+            "state": "rejected",
+        })
+
+        line = self._saved_quote_line_for_code("ODSH-DRAFT-REJECTED")
+        action = line.action_open_possible_homologations()
+
+        self.assertFalse(line.product_id)
+        self.assertFalse(line.homologation_id)
+        self.assertEqual(line.match_status, "draft")
+        self.assertFalse(line.possible_homologation_ids)
+        self.assertEqual(line.possible_homologation_count, 0)
+        self.assertEqual(set(action["domain"][0][2]), set())
+        self.assertNotIn(draft.id, action["domain"][0][2])
+        self.assertNotIn(rejected.id, action["domain"][0][2])
+
+    def test_37_ph022_multiple_validation_still_reconciles_alternatives(self):
+        """PH-024-H: PH-022 still exposes alternatives after validating several drafts."""
+        other_partner = self.env["res.partner"].create({
+            "name": "PH-022 PH-024 Alternative Competitor",
+            "supplier_rank": 1,
+        })
+        first_homologation = self.env["product.homologation"].create({
+            "competitor_id": self.partner.id,
+            "customer_code": "PH022-PH024-MULTI-VALIDATE",
+            "customer_description": "First PH-022 alternative",
+            "product_id": self.product.id,
+            "state": "draft",
+        })
+        second_homologation = self.env["product.homologation"].create({
+            "competitor_id": other_partner.id,
+            "customer_code": "PH022-PH024-MULTI-VALIDATE",
+            "customer_description": "Second PH-022 alternative",
+            "product_id": self.product_b.id,
+            "state": "draft",
+        })
+        quote = self.env["product.homologation.quote"].create({
+            "partner_id": self.customer.id,
+            "name": "PRE-PH022-PH024-MULTI",
+        })
+        line = self.env["product.homologation.quote.line"].create({
+            "quote_id": quote.id,
+            "customer_code": "PH022-PH024-MULTI-VALIDATE",
+            "customer_description": "Ambiguous PH-022 quote line",
+            "state": "unmatched",
+        })
+
+        (first_homologation | second_homologation).action_validate()
+        action = line.action_open_possible_homologations()
+
+        self.assertFalse(line.homologation_id)
+        self.assertFalse(line.product_id)
+        self.assertEqual(line.state, "unmatched")
+        self.assertEqual(line.match_status, "alternatives")
+        self.assertEqual(line.possible_homologation_count, 2)
+        self.assertEqual(
+            set(line.possible_homologation_ids.ids),
+            {first_homologation.id, second_homologation.id},
+        )
+        self.assertEqual(
+            set(action["domain"][0][2]),
+            {first_homologation.id, second_homologation.id},
+        )
+        self.assertEqual(quote.matched_count, 0)
+
+    def test_38_ph025_alternatives_action_only_contains_compatible_records(self):
+        """PH-025-A/B: alternatives action excludes validated records for other codes."""
+        alternatives = self._create_validated_alternatives("LOCAL-PH025-001")
+        incompatible = self.env["product.homologation"].create({
+            "competitor_id": self.partner.id,
+            "customer_code": "LOCAL-PH025-OTHER",
+            "customer_description": "Other validated homologation",
+            "product_id": self.product.id,
+            "state": "validated",
+        })
+        line = self._saved_quote_line_for_code("LOCAL-PH025-001")
+
+        action = line.action_open_possible_homologations()
+
+        self.assertEqual(set(action["domain"][0][2]), set(alternatives.ids))
+        self.assertNotIn(incompatible.id, action["domain"][0][2])
+        self.assertEqual(action["context"]["homologation_quote_line_id"], line.id)
+        self.assertIn(
+            (self.env.ref("product_homologation.view_product_homologation_possible_tree").id, "list"),
+            action["views"],
+        )
+
+    def test_39_ph025_apply_alternative_a_updates_line_and_quote(self):
+        """PH-025-C/E/F: selecting alternative A applies it and updates counters."""
+        alternatives = self._create_validated_alternatives("LOCAL-PH025-APPLY-A")
+        selected = alternatives.filtered(lambda h: h.precision_pct == 90.0)
+        line = self._saved_quote_line_for_code("LOCAL-PH025-APPLY-A")
+        self.assertEqual(line.possible_homologation_count, 2)
+
+        result = selected.with_context(
+            line.action_open_possible_homologations()["context"]
+        ).action_apply_to_quote_line()
+
+        self.assertEqual(result["res_model"], "product.homologation.quote")
+        self.assertEqual(result["res_id"], line.quote_id.id)
+        self.assertEqual(line.homologation_id, selected)
+        self.assertEqual(line.product_id, self.product)
+        self.assertEqual(line.state, "matched")
+        self.assertEqual(line.match_status, "validated")
+        self.assertEqual(line.homologation_level, "near")
+        self.assertEqual(line.homologation_precision_pct, 90.0)
+        self.assertFalse(line.possible_homologation_ids)
+        self.assertEqual(line.possible_homologation_count, 0)
+        self.assertEqual(line.quote_id.matched_count, 1)
+
+    def test_40_ph025_apply_alternative_b_updates_line_and_quote(self):
+        """PH-025-D: selecting alternative B applies its product and precision."""
+        alternatives = self._create_validated_alternatives("LOCAL-PH025-APPLY-B")
+        selected = alternatives.filtered(lambda h: h.precision_pct == 100.0)
+        line = self._saved_quote_line_for_code("LOCAL-PH025-APPLY-B")
+
+        selected.with_context(
+            line.action_open_possible_homologations()["context"]
+        ).action_apply_to_quote_line()
+
+        self.assertEqual(line.homologation_id, selected)
+        self.assertEqual(line.product_id, self.product_b)
+        self.assertEqual(line.state, "matched")
+        self.assertEqual(line.match_status, "validated")
+        self.assertEqual(line.homologation_level, "exact")
+        self.assertEqual(line.homologation_precision_pct, 100.0)
+        self.assertFalse(line.possible_homologation_ids)
+        self.assertEqual(line.possible_homologation_count, 0)
+        self.assertEqual(line.quote_id.matched_count, 1)
+
+    def test_41_ph025_incompatible_homologation_cannot_be_applied(self):
+        """PH-025-G: validated homologations for another code cannot be applied."""
+        self._create_validated_alternatives("LOCAL-PH025-INCOMPATIBLE")
+        incompatible = self.env["product.homologation"].create({
+            "competitor_id": self.partner.id,
+            "customer_code": "LOCAL-PH025-WRONG-CODE",
+            "customer_description": "Wrong code homologation",
+            "product_id": self.product_b.id,
+            "state": "validated",
+        })
+        line = self._saved_quote_line_for_code("LOCAL-PH025-INCOMPATIBLE")
+
+        with self.assertRaises(UserError):
+            line.write({"homologation_id": incompatible.id})
+        with self.assertRaises(UserError):
+            incompatible.with_context(
+                homologation_quote_line_id=line.id
+            ).action_apply_to_quote_line()
+
+        self.assertFalse(line.homologation_id)
+        self.assertFalse(line.product_id)
+        self.assertEqual(line.match_status, "alternatives")
+        self.assertEqual(line.possible_homologation_count, 2)
+        self.assertEqual(line.quote_id.matched_count, 0)
+
+    def test_42_ph025_single_validated_still_auto_applies(self):
+        """PH-025-I: backend guard keeps one validated homologation automatic."""
+        line = self._saved_quote_line_for_code("CMP-BIS-001")
+
+        self.assertEqual(line.homologation_id, self.homologation)
+        self.assertEqual(line.product_id, self.product)
+        self.assertEqual(line.state, "matched")
+        self.assertEqual(line.match_status, "validated")
+        self.assertEqual(line.possible_homologation_count, 0)
+        self.assertEqual(line.quote_id.matched_count, 1)

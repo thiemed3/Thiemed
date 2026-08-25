@@ -1,7 +1,8 @@
 import logging
 import re
 
-from odoo import fields, models, api
+from odoo import fields, models, api, _
+from odoo.exceptions import UserError
 from odoo.osv import expression
 
 _logger = logging.getLogger(__name__)
@@ -227,3 +228,14 @@ class ProductHomologation(models.Model):
             "domain": [("id", "in", cross.ids)],
             "view_mode": "list,form",
         }
+
+    def action_apply_to_quote_line(self):
+        self.ensure_one()
+        quote_line_id = self.env.context.get("homologation_quote_line_id")
+        if not quote_line_id:
+            raise UserError(_("No hay una línea de precotización activa."))
+        line = self.env["product.homologation.quote.line"].browse(quote_line_id).exists()
+        if not line:
+            raise UserError(_("La línea de precotización ya no existe."))
+        line._apply_selected_homologation(self)
+        return line.quote_id.action_open_quote()

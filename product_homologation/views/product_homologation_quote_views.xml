@@ -61,7 +61,8 @@
                                     <field name="observation" string="Obs. precotización" optional="hide"/>
                                     <field name="product_id"
                                            context="{'partner_id': parent.partner_id}"/>
-                                    <field name="homologation_id" optional="show" options="{'no_create': True}"/>
+                                    <field name="homologation_id" optional="show" options="{'no_create': True}"
+                                           readonly="possible_homologation_count > 1"/>
                                     <field name="match_status" widget="badge" optional="show"
                                            decoration-success="match_status == 'validated'"
                                            decoration-warning="match_status in ('pending','alternatives','draft')"
@@ -72,10 +73,11 @@
                                     <field name="homologation_state" optional="hide" readonly="1"/>
                                     <field name="homologation_create_uid" optional="hide" readonly="1"/>
                                     <field name="homologation_validator_id" optional="hide" readonly="1"/>
+                                    <field name="can_open_possible_homologations" column_invisible="1"/>
                                     <field name="possible_homologation_count" optional="show" readonly="1"/>
                                     <button name="action_open_possible_homologations" type="object"
                                             string="Ver alternativas"
-                                            invisible="possible_homologation_count == 0"/>
+                                            invisible="not can_open_possible_homologations"/>
                                     <field name="possible_homologation_ids" widget="many2many_tags" optional="hide" readonly="1"/>
                                     <field name="state" widget="badge" optional="hide"
                                            decoration-success="match_status == 'validated'"
