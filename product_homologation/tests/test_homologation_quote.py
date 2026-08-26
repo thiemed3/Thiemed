@@ -898,7 +898,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(quote.matched_count, 0)
 
     def test_38_ph025_alternatives_action_only_contains_compatible_records(self):
-        """PH-025-A/B: alternatives action excludes validated records for other codes."""
+        """PH-025-A/B and PH-026-E: alternatives action is scoped and explicit."""
         alternatives = self._create_validated_alternatives("LOCAL-PH025-001")
         incompatible = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
@@ -914,10 +914,23 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(set(action["domain"][0][2]), set(alternatives.ids))
         self.assertNotIn(incompatible.id, action["domain"][0][2])
         self.assertEqual(action["context"]["homologation_quote_line_id"], line.id)
-        self.assertIn(
-            (self.env.ref("product_homologation.view_product_homologation_possible_tree").id, "list"),
-            action["views"],
-        )
+        self.assertFalse(action["context"]["create"])
+        self.assertFalse(action["context"]["edit"])
+        self.assertFalse(action["context"]["delete"])
+        self.assertEqual(action["views"], [
+            (
+                self.env.ref(
+                    "product_homologation.view_product_homologation_possible_tree"
+                ).id,
+                "list",
+            ),
+            (
+                self.env.ref(
+                    "product_homologation.view_product_homologation_possible_form"
+                ).id,
+                "form",
+            ),
+        ])
 
     def test_39_ph025_apply_alternative_a_updates_line_and_quote(self):
         """PH-025-C/E/F: selecting alternative A applies it and updates counters."""

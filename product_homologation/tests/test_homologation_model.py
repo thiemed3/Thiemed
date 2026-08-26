@@ -1,3 +1,5 @@
+from lxml import etree
+
 from odoo.tests.common import TransactionCase
 from odoo.exceptions import ValidationError, UserError
 from odoo.tests import Form
@@ -6,6 +8,10 @@ from odoo.tools.safe_eval import safe_eval
 
 class TestHomologationModel(TransactionCase):
     """Test the core product.homologation model."""
+
+    def _view_root(self, xmlid):
+        view = self.env.ref(xmlid)
+        return etree.fromstring(view.arch_db.encode())
 
     def setUp(self):
         super().setUp()
@@ -226,3 +232,52 @@ class TestHomologationModel(TransactionCase):
         pending = self.env["product.homologation"].search(safe_eval(action.domain))
 
         self.assertNotIn(self.homologation, pending)
+
+    def test_18_ph026_homologation_action_uses_normal_views(self):
+        """PH-026-A/B/C: menu action uses the editable normal list/form views."""
+        action = self.env.ref("product_homologation.action_product_homologation")
+        normal_tree = self.env.ref("product_homologation.view_product_homologation_tree")
+        normal_form = self.env.ref("product_homologation.view_product_homologation_form")
+        possible_tree = self.env.ref(
+            "product_homologation.view_product_homologation_possible_tree"
+        )
+        action_views = action.view_ids.sorted("sequence")
+
+        self.assertEqual(action.view_mode, "list,form")
+        self.assertEqual(action_views[0].view_mode, "list")
+        self.assertEqual(action_views[0].view_id, normal_tree)
+        self.assertEqual(action_views[1].view_mode, "form")
+        self.assertEqual(action_views[1].view_id, normal_form)
+        self.assertNotIn(possible_tree, action_views.mapped("view_id"))
+
+        tree_root = self._view_root("product_homologation.view_product_homologation_tree")
+        self.assertEqual(tree_root.tag, "list")
+        self.assertNotIn(tree_root.get("create"), ("0", "false", "False"))
+
+    def test_19_ph026_possible_tree_remains_readonly_selection_view(self):
+        """PH-026-D: alternatives list stays limited to explicit selection."""
+        tree_root = self._view_root(
+            "product_homologation.view_product_homologation_possible_tree"
+        )
+
+        self.assertEqual(tree_root.get("create"), "0")
+        self.assertEqual(tree_root.get("edit"), "0")
+        self.assertEqual(tree_root.get("delete"), "0")
+        self.assertTrue(
+            tree_root.xpath("//button[@name='action_apply_to_quote_line']")
+        )
+
+    def test_20_ph027_normal_form_uses_standard_chatter(self):
+        """PH-027: normal form uses Odoo 18 chatter component, not technical fields."""
+        form_view = self.env.ref("product_homologation.view_product_homologation_form")
+        form_arch = self.env["product.homologation"].get_view(
+            view_id=form_view.id,
+            view_type="form",
+        )["arch"]
+        form_root = etree.fromstring(form_arch.encode())
+
+        self.assertTrue(form_root.xpath("//chatter"))
+        self.assertFalse(form_root.xpath("//div[contains(@class, 'oe_chatter')]"))
+        self.assertFalse(form_root.xpath("//field[@name='message_follower_ids']"))
+        self.assertFalse(form_root.xpath("//field[@name='activity_ids']"))
+        self.assertFalse(form_root.xpath("//field[@name='message_ids']"))

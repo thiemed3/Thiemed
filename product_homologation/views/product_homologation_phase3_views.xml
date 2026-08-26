@@ -21,14 +21,26 @@
                     </field>
                 </group>
             </xpath>
-            <div class="oe_chatter" position="before">
+            <xpath expr="//sheet" position="after">
                 <group>
                     <button name="action_find_cross_homologations" type="object"
                             string="Ver homologaciones cruzadas (mismo producto)"
                             class="btn-secondary"
                             invisible="not product_id"/>
                 </group>
-            </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_form_chatter_component" model="ir.ui.view">
+        <field name="name">product.homologation.form.chatter.component</field>
+        <field name="model">product.homologation</field>
+        <field name="inherit_id" ref="view_product_homologation_form"/>
+        <field name="priority" eval="30"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_chatter')]" position="replace">
+                <chatter/>
+            </xpath>
         </field>
     </record>
 
