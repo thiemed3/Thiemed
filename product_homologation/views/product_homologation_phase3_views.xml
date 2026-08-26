@@ -21,14 +21,26 @@
                     </field>
                 </group>
             </xpath>
-            <div class="oe_chatter" position="before">
+            <xpath expr="//sheet" position="after">
                 <group>
                     <button name="action_find_cross_homologations" type="object"
                             string="Ver homologaciones cruzadas (mismo producto)"
                             class="btn-secondary"
                             invisible="not product_id"/>
                 </group>
-            </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_form_chatter_component" model="ir.ui.view">
+        <field name="name">product.homologation.form.chatter.component</field>
+        <field name="model">product.homologation</field>
+        <field name="inherit_id" ref="view_product_homologation_form"/>
+        <field name="priority" eval="30"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_chatter')]" position="replace">
+                <chatter/>
+            </xpath>
         </field>
     </record>
 
@@ -41,8 +53,9 @@
                   editable="top">
                 <field name="customer_code"/>
                 <field name="customer_description"/>
-                <field name="competitor_id"/>
+                <field name="competitor_id" context="{'default_supplier_rank': 1}"/>
                 <field name="product_id"/>
+                <field name="homologation_level"/>
                 <field name="precision_pct"/>
                 <field name="state" widget="badge"/>
             </list>
@@ -65,6 +78,16 @@
         <field name="state">code</field>
         <field name="code">
             records.action_validate()
+        </field>
+    </record>
+
+    <record id="action_product_homologation_batch_reject" model="ir.actions.server">
+        <field name="name">Rechazar seleccionadas</field>
+        <field name="model_id" ref="model_product_homologation"/>
+        <field name="binding_model_id" ref="model_product_homologation"/>
+        <field name="state">code</field>
+        <field name="code">
+            records.action_reject()
         </field>
     </record>
 </odoo>
