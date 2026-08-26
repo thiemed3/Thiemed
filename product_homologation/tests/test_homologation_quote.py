@@ -1,20 +1,27 @@
 from odoo.tests.common import TransactionCase
-from odoo.tests import Form
+from odoo.tests import Form, tagged
 from odoo.exceptions import UserError
 
 
+@tagged("post_install", "-at_install")
 class TestHomologationQuote(TransactionCase):
     """Test the pre-quotation flow."""
 
+    def _create_test_product(self, name, default_code, list_price):
+        vals = {
+            "name": name,
+            "list_price": list_price,
+        }
+        if "base_unit_count" in self.env["product.template"]._fields:
+            vals["base_unit_count"] = 1
+
+        template = self.env["product.template"].create(vals)
+        product = template.product_variant_id
+        product.default_code = default_code
+        return product
+
     def setUp(self):
         super().setUp()
-        # Ensure base_unit_count column has a default (website_sale adds it as required)
-        self.env.cr.execute(
-            "ALTER TABLE product_template ALTER COLUMN base_unit_count SET DEFAULT 1"
-        )
-        self.env.cr.execute(
-            "ALTER TABLE product_product ALTER COLUMN base_unit_count SET DEFAULT 1"
-        )
         self.partner = self.env["res.partner"].create({
             "name": "Cliente CRM",
             "supplier_rank": 1,
@@ -22,16 +29,16 @@ class TestHomologationQuote(TransactionCase):
         self.customer = self.env["res.partner"].create({
             "name": "Clínica Test",
         })
-        self.product = self.env["product.product"].create({
-            "name": "Bisturí Eléctrico",
-            "default_code": "BIS-001",
-            "list_price": 250.0,
-        })
-        self.product_b = self.env["product.product"].create({
-            "name": "Bisturí Alternativo",
-            "default_code": "BIS-002",
-            "list_price": 300.0,
-        })
+        self.product = self._create_test_product(
+            name="Bisturí Eléctrico",
+            default_code="BIS-001",
+            list_price=250.0,
+        )
+        self.product_b = self._create_test_product(
+            name="Bisturí Alternativo",
+            default_code="BIS-002",
+            list_price=300.0,
+        )
         self.env["product.supplierinfo"].create({
             "partner_id": self.partner.id,
             "product_tmpl_id": self.product.product_tmpl_id.id,

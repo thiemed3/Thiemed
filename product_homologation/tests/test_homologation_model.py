@@ -2,10 +2,11 @@ from lxml import etree
 
 from odoo.tests.common import TransactionCase
 from odoo.exceptions import ValidationError, UserError
-from odoo.tests import Form
+from odoo.tests import Form, tagged
 from odoo.tools.safe_eval import safe_eval
 
 
+@tagged("post_install", "-at_install")
 class TestHomologationModel(TransactionCase):
     """Test the core product.homologation model."""
 
@@ -13,29 +14,35 @@ class TestHomologationModel(TransactionCase):
         view = self.env.ref(xmlid)
         return etree.fromstring(view.arch_db.encode())
 
+    def _create_test_product(self, name, default_code, list_price):
+        vals = {
+            "name": name,
+            "list_price": list_price,
+        }
+        if "base_unit_count" in self.env["product.template"]._fields:
+            vals["base_unit_count"] = 1
+
+        template = self.env["product.template"].create(vals)
+        product = template.product_variant_id
+        product.default_code = default_code
+        return product
+
     def setUp(self):
         super().setUp()
-        # Ensure base_unit_count column has a default (website_sale adds it as required)
-        self.env.cr.execute(
-            "ALTER TABLE product_template ALTER COLUMN base_unit_count SET DEFAULT 1"
-        )
-        self.env.cr.execute(
-            "ALTER TABLE product_product ALTER COLUMN base_unit_count SET DEFAULT 1"
-        )
         self.partner = self.env["res.partner"].create({
             "name": "Xilong Test",
             "supplier_rank": 1,
         })
-        self.product = self.env["product.product"].create({
-            "name": "Tijera Metzenbaum 14cm",
-            "default_code": "TZM-001",
-            "list_price": 150.0,
-        })
-        self.product_b = self.env["product.product"].create({
-            "name": "Tijera Metzenbaum 16cm",
-            "default_code": "TZM-002",
-            "list_price": 180.0,
-        })
+        self.product = self._create_test_product(
+            name="Tijera Metzenbaum 14cm",
+            default_code="TZM-001",
+            list_price=150.0,
+        )
+        self.product_b = self._create_test_product(
+            name="Tijera Metzenbaum 16cm",
+            default_code="TZM-002",
+            list_price=180.0,
+        )
         self.homologation = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "XIL-SC-001",
