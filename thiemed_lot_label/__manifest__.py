@@ -1,6 +1,6 @@
 {
     "name": "Thiemed - Impresión múltiple de etiquetas de lote",
-    "version": "18.0.1.0.0",
+    "version": "19.0.1.0.0",
     "category": "Inventory/Inventory",
     "license": "LGPL-3",
     "depends": ["stock"],
