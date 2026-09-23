@@ -6,22 +6,13 @@
             <field name="model">res.config.settings</field>
             <field name="inherit_id" ref="stock.res_config_settings_view_form"/>
             <field name="arch" type="xml">
-                <block id="production_lot_info" position="after">
-                    <h2>Kardex de Inventario</h2>
-                    <block class="row mt16 o_settings_container">
-                        <div class="col-xs-12 col-md-6 o_setting_box" title="Affect landed costs on receipt operations and split them among products to update their cost price.">
-                            <div class="o_setting_left_pane">
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="as_fecha_invenatario"/>
-                                <div class="text-muted">
-                                <field name="as_fecha_invenatario"/>
-                                </div>
-                               
-                            </div>
-                        </div>
+                <xpath expr="//block[@id='production_lot_info']" position="after">
+                    <block title="Kardex de Inventario" name="as_inventory_kardex">
+                        <setting id="as_fecha_invenatario_setting" string="Inicio Movimiento de Inventario" help="Fecha de inicio para el Kardex de Productos e inventario inicial.">
+                            <field name="as_fecha_invenatario"/>
+                        </setting>
                     </block>
-                </block>
+                </xpath>
             </field>
         </record>
     </data>

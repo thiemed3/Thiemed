@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <report
-        id="report_invoice_cedible"
-        model="account.move"
-        string="Factura Cedible"
-        report_type="qweb-pdf"
-        name="as_thimed_invoice.report_invoice_document_cedible"
-        file="as_thimed_invoice.report_invoice_document_cedible"
-        print_report_name="'Factura Cedible - %s' % (object.name)"
-  />
+  <record id="report_invoice_cedible" model="ir.actions.report">
+        <field name="name">Factura Cedible</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">as_thimed_invoice.report_invoice_cedible_wrapper</field>
+        <field name="report_file">as_thimed_invoice.report_invoice_cedible_wrapper</field>
+        <field name="print_report_name">'Factura Cedible - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+  </record>
 </odoo>
