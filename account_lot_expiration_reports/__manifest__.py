@@ -35,6 +35,7 @@
     ],
     # only loaded in demonstration mode
     'demo': [],
+    'pre_init_hook': 'pre_init_hook',
     'installable': True,
     'application': False,
     'auto_install': False,
