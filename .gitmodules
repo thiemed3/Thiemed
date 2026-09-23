@@ -6,4 +6,4 @@
 [submodule "soportetierranube/inventory_cl"]
 	path = soportetierranube/inventory_cl
 	url = git@github.com:soportetierranube/inventory_cl.git
-	branch = 18.0
+	branch = 19.0
