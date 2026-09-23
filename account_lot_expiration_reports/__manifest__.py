@@ -10,7 +10,7 @@
     # Check https://github.com/odoo/odoo/blob/master/odoo/addons/base/module/module_data.xml
     # for the full list.
     'category': 'sale',
-    'version': '19.0.0.1',
+    'version': '19.0.0.2',
     # any module necessary for this one to work correctly
     'depends': ['base',
                 'account',
@@ -35,7 +35,6 @@
     ],
     # only loaded in demonstration mode
     'demo': [],
-    'pre_init_hook': 'pre_init_hook',
     'installable': True,
     'application': False,
     'auto_install': False,
