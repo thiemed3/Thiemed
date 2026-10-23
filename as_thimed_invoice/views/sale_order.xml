@@ -34,7 +34,7 @@
 			<group>
 				<field name="as_reference" />
 			</group>
-				<field name="referencias" mode="list">
+				<field name="l10n_cl_reference_ids" mode="list">
 					<list editable="bottom">
 						<field name="origin_doc_number" />
 						<field name="date" />

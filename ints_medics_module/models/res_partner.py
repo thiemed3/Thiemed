@@ -24,7 +24,7 @@ class ResPartner(models.Model):
 
     institution_ids = fields.Many2many(
         comodel_name="res.partner",
-        string="Instituciones",
+        string="Instituciones vinculadas",
         compute="_compute_institution_ids",
         search="_search_institution_ids",
         compute_sudo=True,
@@ -125,12 +125,12 @@ class ResPartner(models.Model):
     # -------------------------
     # Candado real (DB)
     # -------------------------
-    @api.constrains("company_type", "is_doctor", "is_institution")
+    @api.constrains("is_company", "is_doctor", "is_institution")
     def _check_roles_vs_company_type(self):
         for p in self:
-            if p.is_doctor and p.company_type != "person":
+            if p.is_doctor and p.is_company:
                 raise ValidationError("Si 'Es médico' está activo, el contacto debe ser Persona.")
-            if p.is_institution and p.company_type != "company":
+            if p.is_institution and not p.is_company:
                 raise ValidationError("Si 'Es institución' está activo, el contacto debe ser Compañía.")
             if p.is_doctor and p.is_institution:
                 raise ValidationError("Un contacto no puede ser 'médico' e 'institución' al mismo tiempo.")
@@ -140,14 +140,19 @@ class ResPartner(models.Model):
 
         for p in self:
             # valores futuros (para validar combinaciones en un mismo write)
-            future_company_type = vals.get("company_type", p.company_type)
+            if "is_company" in vals:
+                future_is_company = vals["is_company"]
+            elif "company_type" in vals:
+                future_is_company = vals["company_type"] == "company"
+            else:
+                future_is_company = p.is_company
             future_is_doctor = vals.get("is_doctor", p.is_doctor)
             future_is_institution = vals.get("is_institution", p.is_institution)
 
             # Bloqueos por tipo según rol
-            if future_is_institution and future_company_type != "company":
+            if future_is_institution and not future_is_company:
                 raise ValidationError("No puedes dejar 'Es institución' activo si el contacto es Persona.")
-            if future_is_doctor and future_company_type != "person":
+            if future_is_doctor and future_is_company:
                 raise ValidationError("No puedes dejar 'Es médico' activo si el contacto es Compañía.")
             if future_is_doctor and future_is_institution:
                 raise ValidationError("Un contacto no puede ser 'médico' e 'institución' a la vez.")

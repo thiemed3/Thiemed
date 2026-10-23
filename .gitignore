@@ -41,3 +41,4 @@ setup/win32/static/postgresql*.exe
 *.pyc
 opencode.json
 AGENTS.md
+*.pyc

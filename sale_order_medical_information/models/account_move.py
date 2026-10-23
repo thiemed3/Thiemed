@@ -1,4 +1,4 @@
-from odoo import fields, models, api
+from odoo import fields, models
 
 
 class AccountMove(models.Model):
@@ -14,7 +14,6 @@ class AccountMove(models.Model):
                    ('asistenciacirugia', 'ASISTENCIA CIRUGIA'),
                    ('consignacion', 'CONSIGNACION')],
         string='Tipo Venta')
-
 
 
 

@@ -6,13 +6,17 @@
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
 
-            <!-- Mostrar checkbox "Es médico" (solo para personas) -->
-            <xpath expr="//field[@name='title']" position="after">
-                <field name="is_doctor" invisible="company_type != 'person'"/>
-                <field name="is_institution" invisible="company_type != 'company'"/>
+            <!-- Mostrar roles médicos debajo de Persona/Compañía con etiqueta visible. -->
+            <xpath expr="//sheet//field[@name='company_type']" position="after">
+                <div class="d-flex gap-4 mt-2">
+                    <label for="is_doctor" string="Es médico" invisible="company_type != 'person'"/>
+                    <field name="is_doctor" nolabel="1" invisible="company_type != 'person'"/>
+                    <label for="is_institution" string="Es institución" invisible="company_type != 'company'"/>
+                    <field name="is_institution" nolabel="1" invisible="company_type != 'company'"/>
+                </div>
             </xpath>
 
-            <xpath expr="//field[@name='company_type']" position="attributes">
+            <xpath expr="//sheet//field[@name='company_type']" position="attributes">
                 <attribute name="readonly">is_doctor or is_institution</attribute>
             </xpath>
 

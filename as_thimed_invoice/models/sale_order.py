@@ -9,7 +9,7 @@ class SO(models.Model):
 
     referencia_ids = fields.Char(string='referencia_ids')
     referencias = fields.One2many(
-        'l10n_cl.account.invoice.reference',
+        'l10n_cl.edi.reference',
         'so_id',
         string="Referencias de documento"
     )
@@ -18,12 +18,13 @@ class SO(models.Model):
     def _prepare_invoice(self):
         vals = super(SO, self)._prepare_invoice()
         if self.referencias:
-            vals['referencias'] = []
+            vals['l10n_cl_reference_ids'] = []
             for ref in self.referencias:
-                vals['referencias'].append(
+                vals['l10n_cl_reference_ids'].append(
                     (0, 0, {
                         'origin_doc_number': ref.origin_doc_number,
                         'l10n_cl_reference_doc_type_id': ref.l10n_cl_reference_doc_type_id.id,
+                        'reference_doc_code': ref.reference_doc_code,
                         'reason': ref.reason,
                         'date': ref.date,
                     })
@@ -55,5 +56,4 @@ class SO(models.Model):
         #     #Agregamos una Nota a cada Guía
             do_pick.write({'note': self.note})
         return vals
-
 

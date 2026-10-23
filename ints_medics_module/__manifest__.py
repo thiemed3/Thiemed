@@ -5,7 +5,7 @@
     'author': "Tierranube(Matias V)",
     'website': "http://www.tierranube.cl",
     "category": "Contacts",
-    'version': '18.0.0.2',
+    'version': '19.0.0.1',
     'depends': ['contacts'],
     'data': [
         "security/ir.model.access.csv",

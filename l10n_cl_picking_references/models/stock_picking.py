@@ -1,19 +1,5 @@
-from odoo import fields, models, api, _
+"""Compatibility notes for the Odoo 19 migration.
 
-
-class StockPickingDoc(models.Model):
-    _inherit = 'stock.picking'
-
-    l10n_cl_reference_ids = fields.One2many('l10n_cl.account.invoice.reference', 'picking_id', readonly=False, string='Reference Records')
-
-class AccountInvoiceReference(models.Model):
-    _inherit = 'l10n_cl.account.invoice.reference'
-
-    picking_id = fields.Many2one(
-            'stock.picking',
-            ondelete='cascade',
-            index=True,
-            copy=False,
-            string="guia de despacho",
-        )
-
+The stock picking reference fields are now provided by ``l10n_cl_edi_stock``
+using ``l10n_cl.edi.reference``.
+"""
