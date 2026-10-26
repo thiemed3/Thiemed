@@ -66,7 +66,7 @@ class StockPicking(models.Model):
                 taxes = (sol.tax_id if sol else product.taxes_id).filtered(lambda t: t.company_id == company)
             else:
                 if guide_price == 'sale_order' and sol:
-                    price_unit = sol.product_uom._compute_price(sol.price_unit, uom)
+                    price_unit = sol.product_uom_id._compute_price(sol.price_unit, uom)
                     discount = float(sol.discount or 0.0)
                     taxes = sol.tax_id
                 else:
