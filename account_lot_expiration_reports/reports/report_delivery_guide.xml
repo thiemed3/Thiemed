@@ -5,7 +5,7 @@
         <template id="delivery_guide_inherit_table" inherit_id="l10n_cl_edi_stock_delivery_guide.delivery_guide_document_content">
 
             <xpath expr="//table[@t-if='o.move_ids']" position="replace">
-                <t t-if="o.move_line_ids_without_package">
+                <t t-if="o.move_line_ids">
                     <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
                     <t t-set="has_unit_price" t-value="prepared_amounts['has_unit_price']"/>
                     <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
@@ -25,7 +25,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-foreach="o.move_line_ids_without_package" t-as="line">
+                            <t t-foreach="o.move_line_ids" t-as="line">
                                 <t t-set="line_amounts" t-value="total_line_amounts.get(line.move_id, {})"/>
                                 <tr style="font-size:12px">
                                     <td name="td_code"><span style="font-size:12px" t-field="line.product_id.default_code"/></td>
