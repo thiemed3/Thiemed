@@ -5,7 +5,17 @@
             <xpath expr="//t[@t-if='picking.l10n_cl_reference_ids']" position="replace">
                 <t t-if="picking.sale_id.client_order_ref or picking.l10n_cl_reference_ids">
                     <t t-set="reference_number" t-value="1"/>
-                    <t t-if="picking.sale_id.client_order_ref">
+
+                    <!--Comprobar si la OC ya existe como referencia tributaria 801-->
+                    <t t-set="sale_oc"
+                    t-value="(picking.sale_id.client_order_ref or '').strip()"/>
+
+                    <t t-set="existing_oc_refs"
+                       t-value="picking.l10n_cl_reference_ids.filtered(
+                            lambda ref: ref.l10n_cl_reference_doc_type_id.code == '801'
+                            and (ref.origin_doc_number or '').strip() == sale_oc
+                        )"/>
+                    <t t-if="sale_oc and not existing_oc_refs">
                     <Referencia>
                             <NroLinRef t-out="reference_number"/>
                             <TpoDocRef t-out="'801'"/>

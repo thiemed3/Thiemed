@@ -17,8 +17,17 @@
                                     </tr>
                                 </thead>
                                 <tbody class="invoice_tbody">
-                                    <t t-if="o.sale_id.client_order_ref">
-                                        <tr>
+                                    <!-- Verificar si la OC ya existe como referencia tributaria 801 -->
+                                        <t t-set="sale_oc"
+                                           t-value="(o.sale_id.client_order_ref or '').strip()"/>
+
+                                        <t t-set="existing_oc_refs"
+                                        t-value="o.l10n_cl_reference_ids.filtered(lambda ref: ref.l10n_cl_reference_doc_type_id.code == '801'
+                                        and (ref.origin_doc_number or '').strip() == sale_oc)"/>
+
+                                    <!-- Mostrar la OC del pedido solo si no está registrada previamente -->
+                                        <t t-if="sale_oc and not existing_oc_refs">
+                                            <tr>
                                             <td class="text-left" name="td_reference_origin"><span t-field="o.sale_id.client_order_ref"/></td>
                                             <td class="text-left" name="td_reference_doc_type"><span>Orden de compra</span></td>
                                             <td class="text-left" name="td_reference_code"><span>801</span></td>
