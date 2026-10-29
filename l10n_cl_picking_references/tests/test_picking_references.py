@@ -21,7 +21,6 @@ class TestPickingReferencesUI(TransactionCase):
 
     def test_loaded_views_are_valid(self):
         views = self.env['ir.ui.view'].browse([
-            self.env.ref('l10n_cl_picking_references.stock_picking_doc').id,
             self.env.ref('l10n_cl_picking_references.report_delivery_guide_inherit').id,
             self.env.ref('l10n_cl_picking_references.dte_subtemplate').id,
             self.env.ref('l10n_cl_picking_references.sale_order_form_inherit_reference').id,
@@ -37,3 +36,9 @@ class TestPickingReferencesUI(TransactionCase):
 
         self.assertIn('picking.sale_id.client_order_ref', combined_arch)
         self.assertIn('picking.sale_id.date_dte', combined_arch)
+
+    def test_duplicate_reference_tab_is_disabled(self):
+        view = self.env.ref(
+            'l10n_cl_picking_references.stock_picking_doc'
+        )
+        self.assertFalse(view.active)
