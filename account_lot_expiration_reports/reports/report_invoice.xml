@@ -28,6 +28,42 @@
     </xpath>
   </template>
 
+  <!-- Alinear subtotales de secciones y subsecciones con Monto -->
+  <template id="ale_inv_fix_section_subtotals_cl"
+            inherit_id="l10n_cl.report_invoice_document"
+            priority="1000032">
+
+    <!-- Ref., descripción, cantidad, lote, vencimiento y precio; dos descuentos opcionales. -->
+    <xpath expr="//table[@name='invoice_line_table']//td[@name='line_name_td']"
+           position="attributes">
+      <attribute name="t-att-colspan">6 + (2 if display_discount else 0)</attribute>
+    </xpath>
+
+    <!-- En PDF no emitir la descripción móvil; en HTML abarca las cinco columnas visibles antes de Monto. -->
+    <xpath expr="//table[@name='invoice_line_table']//td[@name='line_name_td']/following-sibling::td[1]"
+           position="attributes">
+      <attribute name="t-if">report_type == 'html'</attribute>
+      <attribute name="colspan">5</attribute>
+    </xpath>
+
+  </template>
+
+  <!-- En PDF, no reservar espacio para condiciones de pago sin contenido visible. -->
+  <template id="ale_inv_skip_empty_payment_terms_cl"
+            inherit_id="l10n_cl.report_invoice_document"
+            priority="1000033">
+    <xpath expr="//div[@id='payment_term']/t[@t-set='payment_term_details']/following-sibling::div[1]"
+           position="attributes">
+      <attribute name="t-if">report_type != 'pdf'
+        or not is_html_empty(o.invoice_payment_term_id.note)
+        or (o.invoice_payment_term_id.display_on_invoice
+            and payment_term_details
+            and o.show_payment_term_details
+            and (len(payment_term_details) &gt; 1
+                 or o._is_eligible_for_early_payment_discount(o.currency_id, o.invoice_date)))</attribute>
+    </xpath>
+  </template>
+
   <!-- ====== LOTES ====== -->
   <template id="ale_inv_split_lots_cl"
             inherit_id="l10n_cl.report_invoice_document"
@@ -161,6 +197,16 @@
     </xpath>
   </template>
 
-  
+  <!-- COPIA ya usa ORIGINAL + CEDIBLE con acuse personalizado: no añadir el acuse nativo. -->
+  <template id="ale_inv_copy_use_custom_cedible_cl"
+            inherit_id="l10n_cl_edi.report_invoice_with_cedible"
+            priority="1000034">
+    <xpath expr="//t[@t-call='l10n_cl.report_invoice']/t[@t-set='print_with_cedible']"
+           position="attributes">
+      <attribute name="t-value">False</attribute>
+    </xpath>
+  </template>
+
+
 
 </odoo>
