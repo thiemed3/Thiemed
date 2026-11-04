@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="external_layout_striped_payroll"
+              inherit_id="web.external_layout_striped" primary="True">
+        <xpath expr="//*[@t-field='company.report_footer']" position="attributes">
+            <attribute name="t-field"/>
+            <attribute name="name">thiemed_payroll_footer</attribute>
+            <attribute name="t-out">(company.report_footer or '').replace('📞', 'Tel.: ').replace('📧', 'Correo: ').replace('🌐', 'Web: ').replace('🏬', 'RUT: ')</attribute>
+            <attribute name="t-options">{'widget': 'html'}</attribute>
+        </xpath>
+    </template>
+
+    <template id="external_layout_standard_payroll"
+              inherit_id="web.external_layout_standard" primary="True">
+        <xpath expr="//*[@t-field='company.report_footer']" position="attributes">
+            <attribute name="t-field"/>
+            <attribute name="name">thiemed_payroll_footer</attribute>
+            <attribute name="t-out">(company.report_footer or '').replace('📞', 'Tel.: ').replace('📧', 'Correo: ').replace('🌐', 'Web: ').replace('🏬', 'RUT: ')</attribute>
+            <attribute name="t-options">{'widget': 'html'}</attribute>
+        </xpath>
+    </template>
+
+    <template id="external_layout_payroll"
+              inherit_id="web.external_layout" primary="True">
+        <xpath expr="//t[@t-if='company.external_report_layout_id']" position="attributes">
+            <attribute name="t-call">{{ {'web.external_layout_striped': 'thiemed_payroll_report_compatibility.external_layout_striped_payroll', 'web.external_layout_standard': 'thiemed_payroll_report_compatibility.external_layout_standard_payroll'}.get(company.external_report_layout_id.key, company.external_report_layout_id.key) }}</attribute>
+        </xpath>
+        <xpath expr="//t[@t-call='web.external_layout_standard']" position="attributes">
+            <attribute name="t-call">thiemed_payroll_report_compatibility.external_layout_standard_payroll</attribute>
+        </xpath>
+    </template>
+
+    <template id="general_payroll_private_footer"
+              inherit_id="l10n_cl_hr.report_payslipgeneral">
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <attribute name="t-call">thiemed_payroll_report_compatibility.external_layout_payroll</attribute>
+        </xpath>
+    </template>
+
+    <template id="seniority_certificate_private_footer"
+              inherit_id="l10n_cl_hr_payroll_reports.report_certificado_antiguedad_document">
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <attribute name="t-call">thiemed_payroll_report_compatibility.external_layout_payroll</attribute>
+        </xpath>
+    </template>
+</odoo>
