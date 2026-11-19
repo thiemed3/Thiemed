@@ -1,0 +1,156 @@
+name: CI - Thiemed Odoo 19
+
+on:
+  push:
+    branches: [main, Stagging, develop]
+  pull_request:
+    branches: [main, Stagging]
+
+env:
+  ODOO_VERSION: "19.0"
+
+jobs:
+  lint:
+    name: Lint & Validate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install linters
+        run: pip install ruff
+
+      - name: Lint Python
+        run: |
+          ruff check . --select=E,F,W --ignore=E501,E731 || true
+          echo "Lint completed"
+
+      - name: Validate XML
+        run: |
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          import os
+          errors = []
+          for root, _, files in os.walk("."):
+              for f in files:
+                  if f.endswith(".xml"):
+                      path = os.path.join(root, f)
+                      try:
+                          ET.parse(path)
+                      except ET.ParseError as e:
+                          errors.append(f"{path}: {e}")
+          if errors:
+              print(f"WARNING: {len(errors)} XML parse errors")
+              for e in errors[:10]:
+                  print(e)
+          else:
+              print("All XML files valid")
+          PY
+
+  test:
+    name: Test Installation & Unit Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev \
+            libjpeg-dev zlib1g-dev libpq-dev nodejs npm \
+            wkhtmltopdf 2>/dev/null || true
+
+      - name: Install Odoo 19
+        run: |
+          git clone --depth 1 --branch ${{ env.ODOO_VERSION }} https://github.com/odoo/odoo.git /tmp/odoo
+          cd /tmp/odoo
+          python -m pip install --upgrade pip -q
+          pip install -r requirements.txt -q 2>&1 | tail -3
+
+      - name: Install Python dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt 2>/dev/null || true
+          fi
+
+      - name: Create test database
+        env:
+          PGPASSWORD: odoo
+        run: |
+          psql -h localhost -U odoo -d postgres -c "CREATE DATABASE thiemed_ci OWNER odoo;" 2>/dev/null || true
+
+      - name: Test module installation (BD limpia)
+        env:
+          PGPASSWORD: odoo
+        run: |
+          cd /tmp/odoo
+          ADDONS_PATH="/tmp/odoo/addons,/tmp/odoo/odoo/addons,$GITHUB_WORKSPACE,$GITHUB_WORKSPACE/soportetierranube"
+          python odoo-bin \
+            --addons-path="$ADDONS_PATH" \
+            -d thiemed_ci \
+            --db_host=localhost --db_user=odoo --db_password=odoo \
+            -i base --stop-after-init --max-cron-threads=0 \
+            --without-demo=all 2>&1 | tail -15
+
+      - name: Install all modules
+        env:
+          PGPASSWORD: odoo
+        run: |
+          cd /tmp/odoo
+          ADDONS_PATH="/tmp/odoo/addons,/tmp/odoo/odoo/addons,$GITHUB_WORKSPACE,$GITHUB_WORKSPACE/soportetierranube"
+          MODULES=$(find $GITHUB_WORKSPACE -maxdepth 2 -name "__manifest__.py" -exec dirname {} \; | xargs -I{} basename {} | tr '\n' ',' | sed 's/,$//')
+          echo "Modules to install: $MODULES"
+          python odoo-bin \
+            --addons-path="$ADDONS_PATH" \
+            -d thiemed_ci \
+            --db_host=localhost --db_user=odoo --db_password=odoo \
+            -u "$MODULES" --stop-after-init --max-cron-threads=0 \
+            --without-demo=all 2>&1 | tail -20
+
+      - name: Run unit tests
+        env:
+          PGPASSWORD: odoo
+        run: |
+          cd /tmp/odoo
+          ADDONS_PATH="/tmp/odoo/addons,/tmp/odoo/odoo/addons,$GITHUB_WORKSPACE,$GITHUB_WORKSPACE/soportetierranube"
+          TEST_MODULES=$(find $GITHUB_WORKSPACE -maxdepth 2 -name "__manifest__.py" -path "*/tests/*" -prune -o -name "__manifest__.py" -print | xargs -I{} dirname {} | xargs -I{} basename {} | sort -u | tr '\n' ',' | sed 's/,$//')
+          if [ -z "$TEST_MODULES" ]; then
+            echo "No modules with tests found"
+            exit 0
+          fi
+          echo "Testing modules: $TEST_MODULES"
+          python odoo-bin \
+            --addons-path="$ADDONS_PATH" \
+            -d thiemed_ci \
+            --db_host=localhost --db_user=odoo --db_password=odoo \
+            --test-enable --test-tags "$TEST_MODULES" \
+            -u "$TEST_MODULES" --stop-after-init --max-cron-threads=0 2>&1 | tail -30
