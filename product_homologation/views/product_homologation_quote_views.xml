@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_product_homologation_quote_tree" model="ir.ui.view">
+        <field name="name">product.homologation.quote.tree</field>
+        <field name="model">product.homologation.quote</field>
+        <field name="arch" type="xml">
+            <list string="Precotizaciones" multi_edit="1">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="version" optional="show"/>
+                <field name="line_count"/>
+                <field name="matched_count"/>
+                <field name="provisional_count" optional="show"/>
+                <field name="total_quantity" optional="show" sum="Total piezas"/>
+                <field name="total_amount" optional="show" sum="Total"
+                       widget="monetary"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="global_precision" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'homologated'"
+                       decoration-warning="state == 'draft' or state == 'in_progress'"
+                       decoration-info="state == 'converted'"
+                       decoration-danger="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_quote_form" model="ir.ui.view">
+        <field name="name">product.homologation.quote.form</field>
+        <field name="model">product.homologation.quote</field>
+        <field name="arch" type="xml">
+            <form string="Precotización">
+                <header>
+                    <button name="action_confirm_homologation" type="object"
+                            string="Homologar todo" invisible="state not in ('draft','in_progress')"
+                            class="btn-primary"/>
+                    <button name="action_convert_to_sale" type="object"
+                            string="Convertir a presupuesto" invisible="state != 'homologated'"
+                            class="btn-success"/>
+                    <button name="action_duplicate" type="object"
+                            string="Duplicar" invisible="state == 'cancelled'"/>
+                    <button name="action_view_versions" type="object"
+                            string="Versiones" invisible="version_count &lt;= 1"/>
+                    <button name="action_import_lines" type="object"
+                            string="Importar líneas" invisible="state in ('converted','cancelled')"/>
+                    <button name="action_draft" type="object"
+                            string="Volver a borrador" invisible="state not in ('in_progress','homologated')"/>
+                    <button name="action_cancel" type="object"
+                            string="Cancelar" invisible="state in ('converted','cancelled')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <field name="currency_id" invisible="1"/>
+                    <div name="button_box" class="oe_button_box">
+                        <button name="action_view_versions" type="object"
+                                class="oe_stat_button" icon="fa-code-fork"
+                                invisible="version_count &lt;= 1">
+                            <field name="version_count" widget="statinfo"
+                                   string="Versiones"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="partner_id"/>
+                            <field name="version" invisible="version_count &lt;= 1"/>
+                            <field name="parent_id" invisible="not parent_id"/>
+                        </group>
+                        <group>
+                            <field name="line_count"/>
+                            <field name="matched_count"/>
+                            <field name="provisional_count"/>
+                            <field name="sale_order_id"/>
+                        </group>
+                    </group>
+                    <group string="Totales">
+                        <group>
+                            <field name="total_quantity"/>
+                            <field name="total_amount"/>
+                        </group>
+                        <group>
+                            <field name="global_precision"/>
+                            <field name="price_review_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="lines" string="Líneas">
+                            <field name="line_ids">
+                                <list editable="bottom" multi_edit="1">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="customer_code"/>
+                                    <field name="competitor_id" optional="show" context="{'default_supplier_rank': 1}"/>
+                                    <field name="customer_description"/>
+                                    <field name="observation" string="Obs. precotización" optional="hide"/>
+                                    <field name="product_id"
+                                           context="{'partner_id': parent.partner_id}"/>
+                                    <field name="homologation_id" optional="show"
+                                           options="{'no_create': True}"/>
+                                    <field name="match_status" widget="badge" optional="show"
+                                           decoration-success="match_status == 'validated'"
+                                           decoration-warning="match_status in ('pending','alternatives','draft','provisional')"
+                                           decoration-danger="match_status in ('unmatched','rejected')"/>
+                                    <field name="recommended_homologation_id" optional="hide" readonly="1"/>
+                                    <field name="recommendation_reason" optional="hide"/>
+                                    <field name="homologation_level" optional="show" readonly="1"/>
+                                    <field name="homologation_precision_pct" optional="show" readonly="1"/>
+                                    <field name="homologation_observation" optional="hide" readonly="1"/>
+                                    <field name="homologation_state" optional="hide" readonly="1"/>
+                                    <field name="homologation_create_uid" optional="hide" readonly="1"/>
+                                    <field name="homologation_validator_id" optional="hide" readonly="1"/>
+                                    <field name="can_open_possible_homologations" column_invisible="1"/>
+                                    <field name="possible_homologation_count" optional="show" readonly="1"/>
+                                    <button name="action_open_alternatives_wizard" type="object"
+                                            string="Ver alternativas"
+                                            invisible="not can_open_possible_homologations"/>
+                                    <button name="action_apply_recommended" type="object"
+                                            string="Usar recomendada"
+                                            invisible="not recommended_homologation_id"/>
+                                    <field name="possible_homologation_ids" widget="many2many_tags" optional="hide" readonly="1"/>
+                                    <field name="state" widget="badge" optional="hide"
+                                           decoration-success="match_status == 'validated'"
+                                           decoration-warning="match_status in ('pending','alternatives','draft','provisional')"
+                                           decoration-danger="match_status in ('unmatched','rejected')"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit"/>
+                                    <field name="subtotal" sum="Total"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="notes" string="Notas">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_quote_search" model="ir.ui.view">
+        <field name="name">product.homologation.quote.search</field>
+        <field name="model">product.homologation.quote</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <filter name="state_draft" string="Borrador"
+                        domain="[('state','=','draft')]"/>
+                <filter name="state_homologated" string="Homologado"
+                        domain="[('state','=','homologated')]"/>
+                <filter name="state_converted" string="Convertido"
+                        domain="[('state','=','converted')]"/>
+                <group>
+                    <filter name="group_state" string="Estado"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_product_homologation_quote" model="ir.actions.act_window">
+        <field name="name">Precotizaciones</field>
+        <field name="res_model">product.homologation.quote</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_product_homologation_quote_search"/>
+    </record>
+
+    <record id="action_product_homologation_quote_import" model="ir.actions.act_window">
+        <field name="name">Importar líneas de precotización</field>
+        <field name="res_model">product.homologation.quote.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
