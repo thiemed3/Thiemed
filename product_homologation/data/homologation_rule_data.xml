@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+    <record id="rule_highest_precision" model="product.homologation.rule">
+        <field name="name">Mayor precisión</field>
+        <field name="rule_type">highest_precision</field>
+        <field name="priority">10</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="rule_lowest_price" model="product.homologation.rule">
+        <field name="name">Menor precio de venta</field>
+        <field name="rule_type">lowest_price</field>
+        <field name="priority">20</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

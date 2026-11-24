@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_product_homologation_rule_tree" model="ir.ui.view">
+        <field name="name">product.homologation.rule.tree</field>
+        <field name="model">product.homologation.rule</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" multi_edit="1">
+                <field name="priority"/>
+                <field name="name"/>
+                <field name="rule_type"/>
+                <field name="preferred_competitor_id" context="{'default_supplier_rank': 1}"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_rule_form" model="ir.ui.view">
+        <field name="name">product.homologation.rule.form</field>
+        <field name="model">product.homologation.rule</field>
+        <field name="arch" type="xml">
+            <form string="Regla de sugerencia">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="rule_type"/>
+                            <field name="priority"/>
+                        </group>
+                        <group>
+                            <field name="preferred_competitor_id"
+                                   context="{'default_supplier_rank': 1}"
+                                   invisible="rule_type != 'preferred_competitor'"
+                                   required="rule_type == 'preferred_competitor'"/>
+                            <field name="active"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        Menor número de prioridad = mayor importancia. Las reglas de
+                        mayor prioridad se aplican al final y dominan la recomendación;
+                        las de menor prioridad actúan como desempate.
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_product_homologation_rule" model="ir.actions.act_window">
+        <field name="name">Reglas de sugerencia</field>
+        <field name="res_model">product.homologation.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
