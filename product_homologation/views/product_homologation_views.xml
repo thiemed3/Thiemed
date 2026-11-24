@@ -11,10 +11,16 @@
                 <field name="observation" optional="hide"/>
                 <field name="product_id"/>
                 <field name="product_default_code" optional="show"/>
+                <field name="product_price" optional="hide"/>
                 <field name="homologation_level" optional="show"/>
                 <field name="precision_pct" optional="show"/>
-                <field name="state" widget="badge" decoration-success="state == 'validated'" decoration-warning="state == 'draft'" decoration-danger="state == 'rejected'"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'validated'"
+                       decoration-warning="state in ('draft', 'provisional')"
+                       decoration-danger="state == 'rejected'"/>
                 <field name="validator_id" optional="show"/>
+                <field name="origin_quote_id" optional="hide"/>
+                <field name="is_used" optional="hide"/>
             </list>
         </field>
     </record>
@@ -26,37 +32,75 @@
             <form string="Homologación">
                 <header>
                     <button name="action_validate" type="object"
-                            string="Validar" invisible="state != 'draft'"
+                            string="Validar" invisible="state not in ('draft', 'provisional')"
                             class="btn-primary"/>
                     <button name="action_reject" type="object"
-                            string="Rechazar" invisible="state != 'draft'"
+                            string="Rechazar" invisible="state not in ('draft', 'provisional')"
                             class="btn-danger"/>
+                    <button name="action_send_to_validation" type="object"
+                            string="Enviar a validación" invisible="state != 'draft'"/>
                     <button name="action_draft" type="object"
                             string="Volver a borrador" invisible="state not in ('validated','rejected')"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,validated,rejected"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,provisional,validated,rejected"/>
                 </header>
                 <sheet>
+                    <div name="button_box" class="oe_button_box">
+                        <button name="action_view_quotes" type="object"
+                                class="oe_stat_button" icon="fa-list"
+                                invisible="not used_in_quote_count">
+                            <field name="used_in_quote_count" widget="statinfo"
+                                   string="Precotizaciones"/>
+                        </button>
+                        <button name="action_find_cross_homologations" type="object"
+                                class="oe_stat_button" icon="fa-exchange"
+                                invisible="not product_id">
+                            <span class="o_stat_text">Homologaciones cruzadas</span>
+                        </button>
+                    </div>
                     <group>
                         <group>
                             <field name="competitor_id" context="{'default_supplier_rank': 1}"/>
                             <field name="customer_code"/>
                             <field name="customer_description"/>
                             <field name="observation"/>
+                            <field name="origin_quote_id" invisible="not origin_quote_id"/>
+                            <field name="origin_quote_line_id" invisible="not origin_quote_line_id"/>
                         </group>
                         <group>
                             <field name="product_id"/>
                             <field name="product_default_code"/>
+                            <field name="product_price"/>
                             <field name="homologation_level"/>
                             <field name="precision_pct"/>
                             <field name="validator_id" readonly="1"/>
+                            <field name="validation_date" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                     </group>
+                    <notebook>
+                        <page name="duplicates" string="Duplicados"
+                              invisible="not duplicate_homologation_ids">
+                            <field name="duplicate_homologation_ids" nolabel="1">
+                                <list>
+                                    <field name="customer_code"/>
+                                    <field name="competitor_id"/>
+                                    <field name="product_id"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="technical" string="Técnico">
+                            <group>
+                                <field name="normalized_description" readonly="1"/>
+                                <field name="is_provisional" readonly="1"/>
+                                <field name="is_used" readonly="1"/>
+                                <field name="used_in_sale_count" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -73,10 +117,13 @@
                 <field name="customer_description"/>
                 <field name="product_id"/>
                 <field name="product_default_code"/>
+                <field name="product_price" string="Precio"/>
                 <field name="homologation_level"/>
                 <field name="precision_pct"/>
                 <field name="observation" optional="hide"/>
-                <field name="state" widget="badge" decoration-success="state == 'validated'"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'validated'"
+                       decoration-warning="state == 'provisional'"/>
             </list>
         </field>
     </record>
@@ -101,6 +148,7 @@
                         <group>
                             <field name="product_id"/>
                             <field name="product_default_code"/>
+                            <field name="product_price"/>
                             <field name="homologation_level"/>
                             <field name="precision_pct"/>
                             <field name="state"/>
@@ -122,11 +170,19 @@
                 <field name="competitor_id"/>
                 <filter name="state_draft" string="Borrador"
                         domain="[('state','=','draft')]"/>
+                <filter name="state_provisional" string="Provisional"
+                        domain="[('state','=','provisional')]"/>
                 <filter name="state_validated" string="Validado"
                         domain="[('state','=','validated')]"/>
+                <filter name="state_rejected" string="Rechazado"
+                        domain="[('state','=','rejected')]"/>
                 <separator/>
-                <filter name="group_competitor" string="Por competidor"
-                        context="{'group_by': 'competitor_id'}"/>
+                <group>
+                    <filter name="group_state" string="Estado"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_competitor" string="Por competidor"
+                            context="{'group_by': 'competitor_id'}"/>
+                </group>
             </search>
         </field>
     </record>

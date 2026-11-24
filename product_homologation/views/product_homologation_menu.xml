@@ -2,7 +2,7 @@
 <odoo>
     <menuitem id="menu_homologation_root"
               name="Homologación"
-               parent="sale.sale_menu_root"
+              parent="sale.sale_menu_root"
               sequence="50"/>
 
     <menuitem id="menu_product_homologation"
@@ -11,22 +11,22 @@
               action="action_product_homologation"
               sequence="10"/>
 
-    <!--menuitem id="menu_product_homologation_import"
-              name="Importar desde Excel"
-              parent="menu_homologation_root"
-              action="action_product_homologation_import"
-              sequence="20"/-->
-
     <menuitem id="menu_product_homologation_quote"
               name="Precotizaciones"
               parent="menu_homologation_root"
               action="action_product_homologation_quote"
-              sequence="30"/>
+              sequence="20"/>
 
     <menuitem id="menu_product_homologation_validation"
               name="Validar homologaciones"
               parent="menu_homologation_root"
               action="action_product_homologation_validation"
+              sequence="30"/>
+
+    <menuitem id="menu_product_homologation_import"
+              name="Importar homologaciones"
+              parent="menu_homologation_root"
+              action="action_product_homologation_import"
               sequence="40"/>
 
     <menuitem id="menu_product_homologation_rules"

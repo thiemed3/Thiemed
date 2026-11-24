@@ -1,11 +1,11 @@
-from odoo.tests.common import TransactionCase
-from odoo.tests import Form, tagged
 from odoo.exceptions import UserError
+from odoo.tests import Form, tagged
+from odoo.tests.common import TransactionCase
 
 
 @tagged("post_install", "-at_install")
 class TestHomologationQuote(TransactionCase):
-    """Test the pre-quotation flow."""
+    """Pruebas del flujo de precotización (V1 migrada a Odoo 19 + RF-19/RF-20)."""
 
     def _create_test_product(self, name, default_code, list_price):
         vals = {
@@ -52,10 +52,6 @@ class TestHomologationQuote(TransactionCase):
             "customer_description": "Electric scalpel",
             "product_id": self.product.id,
             "state": "validated",
-        })
-        self.lead = self.env["crm.lead"].create({
-            "name": "Oportunidad Test",
-            "partner_id": self.customer.id,
         })
 
     def _transient_line_for_code(self, code):
@@ -106,18 +102,17 @@ class TestHomologationQuote(TransactionCase):
         quote = form.save()
         return quote.line_ids[0]
 
-    def test_01_create_quote_from_lead(self):
-        """Quote can be created from CRM lead."""
+    def test_01_create_quote_gets_sequence_name(self):
+        """RF-08: la precotización se crea en borrador con referencia propia."""
         quote = self.env["product.homologation.quote"].create({
-            "lead_id": self.lead.id,
             "partner_id": self.customer.id,
-            "name": "PRE-001",
         })
         self.assertEqual(quote.state, "draft")
-        self.assertEqual(quote.lead_id, self.lead)
+        self.assertTrue(quote.name.startswith("PC-"))
+        self.assertEqual(quote.partner_id, self.customer)
 
     def test_02_add_line_with_onchange_match(self):
-        """Adding a line with known customer_code auto-matches."""
+        """RF-07/RF-17: un código conocido homologa automáticamente."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-002",
@@ -133,9 +128,10 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.state, "matched")
         self.assertEqual(line.homologation_id, self.homologation)
         self.assertEqual(line.price_unit, 250.0)
+        self.assertEqual(line.subtotal, 1250.0)
 
     def test_03_add_line_without_match(self):
-        """Unknown codes are marked as unmatched after lookup."""
+        """RF-07: un código desconocido queda sin match."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-003",
@@ -151,7 +147,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.state, "unmatched")
 
     def test_04_confirm_homologation(self):
-        """action_confirm_homologation sets state to homologated."""
+        """RF-M06: Homologar todo deja la precotización homologada."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-004",
@@ -161,16 +157,16 @@ class TestHomologationQuote(TransactionCase):
             "customer_code": "CMP-BIS-001",
             "customer_description": "Electric scalpel",
             "product_id": self.product.id,
+            "homologation_id": self.homologation.id,
             "state": "matched",
         })
         quote.action_confirm_homologation()
         self.assertEqual(quote.state, "homologated")
 
     def test_05_convert_to_sale_order(self):
-        """Converted quote creates sale.order with traceability."""
+        """RF-M08/RF-30: la conversión crea el presupuesto con trazabilidad."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
-            "lead_id": self.lead.id,
             "name": "PRE-005",
         })
         line = self.env["product.homologation.quote.line"].create({
@@ -192,8 +188,8 @@ class TestHomologationQuote(TransactionCase):
 
         so = quote.sale_order_id
         self.assertEqual(so.partner_id, self.customer)
-        self.assertEqual(so.opportunity_id, self.lead)
         self.assertEqual(so.origin, quote.name)
+        self.assertEqual(so.homologation_quote_id, quote)
 
         so_line = so.order_line[0]
         self.assertEqual(so_line.product_id, self.product)
@@ -204,7 +200,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(so_line.homologation_quote_line_id, line)
 
     def test_06_quote_line_price_from_product(self):
-        """Price is auto-set from product list_price via compute."""
+        """RF-24: el precio se toma del producto y puede editarse."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-006",
@@ -216,21 +212,29 @@ class TestHomologationQuote(TransactionCase):
         quote = form.save()
         self.assertEqual(quote.line_ids[0].price_unit, 250.0)
 
-    def test_07_crm_lead_smart_button(self):
-        """CRM lead shows homologation quote count and action."""
-        self.env["product.homologation.quote"].create({
-            "lead_id": self.lead.id,
+    def test_07_sale_order_line_traceability(self):
+        """RF-13/RNF-03: el presupuesto conserva la homologación utilizada."""
+        quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-007",
         })
-        self.lead._compute_homologation_quote_count()
-        self.assertEqual(self.lead.homologation_quote_count, 1)
+        self.env["product.homologation.quote.line"].create({
+            "quote_id": quote.id,
+            "homologation_id": self.homologation.id,
+            "quantity": 2,
+        })
+        quote.action_confirm_homologation()
+        quote.action_convert_to_sale()
 
-        action = self.lead.action_open_homologation_quotes()
-        self.assertEqual(action["res_model"], "product.homologation.quote")
+        so_line = quote.sale_order_id.order_line[0]
+        self.assertEqual(so_line.homologation_id, self.homologation)
+        self.assertEqual(so_line.homologation_quote_id, quote)
+        self.assertEqual(so_line.homologation_precision_pct, 100.0)
+        self.assertEqual(self.homologation.used_in_sale_count, 1)
+        self.assertTrue(self.homologation.is_used)
 
     def test_08_form_ui_quote_with_lines(self):
-        """Full UI simulation: create quote, add lines, convert to SO."""
+        """RF-M06/RF-M08: flujo completo por UI."""
         quote_form = Form(self.env["product.homologation.quote"])
         quote_form.partner_id = self.customer
         with quote_form.line_ids.new() as line:
@@ -247,9 +251,10 @@ class TestHomologationQuote(TransactionCase):
         result = quote.action_convert_to_sale()
         self.assertEqual(quote.state, "converted")
         self.assertTrue(quote.sale_order_id)
+        self.assertEqual(result["res_model"], "sale.order")
 
     def test_09_cancel_quote(self):
-        """Quote can be cancelled from any non-converted state."""
+        """RF-08: la precotización puede cancelarse."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-009",
@@ -259,14 +264,14 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(quote.state, "cancelled")
 
     def test_10_case_insensitive_code_match(self):
-        """Customer code lookup is case-insensitive and trims edges."""
+        """RF-07: el código se compara sin distinguir mayúsculas."""
         line = self._transient_line_for_code("  cmp-bis-001  ")
         self.assertEqual(line.product_id, self.product)
         self.assertEqual(line.homologation_id, self.homologation)
         self.assertEqual(line.state, "matched")
 
     def test_11_multiple_validated_codes_do_not_auto_select(self):
-        """Multiple validated homologations do not pick one arbitrarily."""
+        """RF-18: con varias validadas no se elige arbitrariamente."""
         other_partner = self.env["res.partner"].create({
             "name": "Otro Competidor",
             "supplier_rank": 1,
@@ -290,7 +295,7 @@ class TestHomologationQuote(TransactionCase):
         )
 
     def test_12_draft_homologation_is_not_auto_matched(self):
-        """Draft homologations are detected but not used as automatic matches."""
+        """RF-05: un borrador no se usa como match automático."""
         self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "DRAFT-CODE",
@@ -307,7 +312,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.match_status, "draft")
 
     def test_13_rejected_homologation_is_not_auto_matched(self):
-        """Rejected homologations are never used automatically."""
+        """RF-05: una rechazada nunca se usa automáticamente."""
         self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "REJECT-CODE",
@@ -324,7 +329,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.match_status, "rejected")
 
     def test_14_confirm_blocks_pending_lines(self):
-        """Homologar todo blocks incomplete quote lines."""
+        """RF-M06: Homologar todo bloquea líneas incompletas."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-PENDING-CONFIRM",
@@ -341,7 +346,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(quote.state, "draft")
 
     def test_15_convert_blocks_pending_lines(self):
-        """Conversion blocks incomplete quote lines and creates no sale order."""
+        """RF-30: la conversión bloquea líneas pendientes."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-PENDING-CONVERT",
@@ -362,7 +367,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(before_count, after_count)
 
     def test_16_reconversion_is_blocked(self):
-        """A converted quote cannot create a second sale order."""
+        """RF-30: una precotización convertida no genera un segundo presupuesto."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-DOUBLE-CONVERT",
@@ -386,7 +391,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(before_count, after_count)
 
     def test_17_create_homologation_without_competitor_does_not_use_supplier(self):
-        """Automatic draft homologation does not infer competitor from product supplier."""
+        """RF-03/RF-09: la homologación automática no infiere competidor."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-NO-COMPETITOR",
@@ -400,11 +405,12 @@ class TestHomologationQuote(TransactionCase):
         })
 
         self.assertTrue(line.homologation_id)
-        self.assertEqual(line.homologation_id.state, "draft")
+        self.assertEqual(line.homologation_id.state, "provisional")
+        self.assertEqual(line.homologation_id.origin_quote_id, quote)
         self.assertFalse(line.homologation_id.competitor_id)
 
     def test_18_select_validated_alternative(self):
-        """User can choose one validated alternative when code has several."""
+        """RF-18: el usuario puede elegir una alternativa validada."""
         other_partner = self.env["res.partner"].create({
             "name": "Competidor Alternativo",
             "supplier_rank": 1,
@@ -437,7 +443,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.match_status, "validated")
 
     def test_19_code_empty_description_does_not_match_by_description(self):
-        """Description-only lines are allowed but do not trigger automatic matching."""
+        """RF-02: una línea solo con descripción no busca por descripción."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-DESC-ONLY",
@@ -454,7 +460,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.match_status, "pending")
 
     def test_20_description_is_required_on_quote_line(self):
-        """Customer description is required on quote lines."""
+        """RF-02: la descripción del cliente es obligatoria."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-NO-DESC",
@@ -467,7 +473,7 @@ class TestHomologationQuote(TransactionCase):
             })
 
     def test_21_quote_line_price_updates_when_product_changes(self):
-        """Unit price follows product list price when product_id changes."""
+        """RF-31: el precio sigue al producto cuando cambia."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-PRICE-CHANGE",
@@ -483,7 +489,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.price_unit, 300.0)
 
     def test_22_observations_trace_to_sale_order(self):
-        """Homologation and quote observations are preserved on conversion."""
+        """RF-34/RF-35: las observaciones se conservan al convertir."""
         self.homologation.write({
             "observation": "10 mm longer than requested",
             "homologation_level": "near",
@@ -512,7 +518,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertIn("Obs. precotización: Quote-specific note", so_line.name)
 
     def test_23_draft_homologation_is_not_counted_as_validated(self):
-        """PH-021-A: draft homologations are not counted as approved."""
+        """RF-07: los borradores no cuentan como homologados."""
         draft_homologation = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "DRAFT-MANUAL-PRODUCT",
@@ -541,7 +547,7 @@ class TestHomologationQuote(TransactionCase):
         )
 
     def test_24_validated_homologation_is_counted(self):
-        """PH-021-B: validated homologations count as homologated."""
+        """RF-07: las validadas cuentan como homologadas."""
         quote = self.env["product.homologation.quote"].create({
             "partner_id": self.customer.id,
             "name": "PRE-VALIDATED-COUNT",
@@ -556,7 +562,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(quote.matched_count, 1)
 
     def test_25_rejected_homologation_is_not_counted_as_validated(self):
-        """PH-021-C: rejected homologations are not shown as approved."""
+        """RF-07: las rechazadas no cuentan como homologadas."""
         rejected_homologation = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "REJECTED-MANUAL-PRODUCT",
@@ -581,7 +587,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(quote.matched_count, 0)
 
     def test_26_matched_count_uses_validated_homologations_only(self):
-        """PH-021-D: Homologadas counts only approved homologations."""
+        """RF-07: el contador de homologadas solo considera validadas."""
         draft_homologation = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "MIX-DRAFT",
@@ -631,7 +637,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(quote.matched_count, 1)
 
     def test_27_ph022_single_validation_reconciles_existing_quote_line(self):
-        """PH-022-A: validating the only applicable draft reconciles the line."""
+        """RF-06: validar la única candidata reconcilia la línea existente."""
         draft_homologation = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "PH022-A-ONLY-VALIDATE-TEST",
@@ -660,13 +666,12 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.customer_description, "Validated after quote line creation")
         self.assertEqual(line.state, "matched")
         self.assertEqual(line.match_status, "validated")
-        self.assertFalse(line.possible_homologation_ids)
         self.assertEqual(quote.matched_count, 1)
         quote.action_confirm_homologation()
         self.assertEqual(quote.state, "homologated")
 
     def test_28_ph022_multiple_validated_do_not_reconcile_automatically(self):
-        """PH-022-B: multiple validated alternatives keep the line unresolved."""
+        """RF-18: varias validadas dejan la línea sin resolver."""
         other_partner = self.env["res.partner"].create({
             "name": "PH-022 Alternative Competitor",
             "supplier_rank": 1,
@@ -710,7 +715,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(quote.matched_count, 0)
 
     def test_29_ph022_rejected_homologation_never_reconciles_line(self):
-        """PH-022-C: rejected homologations do not become valid matches."""
+        """RF-05: una rechazada no se convierte en match."""
         draft_homologation = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
             "customer_code": "PH022-C-REJECTED-TEST",
@@ -739,7 +744,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(quote.matched_count, 0)
 
     def test_30_ph023_transient_multiple_alternatives_cannot_open_button(self):
-        """PH-023-A: new unsaved lines detect alternatives but cannot show the action."""
+        """RF-21: una línea sin guardar no puede abrir el popup."""
         alternatives = self._create_validated_alternatives()
 
         line = self._transient_line_for_code("ODSH-RULE-001")
@@ -753,7 +758,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertFalse(line.can_open_possible_homologations)
 
     def test_31_ph024_saved_line_keeps_real_alternative_count(self):
-        """PH-024-B: after saving, alternatives remain reconciled and counted."""
+        """RF-20: al guardar, las alternativas se mantienen y se cuentan."""
         alternatives = self._create_validated_alternatives()
         self.env["product.homologation.rule"].create({
             "name": "TEST - Priorizar mayor precision",
@@ -771,7 +776,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertTrue(line.can_open_possible_homologations)
 
     def test_32_ph024_action_opens_exactly_validated_alternatives(self):
-        """PH-024-C: the alternatives action only targets compatible validated records."""
+        """RF-18: la acción solo muestra alternativas válidas del código."""
         alternatives = self._create_validated_alternatives()
         self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
@@ -788,7 +793,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(set(action["domain"][0][2]), set(alternatives.ids))
 
     def test_33_ph024_manual_selection_applies_homologation_and_product(self):
-        """PH-024-D: choosing one alternative applies the selected homologation."""
+        """RF-18/RF-25: elegir una alternativa aplica producto y precisión."""
         alternatives = self._create_validated_alternatives()
         selected = alternatives.filtered(lambda h: h.product_id == self.product_b)
         line = self._saved_quote_line_for_code("ODSH-RULE-001")
@@ -800,30 +805,32 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.state, "matched")
         self.assertEqual(line.match_status, "validated")
 
-    def test_34_ph024_manual_selection_clears_alternatives(self):
-        """PH-024-E: after manual selection the line no longer exposes alternatives."""
+    def test_34_ph024_manual_selection_keeps_alternative_counter(self):
+        """RF-20: el contador de alternativas sigue visible tras seleccionar."""
         alternatives = self._create_validated_alternatives()
         selected = alternatives.filtered(lambda h: h.product_id == self.product)
         line = self._saved_quote_line_for_code("ODSH-RULE-001")
 
         line.write({"homologation_id": selected.id})
 
-        self.assertFalse(line.possible_homologation_ids)
-        self.assertEqual(line.possible_homologation_count, 0)
-        self.assertFalse(line.can_open_possible_homologations)
+        self.assertEqual(line.possible_homologation_count, 2)
+        self.assertEqual(
+            set(line.possible_homologation_ids.ids), set(alternatives.ids)
+        )
+        self.assertTrue(line.can_open_possible_homologations)
 
     def test_35_ph024_single_validated_still_auto_applies(self):
-        """PH-024-F: one validated homologation keeps the existing automatic match."""
+        """RF-17: una única homologación validada se aplica sola."""
         line = self._saved_quote_line_for_code("CMP-BIS-001")
 
         self.assertEqual(line.homologation_id, self.homologation)
         self.assertEqual(line.product_id, self.product)
         self.assertEqual(line.state, "matched")
         self.assertEqual(line.match_status, "validated")
-        self.assertEqual(line.possible_homologation_count, 0)
+        self.assertEqual(line.possible_homologation_count, 1)
 
     def test_36_ph024_draft_and_rejected_are_not_alternatives(self):
-        """PH-024-G: draft/rejected records never populate possible alternatives."""
+        """RF-05: borradores y rechazados no son alternativas."""
         other_partner = self.env["res.partner"].create({
             "name": "Competidor Draft Rejected",
             "supplier_rank": 1,
@@ -856,7 +863,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertNotIn(rejected.id, action["domain"][0][2])
 
     def test_37_ph022_multiple_validation_still_reconciles_alternatives(self):
-        """PH-024-H: PH-022 still exposes alternatives after validating several drafts."""
+        """RF-18: validar varias deja las alternativas disponibles."""
         other_partner = self.env["res.partner"].create({
             "name": "PH-022 PH-024 Alternative Competitor",
             "supplier_rank": 1,
@@ -905,7 +912,7 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(quote.matched_count, 0)
 
     def test_38_ph025_alternatives_action_only_contains_compatible_records(self):
-        """PH-025-A/B and PH-026-E: alternatives action is scoped and explicit."""
+        """RF-18: la acción de alternativas queda acotada y explícita."""
         alternatives = self._create_validated_alternatives("LOCAL-PH025-001")
         incompatible = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
@@ -940,7 +947,7 @@ class TestHomologationQuote(TransactionCase):
         ])
 
     def test_39_ph025_apply_alternative_a_updates_line_and_quote(self):
-        """PH-025-C/E/F: selecting alternative A applies it and updates counters."""
+        """RF-18: seleccionar la alternativa A actualiza línea y contadores."""
         alternatives = self._create_validated_alternatives("LOCAL-PH025-APPLY-A")
         selected = alternatives.filtered(lambda h: h.precision_pct == 90.0)
         line = self._saved_quote_line_for_code("LOCAL-PH025-APPLY-A")
@@ -958,12 +965,10 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.match_status, "validated")
         self.assertEqual(line.homologation_level, "near")
         self.assertEqual(line.homologation_precision_pct, 90.0)
-        self.assertFalse(line.possible_homologation_ids)
-        self.assertEqual(line.possible_homologation_count, 0)
         self.assertEqual(line.quote_id.matched_count, 1)
 
     def test_40_ph025_apply_alternative_b_updates_line_and_quote(self):
-        """PH-025-D: selecting alternative B applies its product and precision."""
+        """RF-18: seleccionar la alternativa B aplica su producto y precisión."""
         alternatives = self._create_validated_alternatives("LOCAL-PH025-APPLY-B")
         selected = alternatives.filtered(lambda h: h.precision_pct == 100.0)
         line = self._saved_quote_line_for_code("LOCAL-PH025-APPLY-B")
@@ -978,12 +983,10 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.match_status, "validated")
         self.assertEqual(line.homologation_level, "exact")
         self.assertEqual(line.homologation_precision_pct, 100.0)
-        self.assertFalse(line.possible_homologation_ids)
-        self.assertEqual(line.possible_homologation_count, 0)
         self.assertEqual(line.quote_id.matched_count, 1)
 
     def test_41_ph025_incompatible_homologation_cannot_be_applied(self):
-        """PH-025-G: validated homologations for another code cannot be applied."""
+        """RF-18: no se aplican homologaciones de otro código."""
         self._create_validated_alternatives("LOCAL-PH025-INCOMPATIBLE")
         incompatible = self.env["product.homologation"].create({
             "competitor_id": self.partner.id,
@@ -1008,12 +1011,12 @@ class TestHomologationQuote(TransactionCase):
         self.assertEqual(line.quote_id.matched_count, 0)
 
     def test_42_ph025_single_validated_still_auto_applies(self):
-        """PH-025-I: backend guard keeps one validated homologation automatic."""
+        """RF-17: con una sola validada el match sigue siendo automático."""
         line = self._saved_quote_line_for_code("CMP-BIS-001")
 
         self.assertEqual(line.homologation_id, self.homologation)
         self.assertEqual(line.product_id, self.product)
         self.assertEqual(line.state, "matched")
         self.assertEqual(line.match_status, "validated")
-        self.assertEqual(line.possible_homologation_count, 0)
+        self.assertEqual(line.possible_homologation_count, 1)
         self.assertEqual(line.quote_id.matched_count, 1)

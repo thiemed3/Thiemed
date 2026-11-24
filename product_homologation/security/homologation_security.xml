@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="group_homologation_seller" model="res.groups">
+        <field name="name">Homologación / Vendedor</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Puede crear homologaciones y precotizaciones, aplicar
+            homologaciones validadas o provisionales y solicitar validación.
+            No puede validar, rechazar ni eliminar homologaciones.</field>
+    </record>
+
+    <record id="group_homologation_specialist" model="res.groups">
+        <field name="name">Homologación / Especialista</field>
+        <field name="implied_ids" eval="[(4, ref('group_homologation_seller'))]"/>
+        <field name="comment">Puede validar, rechazar, editar y archivar
+            homologaciones, además de administrar las reglas de recomendación.</field>
+    </record>
+
+    <record id="rule_homologation_seller_write" model="ir.rule">
+        <field name="name">Homologación: vendedor solo edita borradores o provisionales</field>
+        <field name="model_id" ref="model_product_homologation"/>
+        <field name="groups" eval="[(4, ref('group_homologation_seller'))]"/>
+        <field name="domain_force">[('state', 'in', ('draft', 'provisional'))]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_homologation_specialist_all" model="ir.rule">
+        <field name="name">Homologación: especialista acceso completo</field>
+        <field name="model_id" ref="model_product_homologation"/>
+        <field name="groups" eval="[(4, ref('group_homologation_specialist'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+</odoo>

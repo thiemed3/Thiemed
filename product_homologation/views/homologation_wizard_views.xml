@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_homologation_alternatives_wizard_form" model="ir.ui.view">
+        <field name="name">product.homologation.alternatives.wizard.form</field>
+        <field name="model">product.homologation.alternatives.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Seleccionar alternativa de homologación">
+                <field name="quote_id" invisible="1"/>
+                <group>
+                    <group>
+                        <field name="customer_code" readonly="1"/>
+                        <field name="customer_description" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="recommended_id" readonly="1"/>
+                        <field name="recommendation_reason" readonly="1"/>
+                    </group>
+                </group>
+                <group string="Alternativas disponibles">
+                    <field name="candidate_ids" nolabel="1">
+                        <list create="0" edit="0" delete="0">
+                            <field name="recommended" readonly="1"/>
+                            <field name="is_selected" readonly="1"/>
+                            <field name="reference"/>
+                            <field name="description"/>
+                            <field name="brand_id"/>
+                            <field name="product_id"/>
+                            <field name="product_code"/>
+                            <field name="price"/>
+                            <field name="precision_pct"/>
+                            <field name="homologation_level"/>
+                            <field name="observation" optional="hide"/>
+                            <button name="action_select" type="object"
+                                    string="Seleccionar" class="btn-primary"/>
+                        </list>
+                    </field>
+                </group>
+                <footer>
+                    <button name="action_apply_recommended" type="object"
+                            string="Usar recomendada" class="btn-primary"
+                            invisible="not recommended_id"/>
+                    <button name="action_close" type="object"
+                            string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_homologation_import_wizard_form" model="ir.ui.view">
+        <field name="name">product.homologation.import.wizard.form</field>
+        <field name="model">product.homologation.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Importar homologaciones">
+                <group>
+                    <group>
+                        <field name="filename" invisible="1"/>
+                        <field name="file" filename="filename"
+                               placeholder="Seleccione un archivo .xlsx, .xls o .csv"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                    <group>
+                        <field name="update_existing"/>
+                        <field name="create_competitors"/>
+                    </group>
+                </group>
+                <div class="alert alert-info" role="alert">
+                    Columnas esperadas (encabezados en la primera fila):
+                    <b>código cliente</b>, <b>descripción</b>, <b>marca/competidor</b>,
+                    <b>código interno</b>, <b>nivel</b>, <b>precisión</b> y
+                    <b>observación</b>. Las filas inválidas no se incorporan y se
+                    informan en el resultado.
+                </div>
+                <group string="Resultado" invisible="not result">
+                    <field name="result" nolabel="1"/>
+                    <field name="created_count"/>
+                    <field name="updated_count"/>
+                    <field name="skipped_count"/>
+                    <field name="error_count"/>
+                    <field name="error_log" nolabel="1" invisible="not error_log"/>
+                </group>
+                <footer>
+                    <button name="action_import" type="object"
+                            string="Importar" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_quote_import_wizard_form" model="ir.ui.view">
+        <field name="name">product.homologation.quote.import.wizard.form</field>
+        <field name="model">product.homologation.quote.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Importar líneas de precotización">
+                <group>
+                    <group>
+                        <field name="quote_id" readonly="1" force_save="1"/>
+                        <field name="filename" invisible="1"/>
+                        <field name="file" filename="filename"
+                               placeholder="Seleccione un archivo .xlsx, .xls o .csv"/>
+                        <field name="match_homologations"/>
+                    </group>
+                </group>
+                <div class="alert alert-info" role="alert">
+                    Columnas esperadas: <b>código cliente</b>, <b>descripción</b>,
+                    <b>marca/competidor</b>, <b>cantidad</b> y <b>precio</b> (opcional).
+                    El matching de homologaciones se aplica al crear cada línea.
+                </div>
+                <group string="Resultado" invisible="not result">
+                    <field name="result" nolabel="1"/>
+                    <field name="created_count"/>
+                    <field name="error_count"/>
+                    <field name="error_log" nolabel="1" invisible="not error_log"/>
+                </group>
+                <footer>
+                    <button name="action_import" type="object"
+                            string="Importar" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

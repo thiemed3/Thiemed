@@ -1,9 +1,37 @@
 from odoo import fields, models
 
 
+class SaleOrder(models.Model):
+    _inherit = "sale.order"
+
+    homologation_quote_id = fields.Many2one(
+        "product.homologation.quote",
+        string="Precotización de homologación",
+        readonly=True,
+        index=True,
+        ondelete="set null",
+        help="Precotización que originó este presupuesto.",
+    )
+
+
 class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
+    homologation_id = fields.Many2one(
+        "product.homologation",
+        string="Homologación utilizada",
+        readonly=True,
+        index=True,
+        ondelete="restrict",
+        help="Homologación utilizada para este producto, conservada para trazabilidad.",
+    )
+    homologation_quote_id = fields.Many2one(
+        "product.homologation.quote",
+        string="Precotización",
+        readonly=True,
+        index=True,
+        ondelete="set null",
+    )
     homologation_customer_code = fields.Char(
         string="Código original del cliente",
         help="Código del producto según el listado del cliente, conservado para trazabilidad.",

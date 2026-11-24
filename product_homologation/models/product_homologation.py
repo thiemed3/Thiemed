@@ -1,11 +1,34 @@
 import logging
 import re
 
-from odoo import fields, models, api, _
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
-from odoo.osv import expression
+from odoo.fields import Domain
 
 _logger = logging.getLogger(__name__)
+
+HOMOLOGATION_LEVELS = [
+    ("exact", "Coincidencia exacta"),
+    ("near", "Coincidencia cercana"),
+    ("approximate", "Coincidencia aproximada"),
+    ("best", "Mejor opción"),
+]
+
+HOMOLOGATION_LEVEL_PRECISION = {
+    "exact": 100.0,
+    "near": 90.0,
+    "approximate": 80.0,
+    "best": 70.0,
+}
+
+HOMOLOGATION_STATES = [
+    ("draft", "Borrador"),
+    ("provisional", "Provisional"),
+    ("validated", "Validado"),
+    ("rejected", "Rechazado"),
+]
+
+SPECIALIST_GROUP = "product_homologation.group_homologation_specialist"
 
 
 class ProductHomologation(models.Model):
@@ -15,12 +38,7 @@ class ProductHomologation(models.Model):
     _order = "competitor_id, customer_code"
     _rec_name = "customer_code"
 
-    HOMOLOGATION_LEVEL_PRECISION = {
-        "exact": 100.0,
-        "near": 90.0,
-        "approximate": 80.0,
-        "best": 70.0,
-    }
+    HOMOLOGATION_LEVEL_PRECISION = HOMOLOGATION_LEVEL_PRECISION
 
     competitor_id = fields.Many2one(
         "res.partner",
@@ -55,13 +73,20 @@ class ProductHomologation(models.Model):
         string="Código interno",
         readonly=True,
     )
+    product_price = fields.Float(
+        related="product_id.list_price",
+        string="Precio de venta",
+        readonly=True,
+        help="Precio de lista del producto interno. Se usa en las reglas de recomendación.",
+    )
+    product_standard_price = fields.Float(
+        related="product_id.standard_price",
+        string="Costo",
+        readonly=True,
+        help="Costo del producto interno. Se usa en las reglas de recomendación.",
+    )
     homologation_level = fields.Selection(
-        [
-            ("exact", "Coincidencia exacta"),
-            ("near", "Coincidencia cercana"),
-            ("approximate", "Coincidencia aproximada"),
-            ("best", "Mejor opción"),
-        ],
+        HOMOLOGATION_LEVELS,
         string="Nivel de homologación",
         default="exact",
         tracking=True,
@@ -82,7 +107,7 @@ class ProductHomologation(models.Model):
         store=True,
     )
     state = fields.Selection(
-        [("draft", "Borrador"), ("validated", "Validado"), ("rejected", "Rechazado")],
+        HOMOLOGATION_STATES,
         string="Estado",
         default="draft",
         required=True,
@@ -93,6 +118,44 @@ class ProductHomologation(models.Model):
         string="Validado por",
         readonly=True,
         tracking=True,
+    )
+    validation_date = fields.Datetime(
+        string="Fecha de validación",
+        readonly=True,
+        tracking=True,
+    )
+    origin_quote_id = fields.Many2one(
+        "product.homologation.quote",
+        string="Precotización de origen",
+        readonly=True,
+        index=True,
+        ondelete="set null",
+        help="Precotización desde la cual se creó esta homologación provisional.",
+    )
+    origin_quote_line_id = fields.Many2one(
+        "product.homologation.quote.line",
+        string="Línea de origen",
+        readonly=True,
+        ondelete="set null",
+    )
+    is_provisional = fields.Boolean(
+        string="Es provisional",
+        compute="_compute_is_provisional",
+        store=True,
+    )
+    used_in_quote_count = fields.Integer(
+        string="Usos en precotizaciones",
+        compute="_compute_usage",
+    )
+    used_in_sale_count = fields.Integer(
+        string="Usos en presupuestos",
+        compute="_compute_usage",
+    )
+    is_used = fields.Boolean(
+        string="Utilizada",
+        compute="_compute_usage",
+        help="Indica si la homologación ya fue utilizada en una precotización "
+             "o en un presupuesto. Los registros utilizados no se eliminan.",
     )
     active = fields.Boolean(default=True)
     company_id = fields.Many2one(
@@ -110,14 +173,14 @@ class ProductHomologation(models.Model):
         compute="_compute_duplicates",
     )
 
-    _sql_constraints = [
-        (
-            "uniq_competitor_code",
-            "unique(competitor_id, customer_code, company_id)",
-            "Ya existe una homologación para este competidor con el mismo código.",
-        ),
-    ]
+    _competitor_code_company_uniq = models.Constraint(
+        "UNIQUE(competitor_id, customer_code, company_id)",
+        "Ya existe una homologación para este competidor con el mismo código.",
+    )
 
+    # ------------------------------------------------------------------
+    # ORM
+    # ------------------------------------------------------------------
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -136,13 +199,59 @@ class ProductHomologation(models.Model):
             vals["precision_pct"] = self._precision_from_level(vals["homologation_level"])
         return super().write(vals)
 
+    def unlink(self):
+        """Los registros históricos utilizados no se eliminan (RF-13)."""
+        used = self.filtered(lambda hom: hom._is_used_record())
+        if used:
+            raise UserError(_(
+                "No se pueden eliminar homologaciones que ya fueron utilizadas "
+                "en precotizaciones o presupuestos: %s.\n"
+                "Archívelas en su lugar para conservar la trazabilidad."
+            ) % ", ".join(used.mapped("display_name")))
+        return super().unlink()
+
     @api.onchange("homologation_level")
     def _onchange_homologation_level(self):
         for rec in self:
             rec.precision_pct = rec._precision_from_level(rec.homologation_level)
 
-    def _precision_from_level(self, level):
-        return self.HOMOLOGATION_LEVEL_PRECISION.get(level or "exact", 0.0)
+    # ------------------------------------------------------------------
+    # Compute
+    # ------------------------------------------------------------------
+    @api.depends("state")
+    def _compute_is_provisional(self):
+        for rec in self:
+            rec.is_provisional = rec.state == "provisional"
+
+    def _is_used_record(self):
+        self.ensure_one()
+        if not self.id:
+            return False
+        if self.env["product.homologation.quote.line"].search_count(
+            [("homologation_id", "=", self.id)]
+        ):
+            return True
+        return bool(self.env["sale.order.line"].search_count(
+            [("homologation_id", "=", self.id)]
+        ))
+
+    @api.depends("customer_code", "product_id")
+    def _compute_usage(self):
+        QuoteLine = self.env["product.homologation.quote.line"]
+        SaleLine = self.env["sale.order.line"]
+        for rec in self:
+            if not isinstance(rec.id, int):
+                rec.used_in_quote_count = 0
+                rec.used_in_sale_count = 0
+                rec.is_used = False
+                continue
+            rec.used_in_quote_count = QuoteLine.search_count(
+                [("homologation_id", "=", rec.id)]
+            )
+            rec.used_in_sale_count = SaleLine.search_count(
+                [("homologation_id", "=", rec.id)]
+            )
+            rec.is_used = bool(rec.used_in_quote_count or rec.used_in_sale_count)
 
     @api.depends("customer_code", "competitor_id", "product_id")
     def _compute_duplicates(self):
@@ -155,9 +264,9 @@ class ProductHomologation(models.Model):
             if not domains:
                 rec.duplicate_homologation_ids = False
                 continue
-            domain = expression.OR(domains)
+            domain = Domain.OR(domains)
             if rec.ids:
-                domain = [("id", "not in", rec.ids)] + domain
+                domain = Domain.AND([[("id", "not in", rec.ids)], domain])
             rec.duplicate_homologation_ids = self.search(domain, limit=10)
 
     @api.constrains("competitor_id", "customer_code", "product_id")
@@ -179,15 +288,15 @@ class ProductHomologation(models.Model):
                     rec.product_id.display_name, dup.product_id.display_name,
                 )
 
+    @api.depends("customer_description")
+    def _compute_normalized_description(self):
+        for rec in self:
+            rec.normalized_description = rec._normalize(rec.customer_description)
+
     @api.onchange("customer_description")
     def _onchange_normalize_description(self):
         if self.customer_description:
             self.normalized_description = self._normalize(self.customer_description)
-
-    @api.depends("customer_description")
-    def _compute_normalized_description(self):
-        for rec in self:
-            rec.normalized_description = self._normalize(rec.customer_description)
 
     def _normalize(self, text):
         if not text:
@@ -197,17 +306,96 @@ class ProductHomologation(models.Model):
         t = re.sub(r"\s+", " ", t)
         return t.strip()
 
+    def _precision_from_level(self, level):
+        return self.HOMOLOGATION_LEVEL_PRECISION.get(level or "exact", 0.0)
+
+    # ------------------------------------------------------------------
+    # Búsqueda / autocompletado (RF-33)
+    # ------------------------------------------------------------------
+    @api.model
+    @api.readonly
+    def name_search(self, name="", domain=None, operator="ilike", limit=100):
+        """Autocompletado por código, descripción o código interno.
+
+        Además de buscar por el nombre mostrado (código del cliente), se busca
+        por descripción del cliente y por código/nombre del producto interno,
+        de modo que el vendedor pueda escribir el código que recuerda.
+        """
+        domain = list(domain or [])
+        if not name:
+            return super().name_search(name, domain, operator, limit)
+        extra = Domain.OR([
+            [("customer_code", operator, name)],
+            [("customer_description", operator, name)],
+            [("product_id.default_code", operator, name)],
+            [("product_id.name", operator, name)],
+        ])
+        records = self.search(Domain.AND([domain, extra]), limit=limit)
+        return [(record.id, record.display_name) for record in records.sudo()]
+
+    @api.model
+    def _get_code_suggestions(self, code, limit=10):
+        """Sugerencias para un código de cliente mientras se escribe (RF-33).
+
+        Devuelve primero las homologaciones validadas y luego las provisionales,
+        borradores y rechazadas.
+        """
+        code = (code or "").strip()
+        if not code:
+            return self.browse()
+        domain = [
+            "|", "|",
+            ("customer_code", "=ilike", f"{code}%"),
+            ("customer_code", "=ilike", f"%{code}%"),
+            ("product_id.default_code", "=ilike", f"%{code}%"),
+        ]
+        records = self.search(domain, limit=limit)
+        priority = {"validated": 0, "provisional": 1, "draft": 2, "rejected": 3}
+        return records.sorted(
+            key=lambda hom: (priority.get(hom.state, 9), hom.customer_code or "")
+        )
+
+    # ------------------------------------------------------------------
+    # Flujo de estados (RF-05, RF-06, RF-09, RF-10)
+    # ------------------------------------------------------------------
+    def _check_specialist(self):
+        if self.env.is_admin() or self.env.user.has_group(SPECIALIST_GROUP):
+            return True
+        raise UserError(_(
+            "Solo un especialista de homologación puede validar, rechazar "
+            "o devolver a borrador una homologación."
+        ))
+
     def action_validate(self):
-        self.write({"state": "validated", "validator_id": self.env.user.id})
+        self._check_specialist()
+        self.write({
+            "state": "validated",
+            "validator_id": self.env.user.id,
+            "validation_date": fields.Datetime.now(),
+        })
         self.env[
             "product.homologation.quote.line"
         ]._reconcile_after_homologation_validation(self)
 
     def action_reject(self):
-        self.write({"state": "rejected", "validator_id": self.env.user.id})
+        self._check_specialist()
+        self.write({
+            "state": "rejected",
+            "validator_id": self.env.user.id,
+            "validation_date": fields.Datetime.now(),
+        })
 
     def action_draft(self):
-        self.write({"state": "draft", "validator_id": False})
+        self._check_specialist()
+        self.write({
+            "state": "draft",
+            "validator_id": False,
+            "validation_date": False,
+        })
+
+    def action_send_to_validation(self):
+        """Marca un borrador como provisional (pendiente de validación)."""
+        self.write({"state": "provisional"})
 
     def action_find_cross_homologations(self):
         self.ensure_one()
@@ -239,3 +427,63 @@ class ProductHomologation(models.Model):
             raise UserError(_("La línea de precotización ya no existe."))
         line._apply_selected_homologation(self)
         return line.quote_id.action_open_quote()
+
+    def action_view_quotes(self):
+        self.ensure_one()
+        lines = self.env["product.homologation.quote.line"].search(
+            [("homologation_id", "=", self.id)]
+        )
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Precotizaciones que usan esta homologación"),
+            "res_model": "product.homologation.quote",
+            "view_mode": "list,form",
+            "domain": [("id", "in", lines.quote_id.ids)],
+        }
+
+    # ------------------------------------------------------------------
+    # Reglas de recomendación (RF-23, RF-24, RF-25)
+    # ------------------------------------------------------------------
+    @api.model
+    def _get_recommendation_rules(self):
+        return self.env["product.homologation.rule"].search(
+            [
+                ("active", "=", True),
+                "|",
+                ("company_id", "=", False),
+                ("company_id", "=", self.env.company.id),
+            ],
+            order="priority, id",
+        )
+
+    def _sort_for_rules(self, rules):
+        """Ordena el recordset aplicando las reglas configuradas.
+
+        Se aplica un ordenamiento estable desde la regla de menor prioridad
+        (mayor número) hasta la de mayor prioridad, de modo que la última
+        regla aplicada (mayor prioridad) domine el resultado.
+        """
+        records = self
+        if not records:
+            return records
+        for rule in reversed(rules):
+            records = records.sorted(key=rule._sort_key)
+        return records
+
+    def _recommend(self):
+        """Devuelve (homologación recomendada, motivo, ordenadas)."""
+        rules = self._get_recommendation_rules()
+        ordered = self._sort_for_rules(rules)
+        if not ordered:
+            return self.browse(), "", ordered
+        best = ordered[0]
+        reason = ""
+        for rule in rules:
+            best_key = rule._sort_key(best)
+            if all(best_key <= rule._sort_key(other) for other in ordered):
+                if len(ordered) == 1 or best_key != rule._sort_key(ordered[1]):
+                    reason = rule.name
+                    break
+        if not reason:
+            reason = _("Mayor precisión, menor precio y orden de registro")
+        return best, reason, ordered

@@ -1,5 +1,12 @@
-from odoo import fields, models, api, _
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+
+HOMOLOGATION_LEVELS = [
+    ("exact", "Coincidencia exacta"),
+    ("near", "Coincidencia cercana"),
+    ("approximate", "Coincidencia aproximada"),
+    ("best", "Mejor opción"),
+]
 
 
 class ProductHomologationQuoteLine(models.Model):
@@ -39,8 +46,10 @@ class ProductHomologationQuoteLine(models.Model):
     homologation_id = fields.Many2one(
         "product.homologation",
         string="Homologación aplicada",
-        domain=[("state", "=", "validated")],
-        help="Registro de homologación que vinculó este código al producto interno.",
+        domain=[("state", "in", ("validated", "provisional"))],
+        help="Registro de homologación que vinculó este código al producto interno. "
+             "Puede ser una homologación provisional originada en esta misma "
+             "precotización.",
     )
     homologation_state = fields.Selection(
         related="homologation_id.state",
@@ -80,14 +89,27 @@ class ProductHomologationQuoteLine(models.Model):
         "quote_line_id",
         "homologation_id",
         string="Alternativas de homologación",
-        help="Homologaciones validadas posibles cuando el código no identifica una única alternativa.",
+        help="Homologaciones utilizables cuando el código no identifica una única alternativa.",
     )
     possible_homologation_count = fields.Integer(
         string="Alternativas",
         compute="_compute_possible_homologation_data",
+        help="Cantidad de alternativas disponibles para el código, incluyendo la "
+             "alternativa ya seleccionada. Se mantiene visible después de elegir.",
     )
     can_open_possible_homologations = fields.Boolean(
         string="Puede abrir alternativas",
+        compute="_compute_possible_homologation_data",
+    )
+    recommended_homologation_id = fields.Many2one(
+        "product.homologation",
+        string="Alternativa recomendada",
+        compute="_compute_possible_homologation_data",
+        help="Alternativa sugerida por las reglas de recomendación configuradas. "
+             "El vendedor puede cambiarla manualmente.",
+    )
+    recommendation_reason = fields.Char(
+        string="Motivo de la recomendación",
         compute="_compute_possible_homologation_data",
     )
     state = fields.Selection(
@@ -100,6 +122,7 @@ class ProductHomologationQuoteLine(models.Model):
         [
             ("pending", "Pendiente"),
             ("validated", "Validada"),
+            ("provisional", "Provisional"),
             ("alternatives", "Varias alternativas"),
             ("draft", "Borrador existente"),
             ("rejected", "Rechazada existente"),
@@ -111,39 +134,48 @@ class ProductHomologationQuoteLine(models.Model):
     quantity = fields.Float(string="Cantidad", default=1.0, required=True)
     price_unit = fields.Float(
         string="Precio unitario",
-        compute="_compute_price_unit",
-        readonly=False,
+        digits="Product Price",
+        help="Precio editable de la línea. Se inicializa con el precio de lista "
+             "del producto asignado, pero el vendedor puede ajustarlo.",
+    )
+    subtotal = fields.Float(
+        string="Subtotal",
+        compute="_compute_subtotal",
         store=True,
-        precompute=True,
+        digits="Product Price",
+        help="Cantidad por precio unitario de la línea.",
     )
 
-    @api.depends("product_id")
-    def _compute_price_unit(self):
+    # ------------------------------------------------------------------
+    # Compute
+    # ------------------------------------------------------------------
+    @api.depends("quantity", "price_unit")
+    def _compute_subtotal(self):
         for line in self:
-            if line.product_id:
-                line.price_unit = line.product_id.list_price
-            else:
-                line.price_unit = 0.0
+            line.subtotal = (line.quantity or 0.0) * (line.price_unit or 0.0)
 
     @api.depends(
         "customer_code",
+        "quote_id",
         "homologation_id",
         "homologation_id.state",
         "possible_homologation_ids",
-        "possible_homologation_ids.state",
+        "product_id",
     )
     def _compute_possible_homologation_data(self):
         for line in self:
-            count = 0
-            if not line.homologation_id:
-                count = len(line._get_possible_homologations())
-            line.possible_homologation_count = count
+            alternatives = line._get_possible_homologations()
+            recommended, reason, _ordered = alternatives._recommend()
+            line.possible_homologation_count = len(alternatives)
             line.can_open_possible_homologations = bool(
-                count and line.id and isinstance(line.id, int)
+                len(alternatives) and line.id and isinstance(line.id, int)
             )
+            line.recommended_homologation_id = recommended
+            line.recommendation_reason = reason
 
     @api.depends(
         "customer_code",
+        "quote_id",
         "homologation_id",
         "homologation_id.state",
         "possible_homologation_ids",
@@ -152,35 +184,31 @@ class ProductHomologationQuoteLine(models.Model):
         for line in self:
             line.match_status = line._get_match_status()
 
+    # ------------------------------------------------------------------
+    # Onchange
+    # ------------------------------------------------------------------
     @api.onchange("customer_code")
     def _onchange_customer_code(self):
         code = self._normalize_code(self.customer_code)
         if not code:
-            self.possible_homologation_ids = False
-            if not self.product_id:
-                self.state = "pending"
-            return
+            self._clear_match()
+            self.state = "pending"
+            return {}
         matches = self._get_code_homologation_matches()
-        validated = matches["validated"]
-        if len(validated) == 1:
-            self._apply_homologation(validated)
-            return
-
-        self.product_id = False
-        self.homologation_id = False
-        self.possible_homologation_ids = validated if len(validated) > 1 else False
+        usable = matches["usable"]
+        if len(usable) == 1:
+            self._apply_homologation(usable)
+            return {}
+        if usable:
+            # Varias alternativas: se muestran en la ventana emergente, sin
+            # mensaje intrusivo (RF-19) y manteniendo el contador (RF-20).
+            self.product_id = False
+            self.homologation_id = False
+            self.possible_homologation_ids = usable
+            self.state = "unmatched"
+            return {}
+        self._clear_match()
         self.state = "unmatched"
-        if len(validated) > 1:
-            return {
-                "domain": {"homologation_id": [("id", "in", validated.ids)]},
-                "warning": {
-                    "title": _("Múltiples homologaciones"),
-                    "message": _(
-                        "Existen %s homologaciones validadas para este código. "
-                        "Seleccione una alternativa manualmente."
-                    ) % len(validated),
-                }
-            }
         if matches["draft"] or matches["rejected"]:
             return {
                 "warning": {
@@ -196,18 +224,20 @@ class ProductHomologationQuoteLine(models.Model):
                 "title": _("Sin coincidencia"),
                 "message": _("No existe una homologación validada para este código."),
             }
-            }
+        }
 
     @api.onchange("homologation_id")
     def _onchange_homologation_id(self):
         if not self.homologation_id:
-            return
-        if self.homologation_id.state != "validated":
+            return {}
+        if not self._is_usable_homologation(self.homologation_id):
+            self.homologation_id = False
             return {
                 "warning": {
-                    "title": _("Homologación no validada"),
+                    "title": _("Homologación no disponible"),
                     "message": _(
-                        "Solo una homologación validada puede aplicarse como match."
+                        "Solo una homologación validada (o una provisional "
+                        "originada en esta precotización) puede aplicarse como match."
                     ),
                 }
             }
@@ -222,9 +252,11 @@ class ProductHomologationQuoteLine(models.Model):
                 }
             }
         self._apply_homologation(self.homologation_id)
+        return {}
 
     @api.onchange("product_id")
     def _onchange_product_id(self):
+        self.price_unit = self._price_for_product(self.product_id)
         if self.product_id and self.state != "matched":
             self.state = "matched"
         elif not self.product_id:
@@ -232,13 +264,21 @@ class ProductHomologationQuoteLine(models.Model):
             self.homologation_id = False
             self.possible_homologation_ids = False
 
+    # ------------------------------------------------------------------
+    # ORM
+    # ------------------------------------------------------------------
     @api.model_create_multi
     def create(self, vals_list):
         for index, vals in enumerate(vals_list):
             vals = vals.copy()
             if vals.get("customer_code"):
                 vals["customer_code"] = vals["customer_code"].strip()
-            vals_list[index] = self._prepare_values_from_homologation(vals)
+            vals = self._prepare_values_from_homologation(vals)
+            if "price_unit" not in vals and vals.get("product_id"):
+                vals["price_unit"] = self._price_for_product(
+                    self.env["product.product"].browse(vals["product_id"])
+                )
+            vals_list[index] = vals
         lines = super().create(vals_list)
         lines._reconcile_code_homologations()
         lines._ensure_homologation()
@@ -251,6 +291,18 @@ class ProductHomologationQuoteLine(models.Model):
             vals["customer_code"] = vals["customer_code"].strip()
         if vals.get("homologation_id"):
             vals = self._prepare_values_from_homologation(vals)
+        if (
+            "product_id" in vals
+            and "price_unit" not in vals
+            and ("product_id" in original_keys or not any(self.mapped("price_unit")))
+        ):
+            # Solo se repone el precio de lista si el usuario cambió el
+            # producto o la línea aún no tenía precio. Si el producto llega
+            # implícito desde una homologación, se conserva el precio editado.
+            vals = vals.copy()
+            vals["price_unit"] = self._price_for_product(
+                self.env["product.product"].browse(vals["product_id"])
+            )
         result = super().write(vals)
         if (
             not self.env.context.get("skip_homologation_reconcile")
@@ -265,12 +317,32 @@ class ProductHomologationQuoteLine(models.Model):
             self._ensure_homologation()
         return result
 
+    @api.model
+    def _price_for_product(self, product):
+        return product.list_price if product else 0.0
+
+    def copy_data(self, default=None):
+        """Al duplicar una precotización se vuelve a resolver el match.
+
+        Una homologación provisional solo es utilizable en la precotización
+        que la originó (RF-10), por lo que la copia no debe arrastrar la
+        referencia de la línea original: el matching se recalcula y, si
+        corresponde, se crea/usa la homologación válida del nuevo contexto.
+        """
+        default = dict(default or {})
+        vals_list = super().copy_data(default=default)
+        for vals in vals_list:
+            vals.pop("homologation_id", None)
+            vals.pop("possible_homologation_ids", None)
+        return vals_list
+
+
     def _prepare_values_from_homologation(self, vals):
         homologation_id = vals.get("homologation_id")
         if not homologation_id:
             return vals
         homologation = self.env["product.homologation"].browse(homologation_id)
-        if not homologation or homologation.state != "validated":
+        if not self._is_usable_homologation(homologation, self._vals_quote(vals)):
             return vals
         self._check_homologation_can_be_applied(homologation, vals)
         vals = vals.copy()
@@ -279,8 +351,15 @@ class ProductHomologationQuoteLine(models.Model):
         vals.setdefault("competitor_id", homologation.competitor_id.id)
         vals.setdefault("product_id", homologation.product_id.id)
         vals.setdefault("state", "matched")
-        vals.setdefault("possible_homologation_ids", [(5, 0, 0)])
         return vals
+
+    def _vals_quote(self, vals):
+        quote_id = vals.get("quote_id")
+        if quote_id:
+            return self.env["product.homologation.quote"].browse(quote_id)
+        if self:
+            return self[:1].quote_id
+        return self.env["product.homologation.quote"]
 
     def _normalize_code(self, code):
         return (code or "").strip()
@@ -288,9 +367,26 @@ class ProductHomologationQuoteLine(models.Model):
     def _same_code(self, first, second):
         return self._normalize_code(first).casefold() == self._normalize_code(second).casefold()
 
-    def _check_homologation_values_compatible(self, homologation, code=False, company=False):
-        if homologation.state != "validated":
-            raise UserError(_("Solo una homologación validada puede aplicarse como match."))
+    def _is_usable_homologation(self, homologation, quote=None):
+        """Una homologación es utilizable si está validada o si es provisional
+        y fue originada en la misma precotización (RF-10)."""
+        if not homologation:
+            return False
+        if homologation.state == "validated":
+            return True
+        if homologation.state == "provisional":
+            quote = quote or (self[:1].quote_id if self else self.env[
+                "product.homologation.quote"
+            ])
+            return bool(quote and homologation.origin_quote_id == quote)
+        return False
+
+    def _check_homologation_values_compatible(self, homologation, code=False, company=False, quote=None):
+        if not self._is_usable_homologation(homologation, quote):
+            raise UserError(_(
+                "Solo una homologación validada, o una provisional originada en "
+                "esta precotización, puede aplicarse como match."
+            ))
         if company and homologation.company_id and homologation.company_id != company:
             raise UserError(_("La homologación seleccionada pertenece a otra compañía."))
         if code and not self._same_code(code, homologation.customer_code):
@@ -305,23 +401,24 @@ class ProductHomologationQuoteLine(models.Model):
             for line in self:
                 code = vals.get("customer_code", line.customer_code)
                 company = line.quote_id.company_id or self.env.company
-                line._check_homologation_values_compatible(homologation, code, company)
+                line._check_homologation_values_compatible(
+                    homologation, code, company, line.quote_id
+                )
             return
-        company = False
-        if vals.get("quote_id"):
-            quote = self.env["product.homologation.quote"].browse(vals["quote_id"])
-            company = quote.company_id or self.env.company
+        quote = self._vals_quote(vals)
+        company = (quote.company_id if quote else False) or self.env.company
         self._check_homologation_values_compatible(
             homologation,
             vals.get("customer_code"),
             company,
+            quote,
         )
 
     def _line_matches_homologation(self, homologation, require_validated=False):
         self.ensure_one()
         if not homologation or not self.product_id:
             return False
-        if require_validated and homologation.state != "validated":
+        if require_validated and not self._is_usable_homologation(homologation):
             return False
         if homologation.product_id != self.product_id:
             return False
@@ -338,6 +435,9 @@ class ProductHomologationQuoteLine(models.Model):
             return []
         return ["|", ("company_id", "=", company.id), ("company_id", "=", False)]
 
+    # ------------------------------------------------------------------
+    # Búsqueda de homologaciones
+    # ------------------------------------------------------------------
     def _get_code_homologations(self):
         self.ensure_one()
         code = self._normalize_code(self.customer_code)
@@ -348,37 +448,50 @@ class ProductHomologationQuoteLine(models.Model):
 
     def _get_code_homologation_matches(self):
         homologations = self._get_code_homologations()
+        provisional = homologations.filtered(
+            lambda hom: hom.state == "provisional"
+            and self.quote_id
+            and hom.origin_quote_id == self.quote_id
+        )
+        validated = homologations.filtered(lambda h: h.state == "validated")
         return {
-            "validated": homologations.filtered(lambda h: h.state == "validated"),
+            "validated": validated,
+            "provisional": provisional,
+            "usable": validated | provisional,
             "draft": homologations.filtered(lambda h: h.state == "draft"),
             "rejected": homologations.filtered(lambda h: h.state == "rejected"),
         }
 
     def _get_possible_homologations(self):
+        """Alternativas utilizables para el código de la línea.
+
+        Se mantiene la lista aun después de seleccionar una alternativa para
+        que el contador siga visible (RF-20).
+        """
         self.ensure_one()
-        if self.homologation_id:
-            return self.env["product.homologation"]
         if self._normalize_code(self.customer_code):
-            validated = self._get_code_homologation_matches()["validated"]
-            if len(validated) > 1:
-                return validated
-            return self.env["product.homologation"]
-        return self.possible_homologation_ids.filtered(lambda h: h.state == "validated")
+            return self._get_code_homologation_matches()["usable"]
+        return self.possible_homologation_ids.filtered(
+            lambda hom: self._is_usable_homologation(hom, self.quote_id)
+        )
 
     def _get_match_status(self):
         self.ensure_one()
         if self.homologation_id:
             if self.homologation_id.state == "validated":
                 return "validated"
+            if self.homologation_id.state == "provisional":
+                return "provisional"
             return self.homologation_id.state
-        if self._get_possible_homologations():
+        alternatives = self._get_possible_homologations()
+        if len(alternatives) > 1:
             return "alternatives"
         if not self._normalize_code(self.customer_code):
             return "pending"
         matches = self._get_code_homologation_matches()
-        if len(matches["validated"]) > 1:
+        if len(matches["usable"]) > 1:
             return "alternatives"
-        if matches["validated"]:
+        if matches["usable"]:
             return "validated"
         if matches["draft"]:
             return "draft"
@@ -386,12 +499,22 @@ class ProductHomologationQuoteLine(models.Model):
             return "rejected"
         return "unmatched"
 
+    def _is_line_complete(self):
+        self.ensure_one()
+        return bool(
+            self.state == "matched"
+            and self.product_id
+            and self.homologation_id
+            and self._is_usable_homologation(self.homologation_id, self.quote_id)
+        )
+
     def _apply_homologation(self, homologation):
         self.customer_description = homologation.customer_description
         self.competitor_id = homologation.competitor_id
         self.product_id = homologation.product_id
         self.homologation_id = homologation
-        self.possible_homologation_ids = False
+        # RF-20: las alternativas se mantienen visibles luego de seleccionar.
+        self.possible_homologation_ids = self._get_possible_homologations()
         self.state = "matched"
 
     def _apply_selected_homologation(self, homologation):
@@ -401,6 +524,15 @@ class ProductHomologationQuoteLine(models.Model):
             "homologation_id": homologation.id,
         })
 
+    def _clear_match(self):
+        self.product_id = False
+        self.homologation_id = False
+        self.possible_homologation_ids = False
+        self.state = "pending"
+
+    # ------------------------------------------------------------------
+    # Reconciliación
+    # ------------------------------------------------------------------
     @api.model
     def _reconcile_after_homologation_validation(self, homologations):
         lines = self.browse()
@@ -422,37 +554,44 @@ class ProductHomologationQuoteLine(models.Model):
             if (
                 line.state == "matched"
                 and line.product_id
-                and line._line_matches_homologation(
-                    line.homologation_id,
-                    require_validated=True,
-                )
+                and line._line_matches_homologation(line.homologation_id)
             ):
-                if line.possible_homologation_ids:
+                # Mantener el contador de alternativas (RF-20).
+                usable = line._get_possible_homologations()
+                if set(usable.ids) != set(line.possible_homologation_ids.ids):
                     line.with_context(skip_homologation_reconcile=True).write({
-                        "possible_homologation_ids": [(5, 0, 0)],
+                        "possible_homologation_ids": [(6, 0, usable.ids)],
                     })
                 continue
             matches = line._get_code_homologation_matches()
-            validated = matches["validated"]
-            if len(validated) == 1:
+            usable = matches["usable"]
+            if len(usable) == 1:
                 line.with_context(skip_homologation_reconcile=True).write({
-                    "homologation_id": validated.id,
-                    "possible_homologation_ids": [(5, 0, 0)],
+                    "homologation_id": usable.id,
+                    "possible_homologation_ids": [(6, 0, usable.ids)],
                 })
                 continue
-            if len(validated) > 1:
+            if len(usable) > 1:
                 line.with_context(skip_homologation_reconcile=True).write({
                     "product_id": False,
                     "homologation_id": False,
-                    "possible_homologation_ids": [(6, 0, validated.ids)],
+                    "possible_homologation_ids": [(6, 0, usable.ids)],
                     "state": "unmatched",
                 })
                 continue
+            values = {}
             if line.possible_homologation_ids:
-                line.with_context(skip_homologation_reconcile=True).write({
-                    "possible_homologation_ids": [(5, 0, 0)],
-                })
+                values["possible_homologation_ids"] = [(5, 0, 0)]
+            if line.homologation_id and not line._is_usable_homologation(
+                line.homologation_id, line.quote_id
+            ):
+                values.update({"homologation_id": False, "product_id": False})
+            if values:
+                line.with_context(skip_homologation_reconcile=True).write(values)
 
+    # ------------------------------------------------------------------
+    # Homologación provisional (RF-08, RF-09, RF-10)
+    # ------------------------------------------------------------------
     def _get_existing_homologations_for_line(self):
         self.ensure_one()
         code = self._normalize_code(self.customer_code)
@@ -467,6 +606,12 @@ class ProductHomologationQuoteLine(models.Model):
         return self.env["product.homologation"].search(domain)
 
     def _ensure_homologation(self):
+        """Crea una homologación provisional cuando la línea aún no tiene una.
+
+        Las homologaciones creadas desde una precotización quedan en estado
+        provisional y solo son utilizables en la precotización que las originó
+        hasta que un especialista las valide (RF-09, RF-10).
+        """
         for line in self:
             if not line.product_id or not line.customer_description:
                 continue
@@ -475,28 +620,37 @@ class ProductHomologationQuoteLine(models.Model):
                     continue
                 line.homologation_id = False
             existing = line._get_existing_homologations_for_line()
-            validated = existing.filtered(lambda h: h.state == "validated")
-            if len(validated) == 1:
-                if line.homologation_id != validated:
-                    line.homologation_id = validated
+            usable = existing.filtered(
+                lambda hom: line._is_usable_homologation(hom, line.quote_id)
+            )
+            if len(usable) == 1:
+                if line.homologation_id != usable:
+                    line.homologation_id = usable
+                line.state = "matched"
                 continue
-            if len(validated) > 1:
-                line.possible_homologation_ids = validated
+            if len(usable) > 1:
+                line.possible_homologation_ids = usable
                 line.state = "unmatched"
                 continue
             if existing:
                 line.state = "unmatched"
                 continue
-            hom = self.env["product.homologation"].create({
+            homologation = self.env["product.homologation"].create({
                 "competitor_id": line.competitor_id.id or False,
                 "customer_code": line._normalize_code(line.customer_code) or False,
                 "customer_description": line.customer_description,
                 "observation": line.observation,
                 "product_id": line.product_id.id,
-                "state": "draft",
+                "state": "provisional",
+                "origin_quote_id": line.quote_id.id,
+                "origin_quote_line_id": line.id,
             })
-            line.homologation_id = hom
+            line.homologation_id = homologation
+            line.state = "matched"
 
+    # ------------------------------------------------------------------
+    # Alternativas
+    # ------------------------------------------------------------------
     def action_open_possible_homologations(self):
         self.ensure_one()
         homologations = self._get_possible_homologations()
@@ -520,3 +674,26 @@ class ProductHomologationQuoteLine(models.Model):
                 "homologation_quote_line_id": self.id,
             },
         }
+
+    def action_open_alternatives_wizard(self):
+        """Abre la ventana emergente simplificada de alternativas (RF-21)."""
+        self.ensure_one()
+        wizard = self.env["product.homologation.alternatives.wizard"].create({
+            "quote_line_id": self.id,
+        })
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Seleccionar alternativa de homologación"),
+            "res_model": "product.homologation.alternatives.wizard",
+            "res_id": wizard.id,
+            "view_mode": "form",
+            "target": "new",
+        }
+
+    def action_apply_recommended(self):
+        self.ensure_one()
+        recommended = self._get_possible_homologations()._recommend()[0]
+        if not recommended:
+            raise UserError(_("No hay alternativas para recomendar en esta línea."))
+        self._apply_selected_homologation(recommended)
+        return self.quote_id.action_open_quote()
