@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_crm_lead_form_inherit_homologation" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit.homologation</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_homologation_quotes"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-clipboard">
+                    <div class="o_stat_info">
+                        <field name="homologation_quote_count"/>
+                        <span>Precotizaciones</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//notebook/page[@name='internal_notes']" position="after">
+                <page name="homologation" string="Homologación"
+                      invisible="homologation_quote_count == 0">
+                    <field name="homologation_quote_ids">
+                        <list>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_quote_form_inherit_crm" model="ir.ui.view">
+        <field name="name">product.homologation.quote.form.inherit.crm</field>
+        <field name="model">product.homologation.quote</field>
+        <field name="inherit_id" ref="product_homologation.view_product_homologation_quote_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="lead_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_product_homologation_quote_tree_inherit_crm" model="ir.ui.view">
+        <field name="name">product.homologation.quote.tree.inherit.crm</field>
+        <field name="model">product.homologation.quote</field>
+        <field name="inherit_id" ref="product_homologation.view_product_homologation_quote_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="lead_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
