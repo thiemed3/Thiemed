@@ -1,8 +1,92 @@
-from odoo import models, fields
+from lxml import etree
+
+from odoo import _, fields, models
+from odoo.exceptions import UserError
 from odoo.tools import float_repr
+
 
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
+
+    l10n_cl_dte_rate_date = fields.Date(
+        string="Fecha tipo de cambio DTE", copy=False, readonly=True,
+    )
+    l10n_cl_dte_rate = fields.Float(
+        string="Tipo de cambio DTE", digits=(16, 6), copy=False, readonly=True,
+    )
+
+    def _l10n_cl_create_dte(self):
+        for picking in self:
+            company = picking.company_id
+            company_currency = company.currency_id
+            source_currency = picking.sale_id.currency_id or company_currency
+            date = picking._l10n_cl_dte_conversion_date()
+            rate = picking._l10n_cl_get_conversion_rate(
+                source_currency, company_currency, company, date,
+            )
+            picking.write({
+                'l10n_cl_dte_rate_date': date,
+                'l10n_cl_dte_rate': rate,
+            })
+        return super()._l10n_cl_create_dte()
+
+    def _l10n_cl_dte_conversion_date(self):
+        self.ensure_one()
+        return (
+            self.l10n_cl_dte_rate_date
+            or self._l10n_cl_dte_date_from_attachment()
+            or self._get_cl_current_datetime().date()
+        )
+
+    def _l10n_cl_dte_date_from_attachment(self):
+        attachment = self.l10n_cl_dte_file
+        if not attachment:
+            return False
+        try:
+            root = etree.fromstring(attachment.raw)
+            node = root.find('.//{*}FchEmis')
+            return fields.Date.to_date(node.text) if node is not None and node.text else False
+        except Exception:
+            return False
+
+    def _l10n_cl_find_rate_record(self, currency, company, date):
+        root_company = company.root_id or company
+        Rate = self.env['res.currency.rate'].sudo()
+        domain = [
+            ('currency_id', '=', currency.id),
+            '|',
+            ('company_id', '=', False),
+            ('company_id', '=', root_company.id),
+            ('name', '<=', date),
+        ]
+        return Rate.search(domain, order='name DESC, id DESC', limit=1)
+
+    def _l10n_cl_get_conversion_rate(self, from_currency, to_currency, company, date):
+        if from_currency == to_currency:
+            return 1.0
+        for currency in (from_currency, to_currency):
+            if currency == (company.root_id or company).currency_id:
+                continue
+            rate_record = self._l10n_cl_find_rate_record(currency, company, date)
+            if not rate_record or rate_record.rate <= 0:
+                raise UserError(_(
+                    "No hay tasa de cambio válida para %(currency)s con fecha %(date)s. "
+                    "Registre una tasa antes de generar la guía de despacho."
+                ) % {
+                    'currency': currency.name,
+                    'date': date,
+                })
+        return self.env['res.currency']._get_conversion_rate(
+            from_currency, to_currency, company, date,
+        )
+
+    def _l10n_cl_convert_amount(self, amount, from_currency, to_currency, company, date, rate=None):
+        if not amount or from_currency == to_currency:
+            return amount
+        rate = rate if rate is not None else self._l10n_cl_get_conversion_rate(
+            from_currency, to_currency, company, date,
+        )
+        return amount * rate
 
     def _l10n_cl_get_tax_amounts(self):
         """
@@ -14,7 +98,15 @@ class StockPicking(models.Model):
         company = self.company_id
         currency = company.currency_id
         partner = self.partner_id
-        round_per_line = (company.tax_calculation_rounding_method == 'round_per_line')
+        rounding_method = company.tax_calculation_rounding_method
+        round_per_line = (rounding_method == 'round_per_line')
+        conversion_date = self._l10n_cl_dte_conversion_date()
+        source_currency = self.sale_id.currency_id or currency
+        stored_rate = (
+            self.l10n_cl_dte_rate
+            if self.l10n_cl_dte_rate_date == conversion_date and self.l10n_cl_dte_rate
+            else None
+        )
 
         totals = {
             'vat_amount': 0.0,
@@ -33,8 +125,8 @@ class StockPicking(models.Model):
 
         guide_price = partner.l10n_cl_delivery_guide_price
         if guide_price == 'none':
-            guide_price = "sale_order" if (self.sale_id and self.sale_id.currency_id == currency) else "product"
-        if guide_price == 'sale_order' and (not self.sale_id or self.sale_id.currency_id != currency):
+            return totals, retentions, line_amounts
+        if guide_price == 'sale_order' and not self.sale_id:
             guide_price = 'product'
 
         tax_group_ila = self.env['account.chart.template'].with_company(company).ref('tax_group_ila', raise_if_not_found=False)
@@ -55,33 +147,40 @@ class StockPicking(models.Model):
 
             if is_kit_component:
                 if self.sale_id and self.sale_id.pricelist_id:
-                    price_unit = self._safe_pricelist_price(
+                    price_doc, price_currency = self._safe_pricelist_price(
                         pricelist=self.sale_id.pricelist_id,
                         product=product, qty=qty or 1.0, partner=partner, uom=uom,
                         date=(self.date_done or self.scheduled_date or fields.Date.context_today(self)),
                     )
                 else:
-                    price_unit = product.uom_id._compute_price(product.lst_price, uom)
+                    price_doc = product.uom_id._compute_price(product.lst_price, uom)
+                    price_currency = getattr(product, 'currency_id', None) or currency
+                price_unit = self._l10n_cl_convert_amount(
+                    price_doc, price_currency, currency, company, conversion_date,
+                    stored_rate if price_currency == source_currency else None,
+                )
                 discount = float(sol.discount or 0.0) if sol else 0.0
                 taxes = (sol.tax_ids if sol else product.taxes_id).filtered(lambda t: t.company_id == company)
             else:
                 if guide_price == 'sale_order' and sol:
-                    price_unit = sol.product_uom_id._compute_price(sol.price_unit, uom)
-                    discount = float(sol.discount or 0.0)
-                    taxes = sol.tax_ids
+                    price_doc = sol.product_uom_id._compute_price(sol.price_unit, uom)
+                    price_currency = sol.currency_id or source_currency
                 else:
-                    price_unit = product.uom_id._compute_price(product.lst_price, uom)
-                    discount = 0.0
-                    taxes = product.taxes_id.filtered(lambda t: t.company_id == company)
+                    price_doc = product.uom_id._compute_price(product.lst_price, uom)
+                    price_currency = getattr(product, 'currency_id', None) or currency
+                price_unit = self._l10n_cl_convert_amount(
+                    price_doc, price_currency, currency, company, conversion_date,
+                    stored_rate if price_currency == source_currency else None,
+                )
+                discount = float(sol.discount or 0.0) if guide_price == 'sale_order' and sol else 0.0
+                taxes = sol.tax_ids if guide_price == 'sale_order' and sol else product.taxes_id.filtered(lambda t: t.company_id == company)
 
             price_after_disc = price_unit * (1 - (discount or 0.0) / 100.0)
 
-            try:
-                tax_res = taxes.compute_all(price_after_disc, currency=currency, quantity=qty,
-                                            partner=partner, round=round_per_line) if taxes else None
-            except TypeError:
-                tax_res = taxes.compute_all(price_after_disc, currency=currency, quantity=qty,
-                                            partner=partner) if taxes else None
+            tax_res = taxes.compute_all(
+                price_after_disc, currency=currency, quantity=qty,
+                partner=partner, rounding_method=rounding_method,
+            ) if taxes else None
 
             if not tax_res:
                 base = price_after_disc * qty
@@ -134,10 +233,10 @@ class StockPicking(models.Model):
             }
             if discount:
                 if taxes:
-                    try:
-                        undisc_res = taxes.compute_all(price_unit, currency=currency, quantity=qty, partner=partner, round=False)
-                    except TypeError:
-                        undisc_res = taxes.compute_all(price_unit, currency=currency, quantity=qty, partner=partner)
+                    undisc_res = taxes.compute_all(
+                        price_unit, currency=currency, quantity=qty,
+                        partner=partner, rounding_method=rounding_method,
+                    )
                     base_undisc_raw = undisc_res['total_excluded']
                 else:
                     base_undisc_raw = price_unit * qty
@@ -179,16 +278,14 @@ class StockPicking(models.Model):
         date = fields.Date.to_date(date) or fields.Date.context_today(self)
         uom = uom or product.uom_id
         try:
-            return pricelist._get_product_price(product, qty, partner, uom=uom, date=date)
+            return pricelist._get_product_price(product, qty, partner, uom=uom, date=date), pricelist.currency_id
         except Exception:
-            price = product.lst_price
-            try:
-                company = self.company_id
-                if company.currency_id and pricelist.currency_id and company.currency_id != pricelist.currency_id:
-                    price = company.currency_id._convert(price, pricelist.currency_id, company, date, round=False)
-            except Exception:
-                pass
-            return price
+            product_currency = getattr(product, 'currency_id', None) or self.company_id.currency_id
+            price = self._l10n_cl_convert_amount(
+                product.lst_price, product_currency, pricelist.currency_id,
+                self.company_id, date,
+            )
+            return price, pricelist.currency_id
 
     def _qty_in_move_uom(self, move):
         move_uom = move.product_uom
@@ -203,12 +300,10 @@ class StockPicking(models.Model):
 
     # ------------------ PDF: reutiliza exactamente los mismos montos ------------------
     def _prepare_pdf_values(self):
-        amounts, withholdings, total_line_amounts = self._l10n_cl_get_tax_amounts()
         res = super()._prepare_pdf_values()
+        amounts = res['amounts']
+        total_line_amounts = res['total_line_amounts']
         res.update({
-            'amounts': amounts,
-            'withholdings': withholdings,
-            'total_line_amounts': total_line_amounts,
             'has_unit_price': any(l.get('price_unit', 0.0) != 0.0 for l in total_line_amounts.values()),
             'has_discount': any(l.get('total_discount', '0') != '0' for l in total_line_amounts.values()),
             'amount_untaxed': amounts['subtotal_amount_taxable'] + amounts['subtotal_amount_exempt'],

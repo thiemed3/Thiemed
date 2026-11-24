@@ -6,7 +6,6 @@
 
             <xpath expr="//table[@t-if='o.move_ids']" position="replace">
                 <t t-if="o.move_line_ids">
-                    <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
                     <t t-set="has_unit_price" t-value="prepared_amounts['has_unit_price']"/>
                     <t t-set="total_line_amounts" t-value="prepared_amounts.get('total_line_amounts', {})"/>
                     <t t-set="has_discount" t-value="any((v.get('discount') or 0.0) &gt; 0 for v in total_line_amounts.values())"/>
@@ -63,7 +62,6 @@
             </xpath>
 
             <xpath expr="//div[@id='total']" position="replace">
-                <t t-set="prepared_amounts" t-value="o._prepare_pdf_values()"/>
                 <div id="total" class="row justify-content-end">
                     <div class="col-4">
                         <table class="table table-sm">
