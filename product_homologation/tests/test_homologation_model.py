@@ -61,7 +61,7 @@ class TestHomologationModel(TransactionCase):
 
     def test_02_unique_constraint(self):
         """RF-01: no se permiten códigos duplicados por competidor."""
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValidationError):
             self.env["product.homologation"].create({
                 "competitor_id": self.partner.id,
                 "customer_code": "XIL-SC-001",

@@ -2,7 +2,7 @@ import logging
 import re
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.fields import Domain
 
 _logger = logging.getLogger(__name__)
@@ -181,13 +181,47 @@ class ProductHomologation(models.Model):
     # ------------------------------------------------------------------
     # ORM
     # ------------------------------------------------------------------
+    def _check_unique_competitor_code(self, vals_list):
+        """Valida duplicados antes de INSERT para dar un error de usuario.
+
+        La restricción UNIQUE de PostgreSQL se mantiene como última línea de
+        defensa, pero validar aquí evita exponer un ``IntegrityError`` crudo
+        (y su registro SQL) cuando se crea un código ya existente.
+        """
+        seen = set()
+        for vals in vals_list:
+            code = (vals.get("customer_code") or "").strip()
+            competitor_id = vals.get("competitor_id")
+            if not code or not competitor_id:
+                continue
+            company_id = vals.get("company_id") or self.env.company.id
+            key = (competitor_id, company_id, code.casefold())
+            if key in seen:
+                raise ValidationError(_(
+                    "Ya existe una homologación para este competidor con el "
+                    "código %s."
+                ) % code)
+            seen.add(key)
+            duplicate = self.with_context(active_test=False).search([
+                ("competitor_id", "=", competitor_id),
+                ("company_id", "=", company_id),
+                ("customer_code", "=ilike", code),
+            ], limit=1)
+            if duplicate:
+                raise ValidationError(_(
+                    "Ya existe una homologación para este competidor con el "
+                    "código %s."
+                ) % code)
+
     @api.model_create_multi
     def create(self, vals_list):
+        vals_list = [dict(vals) for vals in vals_list]
         for vals in vals_list:
             if vals.get("customer_code"):
                 vals["customer_code"] = vals["customer_code"].strip()
             if vals.get("homologation_level") and "precision_pct" not in vals:
                 vals["precision_pct"] = self._precision_from_level(vals["homologation_level"])
+        self._check_unique_competitor_code(vals_list)
         return super().create(vals_list)
 
     def write(self, vals):
@@ -227,18 +261,18 @@ class ProductHomologation(models.Model):
         self.ensure_one()
         if not self.id:
             return False
-        if self.env["product.homologation.quote.line"].search_count(
+        if self.env["product.homologation.quote.line"].sudo().search_count(
             [("homologation_id", "=", self.id)]
         ):
             return True
-        return bool(self.env["sale.order.line"].search_count(
+        return bool(self.env["sale.order.line"].sudo().search_count(
             [("homologation_id", "=", self.id)]
         ))
 
     @api.depends("customer_code", "product_id")
     def _compute_usage(self):
-        QuoteLine = self.env["product.homologation.quote.line"]
-        SaleLine = self.env["sale.order.line"]
+        QuoteLine = self.env["product.homologation.quote.line"].sudo()
+        SaleLine = self.env["sale.order.line"].sudo()
         for rec in self:
             if not isinstance(rec.id, int):
                 rec.used_in_quote_count = 0

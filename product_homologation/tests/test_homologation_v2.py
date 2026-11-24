@@ -848,6 +848,84 @@ class TestPermissions(HomologationTestBase):
         self.assertEqual(line.homologation_id.state, "provisional")
         self.assertEqual(quote.state, "draft")
 
+    def test_08_salesperson_and_sales_manager_access_homologation(self):
+        salesperson = self.env["res.users"].create({
+            "name": "Ejecutivo Ventas",
+            "login": "ejecutivo_ventas_homologation",
+            "email": "ejecutivo_ventas@example.com",
+            "group_ids": [(6, 0, [self.env.ref("sales_team.group_sale_salesman").id])],
+        })
+        sales_manager = self.env["res.users"].create({
+            "name": "Administrador Ventas",
+            "login": "admin_ventas_homologation",
+            "email": "admin_ventas@example.com",
+            "group_ids": [(6, 0, [self.env.ref("sales_team.group_sale_manager").id])],
+        })
+
+        self.assertTrue(salesperson.has_group(SELLER_GROUP))
+        self.assertFalse(salesperson.has_group(SPECIALIST_GROUP))
+        self.assertTrue(sales_manager.has_group(SELLER_GROUP))
+        self.assertTrue(sales_manager.has_group(SPECIALIST_GROUP))
+
+        homologation = self.env["product.homologation"].with_user(salesperson).create({
+            "competitor_id": self.competitor.id,
+            "customer_code": "PERM-SALES-001",
+            "customer_description": "Creada desde Ventas → Homologación",
+            "product_id": self.product.id,
+        })
+        homologation.with_user(salesperson).action_send_to_validation()
+        self.assertEqual(homologation.state, "provisional")
+
+        with self.assertRaises(UserError):
+            homologation.with_user(salesperson).action_validate()
+
+        homologation.with_user(sales_manager).action_validate()
+        self.assertEqual(homologation.state, "validated")
+        self.assertEqual(homologation.validator_id, sales_manager)
+
+        homologation.with_user(sales_manager).action_draft()
+        self.assertEqual(homologation.state, "draft")
+        homologation.with_user(sales_manager).action_reject()
+        self.assertEqual(homologation.state, "rejected")
+
+    def test_09_sales_homologation_menus_and_actions_are_accessible(self):
+        root_menu = self.env.ref("product_homologation.menu_homologation_root")
+        sale_root = self.env.ref("sale.sale_menu_root")
+        self.assertEqual(root_menu.parent_id, sale_root)
+
+        expected_actions = {
+            "product_homologation.menu_product_homologation": (
+                "product_homologation.action_product_homologation"
+            ),
+            "product_homologation.menu_product_homologation_quote": (
+                "product_homologation.action_product_homologation_quote"
+            ),
+            "product_homologation.menu_product_homologation_validation": (
+                "product_homologation.action_product_homologation_validation"
+            ),
+            "product_homologation.menu_product_homologation_import": (
+                "product_homologation.action_product_homologation_import"
+            ),
+            "product_homologation.menu_product_homologation_rules": (
+                "product_homologation.action_product_homologation_rule"
+            ),
+        }
+        for menu_xmlid, action_xmlid in expected_actions.items():
+            menu = self.env.ref(menu_xmlid)
+            action = self.env.ref(action_xmlid)
+            self.assertEqual(menu.parent_id, root_menu)
+            self.assertEqual(menu.action, action)
+
+        validation_action = self.env.ref(
+            "product_homologation.action_product_homologation_validation"
+        )
+        validation_views = validation_action.view_ids.sorted("sequence")
+        self.assertEqual(
+            validation_views.mapped("view_id"),
+            self.env.ref("product_homologation.view_product_homologation_validation_tree")
+            | self.env.ref("product_homologation.view_product_homologation_form"),
+        )
+
 
 @tagged("post_install", "-at_install")
 class TestModelIntegration(HomologationTestBase):

@@ -1,4 +1,4 @@
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import Form, tagged
 from odoo.tests.common import TransactionCase
 
@@ -466,7 +466,7 @@ class TestHomologationQuote(TransactionCase):
             "name": "PRE-NO-DESC",
         })
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValidationError):
             self.env["product.homologation.quote.line"].create({
                 "quote_id": quote.id,
                 "customer_code": "NO-DESC",

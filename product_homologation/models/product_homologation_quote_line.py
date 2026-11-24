@@ -1,5 +1,5 @@
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 HOMOLOGATION_LEVELS = [
     ("exact", "Coincidencia exacta"),
@@ -274,6 +274,11 @@ class ProductHomologationQuoteLine(models.Model):
             if vals.get("customer_code"):
                 vals["customer_code"] = vals["customer_code"].strip()
             vals = self._prepare_values_from_homologation(vals)
+            if not (vals.get("customer_description") or "").strip():
+                raise ValidationError(_(
+                    "La descripción del cliente es obligatoria en cada línea "
+                    "de la precotización."
+                ))
             if "price_unit" not in vals and vals.get("product_id"):
                 vals["price_unit"] = self._price_for_product(
                     self.env["product.product"].browse(vals["product_id"])
